@@ -1,0 +1,315 @@
+import { useState, useRef, useEffect } from "react";
+import { Button } from "./button";
+import { Input } from "./input";
+import { MessageCircle, X, Send, Zap } from "lucide-react";
+import { Link } from "react-router-dom";
+
+type Message = {
+  id: number;
+  text: string;
+  sender: "user" | "bot";
+  timestamp: Date;
+};
+
+const initialMessages: Message[] = [
+  {
+    id: 1,
+    text: "👋 Hi there! I'm your AI assistant. How can I help you with your website redesign today?",
+    sender: "bot",
+    timestamp: new Date(),
+  },
+];
+
+const commonQuestions = [
+  "How much does a website redesign cost?",
+  "How long does the redesign process take?",
+  "What information do you need from me?",
+  "Do you offer ongoing maintenance?",
+];
+
+export function Chatbot() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [inputValue, setInputValue] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [showEmailCapture, setShowEmailCapture] = useState(false);
+  const [email, setEmail] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const toggleChat = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSendMessage = () => {
+    if (inputValue.trim() === "") return;
+
+    const newUserMessage: Message = {
+      id: messages.length + 1,
+      text: inputValue,
+      sender: "user",
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, newUserMessage]);
+    setInputValue("");
+    setIsTyping(true);
+
+    // Simulate bot response after a delay
+    setTimeout(() => {
+      const botResponse = generateResponse(inputValue);
+      const newBotMessage: Message = {
+        id: messages.length + 2,
+        text: botResponse.text,
+        sender: "bot",
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, newBotMessage]);
+      setIsTyping(false);
+
+      if (botResponse.showEmailCapture) {
+        setShowEmailCapture(true);
+      }
+    }, 1000);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSendMessage();
+    }
+  };
+
+  const handleQuickQuestion = (question: string) => {
+    setInputValue(question);
+    handleSendMessage();
+  };
+
+  const handleSubmitEmail = () => {
+    if (email.trim() === "") return;
+
+    // Add user email message
+    const newUserMessage: Message = {
+      id: messages.length + 1,
+      text: `My email is: ${email}`,
+      sender: "user",
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, newUserMessage]);
+    setIsTyping(true);
+
+    // Simulate bot response
+    setTimeout(() => {
+      const newBotMessage: Message = {
+        id: messages.length + 2,
+        text: "Thanks for providing your email! One of our experts will reach out to you shortly to schedule your free consultation. In the meantime, feel free to ask me any other questions you might have.",
+        sender: "bot",
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, newBotMessage]);
+      setIsTyping(false);
+      setShowEmailCapture(false);
+    }, 1000);
+  };
+
+  const generateResponse = (
+    message: string,
+  ): { text: string; showEmailCapture: boolean } => {
+    const lowerMessage = message.toLowerCase();
+
+    if (
+      lowerMessage.includes("price") ||
+      lowerMessage.includes("cost") ||
+      lowerMessage.includes("pricing")
+    ) {
+      return {
+        text: "Our website redesign packages start at £1,199 for our Basic plan, £1,999 for our Standard plan, and £2,999 for our Premium plan. Each plan includes different features and benefits. Would you like to schedule a free consultation to discuss which plan would be best for your business?",
+        showEmailCapture: true,
+      };
+    } else if (
+      lowerMessage.includes("time") ||
+      lowerMessage.includes("long") ||
+      lowerMessage.includes("delivery")
+    ) {
+      return {
+        text: "We guarantee quick delivery of your new website after receiving all necessary content and completing the discovery phase. Our streamlined, AI-powered process allows us to work much faster than traditional agencies without compromising on quality.",
+        showEmailCapture: false,
+      };
+    } else if (
+      lowerMessage.includes("consultation") ||
+      lowerMessage.includes("call") ||
+      lowerMessage.includes("talk") ||
+      lowerMessage.includes("speak")
+    ) {
+      return {
+        text: "I'd be happy to set up a free consultation with one of our website experts. Could you please provide your email address so we can schedule a time that works for you?",
+        showEmailCapture: true,
+      };
+    } else if (
+      lowerMessage.includes("information") ||
+      lowerMessage.includes("need from me") ||
+      lowerMessage.includes("start")
+    ) {
+      return {
+        text: "To get started, we'll need your current website URL, brand assets (logo, colors, etc.), content for your pages, and information about your target audience and business goals. Would you like to schedule a call to discuss the details?",
+        showEmailCapture: true,
+      };
+    } else if (
+      lowerMessage.includes("maintenance") ||
+      lowerMessage.includes("support") ||
+      lowerMessage.includes("after")
+    ) {
+      return {
+        text: "Yes, we offer ongoing maintenance packages to keep your website secure, up-to-date, and performing at its best. Our Standard plan includes 1 month of support, and our Premium plan includes 3 months. We also offer monthly maintenance packages that can be added to any plan.",
+        showEmailCapture: false,
+      };
+    } else {
+      return {
+        text: "Thanks for your message! That's a great question. To provide you with the most accurate information, it would be best to speak with one of our website experts. Would you like to schedule a free consultation?",
+        showEmailCapture: true,
+      };
+    }
+  };
+
+  return (
+    <div className="fixed bottom-6 right-6 z-50">
+      {/* Chat button */}
+      <button
+        onClick={toggleChat}
+        className="flex items-center justify-center w-16 h-16 rounded-full bg-[#1A4D2E] text-white shadow-lg hover:bg-[#1A4D2E]/90 transition-all duration-300 hover:scale-105"
+      >
+        {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
+      </button>
+
+      {/* Chat window */}
+      {isOpen && (
+        <div className="absolute bottom-20 right-0 w-80 sm:w-96 h-[500px] bg-white rounded-lg shadow-xl flex flex-col overflow-hidden border border-gray-200">
+          {/* Header */}
+          <div className="bg-[#1A4D2E] text-white p-4 flex items-center justify-between">
+            <div className="flex items-center">
+              <Zap className="mr-2" size={20} />
+              <h3 className="font-semibold">The Enclosure AI Assistant</h3>
+            </div>
+            <button
+              onClick={toggleChat}
+              className="text-white hover:text-gray-200"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Messages */}
+          <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`mb-4 ${message.sender === "user" ? "flex justify-end" : "flex justify-start"}`}
+              >
+                <div
+                  className={`max-w-[80%] rounded-lg p-3 ${message.sender === "user" ? "bg-[#1A4D2E] text-white" : "bg-white text-gray-800 border border-gray-200"}`}
+                >
+                  <p className="text-sm">{message.text}</p>
+                  <p className="text-xs mt-1 opacity-70">
+                    {message.timestamp.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+              </div>
+            ))}
+            {isTyping && (
+              <div className="flex justify-start mb-4">
+                <div className="bg-white text-gray-800 rounded-lg p-3 border border-gray-200">
+                  <div className="flex space-x-1">
+                    <div
+                      className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
+                      style={{ animationDelay: "0ms" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
+                      style={{ animationDelay: "150ms" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
+                      style={{ animationDelay: "300ms" }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Email capture */}
+          {showEmailCapture && (
+            <div className="p-4 bg-[#1A4D2E]/5 border-t border-gray-200">
+              <p className="text-sm text-gray-700 mb-2">
+                Enter your email to schedule a free consultation:
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={handleSubmitEmail}
+                  className="bg-[#2D5F3F] hover:bg-[#2D5F3F]/90 text-white"
+                >
+                  Submit
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Quick questions */}
+          <div className="p-2 bg-gray-50 border-t border-gray-200 overflow-x-auto whitespace-nowrap">
+            <div className="flex gap-2">
+              {commonQuestions.map((question, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleQuickQuestion(question)}
+                  className="px-3 py-1 text-xs bg-white border border-gray-200 rounded-full hover:bg-gray-100 text-gray-700 whitespace-nowrap"
+                >
+                  {question}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Input */}
+          <div className="p-4 border-t border-gray-200 bg-white">
+            <div className="flex items-center gap-2">
+              <Input
+                type="text"
+                placeholder="Type your message..."
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="flex-1"
+              />
+              <Button
+                onClick={handleSendMessage}
+                className="bg-[#1A4D2E] hover:bg-[#1A4D2E]/90"
+              >
+                <Send size={18} />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

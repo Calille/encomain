@@ -1,0 +1,244 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Pure White (#FFFFFF) */
+    --background: 0 0% 100%;
+    /* Dark Green (#1A4D2E) */
+    --foreground: 150 45% 15%;
+
+    /* Pure White for cards */
+    --card: 0 0% 100%;
+    --card-foreground: 150 45% 15%;
+
+    /* Pure White for popovers */
+    --popover: 0 0% 100%;
+    --popover-foreground: 150 45% 15%;
+
+    /* Dark Green (#1A4D2E) */
+    --primary: 150 45% 15%;
+    /* White text on primary */
+    --primary-foreground: 0 0% 100%;
+
+    /* Off-White / Pale Sage */
+    --secondary: 150 25% 90%;
+    --secondary-foreground: 150 45% 15%;
+
+    /* Cool Gray / Pale Sage */
+    --muted: 150 20% 95%;
+    /* Graphite / Medium Green */
+    --muted-foreground: 150 20% 35%;
+
+    /* Sage Green (#7FA99B) */
+    --accent: 150 30% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Cool Gray (#D9E0DC) for borders */
+    --border: 150 10% 85%;
+    --border-color: 150 10% 85%;
+    --input: 150 10% 85%;
+    /* Dark Green for focus rings */
+    --ring: 150 45% 15%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Poppins", sans-serif;
+    position: relative;
+  }
+  html {
+    scroll-behavior: smooth;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Ensure main content doesn't overlap with navigation */
+  main {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(0, 0, 0, 0.87);
+  background-color: #ffffff;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* React Vertical Timeline Custom Styles */
+.vertical-timeline::before {
+  background: #7FA99B !important;
+  width: 3px !important;
+}
+
+.vertical-timeline-element-content {
+  border-radius: 12px !important;
+  padding: 2rem !important;
+}
+
+.vertical-timeline-element-content-arrow {
+  border-right-color: #FFFFFF !important;
+}
+
+.vertical-timeline-element-icon {
+  box-shadow: 0 0 0 4px #F8FAF9, inset 0 2px 0 rgba(0,0,0,.08), 0 3px 0 4px rgba(0,0,0,.05) !important;
+}
+
+.vertical-timeline-element-content h3 {
+  margin-top: 0;
+}
+
+/* Hover effect for timeline cards */
+.vertical-timeline-element-content:hover {
+  box-shadow: 0 10px 25px rgba(26, 77, 46, 0.15) !important;
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+/* Timeline element animation */
+.vertical-timeline-element {
+  margin: 3rem 0;
+}
+
+/* ========================================
+   PERFORMANCE-OPTIMIZED ANIMATIONS
+   ======================================== */
+
+/* GPU-accelerated fade in animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-delayed {
+  animation: fadeIn 0.6s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-delayed-2 {
+  animation: fadeIn 0.6s ease-out 0.4s forwards;
+  opacity: 0;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .animate-fade-in,
+  .animate-fade-in-delayed,
+  .animate-fade-in-delayed-2 {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Hardware acceleration utilities */
+@layer utilities {
+  .gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  .will-change-transform {
+    will-change: transform;
+  }
+  
+  .will-change-opacity {
+    will-change: opacity;
+  }
+}
+
+/* Optimize hover transitions with GPU */
+.transition-transform {
+  transition: transform 0.2s ease-out;
+}
+
+.hover\:scale-105:hover {
+  transform: scale(1.05) translateZ(0);
+}
+
+/* Smooth scroll with performance optimization */
+@supports (scroll-behavior: smooth) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Intersection Observer animation classes */
+.fade-in-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.fade-in-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger animations without JS */
+.stagger-animation > * {
+  opacity: 0;
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.stagger-animation > *:nth-child(1) { animation-delay: 0.1s; }
+.stagger-animation > *:nth-child(2) { animation-delay: 0.2s; }
+.stagger-animation > *:nth-child(3) { animation-delay: 0.3s; }
+.stagger-animation > *:nth-child(4) { animation-delay: 0.4s; }
+.stagger-animation > *:nth-child(5) { animation-delay: 0.5s; }
+.stagger-animation > *:nth-child(6) { animation-delay: 0.6s; }
+
+/* Loading spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
