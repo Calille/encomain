@@ -132,7 +132,7 @@ export function Chatbot() {
       lowerMessage.includes("pricing")
     ) {
       return {
-        text: "Our website redesign packages start at £1,199 for our Basic plan, £1,999 for our Standard plan, and £2,999 for our Premium plan. We only require a 20% deposit to get started, with the remaining balance paid through flexible monthly installments. Would you like to schedule a free consultation to discuss which plan would be best for your business?",
+        text: "Our website redesign packages are: Essential (£1,997) for startups and small businesses, Professional (£2,997) for growing brands - our most popular option, and Signature (£5,499) for premium digital experiences. We only require a 20% deposit to get started, with the remaining balance paid through flexible monthly installments. Would you like to schedule a free consultation to discuss which plan would be best for your business?",
         showEmailCapture: true,
       };
     } else if (
