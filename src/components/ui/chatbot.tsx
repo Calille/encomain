@@ -132,49 +132,112 @@ export function Chatbot() {
       lowerMessage.includes("pricing")
     ) {
       return {
-        text: "Our website redesign packages start at £1,199 for our Basic plan, £1,999 for our Standard plan, and £2,999 for our Premium plan. Each plan includes different features and benefits. Would you like to schedule a free consultation to discuss which plan would be best for your business?",
+        text: "Our website redesign packages start at £1,199 for our Basic plan, £1,999 for our Standard plan, and £2,999 for our Premium plan. We only require a 20% deposit to get started, with the remaining balance paid through flexible monthly installments. Would you like to schedule a free consultation to discuss which plan would be best for your business?",
+        showEmailCapture: true,
+      };
+    } else if (
+      lowerMessage.includes("payment") ||
+      lowerMessage.includes("deposit") ||
+      lowerMessage.includes("pay") ||
+      lowerMessage.includes("installment")
+    ) {
+      return {
+        text: "We make our pricing flexible and accessible! You only need to pay a 20% deposit upfront to start your project. The remaining balance can be paid through flexible monthly installments that work with your budget. This way, you can get a premium website without a huge upfront cost.",
         showEmailCapture: true,
       };
     } else if (
       lowerMessage.includes("time") ||
       lowerMessage.includes("long") ||
-      lowerMessage.includes("delivery")
+      lowerMessage.includes("delivery") ||
+      lowerMessage.includes("timeline")
     ) {
       return {
-        text: "We guarantee quick delivery of your new website after receiving all necessary content and completing the discovery phase. Our streamlined, AI-powered process allows us to work much faster than traditional agencies without compromising on quality.",
+        text: "Our typical website redesign takes 6-8 weeks from start to launch, depending on the complexity and your responsiveness with content. We follow a streamlined process: Discovery (1 week) → Design (2 weeks) → Development (3-4 weeks) → Launch. Our AI-powered workflow allows us to deliver quality results efficiently without rushing.",
         showEmailCapture: false,
       };
     } else if (
       lowerMessage.includes("consultation") ||
       lowerMessage.includes("call") ||
       lowerMessage.includes("talk") ||
-      lowerMessage.includes("speak")
+      lowerMessage.includes("speak") ||
+      lowerMessage.includes("meeting")
     ) {
       return {
-        text: "I'd be happy to set up a free consultation with one of our website experts. Could you please provide your email address so we can schedule a time that works for you?",
+        text: "I'd be happy to set up a free consultation with one of our website experts! We'll discuss your business goals, current website challenges, and how we can help. Could you please provide your email address so we can schedule a time that works for you?",
         showEmailCapture: true,
       };
     } else if (
       lowerMessage.includes("information") ||
       lowerMessage.includes("need from me") ||
-      lowerMessage.includes("start")
+      lowerMessage.includes("start") ||
+      lowerMessage.includes("begin")
     ) {
       return {
-        text: "To get started, we'll need your current website URL, brand assets (logo, colors, etc.), content for your pages, and information about your target audience and business goals. Would you like to schedule a call to discuss the details?",
+        text: "To get started, we'll need: your current website URL (if applicable), brand assets (logo, colors, fonts), content for your pages, information about your target audience and competitors, and your main business goals. Don't worry if you don't have everything ready - we can help you with content creation too! Would you like to schedule a discovery call?",
         showEmailCapture: true,
       };
     } else if (
       lowerMessage.includes("maintenance") ||
       lowerMessage.includes("support") ||
-      lowerMessage.includes("after")
+      lowerMessage.includes("after") ||
+      lowerMessage.includes("ongoing")
     ) {
       return {
-        text: "Yes, we offer ongoing maintenance packages to keep your website secure, up-to-date, and performing at its best. Our Standard plan includes 1 month of support, and our Premium plan includes 3 months. We also offer monthly maintenance packages that can be added to any plan.",
+        text: "Yes! We offer comprehensive ongoing maintenance packages to keep your website secure, fast, and up-to-date. Our Standard plan includes 1 month of post-launch support, and our Premium plan includes 3 months. We also offer monthly maintenance retainers for regular updates, security monitoring, and technical support.",
         showEmailCapture: false,
+      };
+    } else if (
+      lowerMessage.includes("seo") ||
+      lowerMessage.includes("google") ||
+      lowerMessage.includes("ranking") ||
+      lowerMessage.includes("search")
+    ) {
+      return {
+        text: "SEO is a core part of every website we build! All our sites include on-page SEO optimization, fast loading speeds, mobile responsiveness, and clean code that search engines love. We also offer advanced SEO packages for businesses that want comprehensive keyword research, content optimization, and ongoing SEO strategy.",
+        showEmailCapture: true,
+      };
+    } else if (
+      lowerMessage.includes("portfolio") ||
+      lowerMessage.includes("examples") ||
+      lowerMessage.includes("past work") ||
+      lowerMessage.includes("previous")
+    ) {
+      return {
+        text: "We've successfully launched 50+ websites across various industries, with a 100% client satisfaction rate. Our clients typically see an 85% increase in conversions after their redesign. I'd love to show you relevant examples during a free consultation call - would you like to schedule one?",
+        showEmailCapture: true,
+      };
+    } else if (
+      lowerMessage.includes("cancel") ||
+      lowerMessage.includes("refund") ||
+      lowerMessage.includes("guarantee")
+    ) {
+      return {
+        text: "We offer a 30-day satisfaction guarantee. If you're not happy with our work within the first 30 days, we'll either revise it until you're satisfied or provide a full refund. We also have a flexible cancellation policy - you can cancel anytime with 30 days' notice. Your satisfaction is our priority!",
+        showEmailCapture: false,
+      };
+    } else if (
+      lowerMessage.includes("ai") ||
+      lowerMessage.includes("technology") ||
+      lowerMessage.includes("modern") ||
+      lowerMessage.includes("stack")
+    ) {
+      return {
+        text: "We build websites using cutting-edge technology including React, Next.js, TypeScript, and Tailwind CSS. Our AI-powered design process helps us create modern, fast, and conversion-optimized websites. All our sites are fully responsive, accessible (WCAG 2.1 AA compliant), and built with best practices for performance and security.",
+        showEmailCapture: false,
+      };
+    } else if (
+      lowerMessage.includes("contact") ||
+      lowerMessage.includes("email") ||
+      lowerMessage.includes("phone") ||
+      lowerMessage.includes("reach")
+    ) {
+      return {
+        text: "You can reach us at josh@theenclosure.co.uk or call us at 07877 700 777. We're also available through our contact page where you can book a free consultation call directly into our calendar. What's the best way for us to get in touch with you?",
+        showEmailCapture: true,
       };
     } else {
       return {
-        text: "Thanks for your message! That's a great question. To provide you with the most accurate information, it would be best to speak with one of our website experts. Would you like to schedule a free consultation?",
+        text: "Thanks for your message! That's a great question. To provide you with the most accurate and personalized information, it would be best to speak with one of our website experts directly. Would you like to schedule a free 30-minute consultation call?",
         showEmailCapture: true,
       };
     }
