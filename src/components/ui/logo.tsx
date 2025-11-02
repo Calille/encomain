@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import logoImage from "@/assets/images/logo.png";
 
 interface LogoProps {
   className?: string;
@@ -6,15 +7,11 @@ interface LogoProps {
 }
 
 export function Logo({ className, color = "#1A4D2E" }: LogoProps) {
-  // Import your logo image with the correct path once you've added it
-  // To use the logo, place your logo file in the src/assets/images directory
-  // Example: yourlogo.png or yourlogo.svg
-  
   return (
     <div className={cn("flex items-center", className)}>
-      {/* Logo image only - text removed */}
+      {/* Logo image */}
       <img 
-        src="/src/assets/images/logo.png" 
+        src={logoImage} 
         alt="The Enclosure Logo" 
         className="h-14 w-auto" 
       />
