@@ -30,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [initError, setInitError] = useState<Error | null>(null);
   const welcomeEmailSentRef = useRef<Set<string>>(new Set()); // Track which users have received welcome email
+  const welcomeEmailInProgressRef = useRef<Set<string>>(new Set()); // Track emails currently being sent (prevents race conditions)
 
   const isAdmin = profile?.role === "admin" && profile?.status === "active";
 
@@ -55,17 +56,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Fetch user profile from the users table
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('[AUTH] Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from("users")
         .select("*")
         .eq("id", userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("[AUTH] Error fetching profile:", error);
+        throw error;
+      }
+      
+      console.log('[AUTH] Profile fetched successfully:', data?.email);
       setProfile(data);
       return data;
     } catch (error) {
-      console.error("Error fetching profile:", error);
+      console.error("[AUTH] Failed to fetch profile:", error);
+      // Set profile to null so UI knows there's no profile
+      setProfile(null);
       return null;
     }
   };
@@ -76,18 +85,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     const initAuth = async () => {
       try {
+        console.log('[AUTH] Initializing authentication...');
         // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error("Error getting session:", error);
+          console.error("[AUTH] Error getting session:", error);
           throw error;
         }
         
+        console.log('[AUTH] Session retrieved:', session?.user?.email || 'no user');
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          console.log('[AUTH] User found, fetching profile...');
           const userProfile = await fetchProfile(session.user.id);
           
           // Check if welcome email should be sent for initial session
@@ -95,13 +107,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const emailConfirmed = session.user.email_confirmed_at;
           const email = session.user.email;
           
-          // Only send if email is confirmed and hasn't been sent before
+          // Only send if email is confirmed, hasn't been sent, and isn't currently in progress
           if (
             emailConfirmed && 
             email && 
-            !welcomeEmailSentRef.current.has(userId)
+            !welcomeEmailSentRef.current.has(userId) &&
+            !welcomeEmailInProgressRef.current.has(userId)
           ) {
+            // Mark as in progress immediately to prevent race conditions
+            welcomeEmailInProgressRef.current.add(userId);
+            
             try {
+              console.log(`[AUTH] Triggering welcome email for user ${userId} (${email})`);
+              
               // Fire and forget - don't block on email
               sendWelcomeEmail(email, {
                 userName: userProfile?.name || email.split('@')[0],
@@ -110,60 +128,113 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }).then((result) => {
                 if (result.success) {
                   welcomeEmailSentRef.current.add(userId);
+                  console.log(`[AUTH] Welcome email successfully sent to ${email}`);
+                } else {
+                  console.error(`[AUTH] Failed to send welcome email to ${email}:`, result.error);
                 }
               }).catch((error) => {
-                console.error('Failed to send welcome email:', error);
+                console.error(`[AUTH] Error sending welcome email to ${email}:`, error);
+              }).finally(() => {
+                // Remove from in-progress set regardless of success/failure
+                welcomeEmailInProgressRef.current.delete(userId);
               });
             } catch (error) {
-              console.error('Error triggering welcome email:', error);
+              console.error(`[AUTH] Error triggering welcome email for ${email}:`, error);
+              welcomeEmailInProgressRef.current.delete(userId);
+            }
+          } else {
+            if (!emailConfirmed) {
+              console.log(`[AUTH] Skipping welcome email - email not confirmed for ${email}`);
+            } else if (welcomeEmailSentRef.current.has(userId)) {
+              console.log(`[AUTH] Skipping welcome email - already sent to ${email}`);
+            } else if (welcomeEmailInProgressRef.current.has(userId)) {
+              console.log(`[AUTH] Skipping welcome email - already in progress for ${email}`);
             }
           }
+        } else {
+          console.log('[AUTH] No user session found');
         }
         
+        console.log('[AUTH] Setting loading to false');
         setLoading(false);
         
         // Listen for auth changes
+        console.log('[AUTH] Setting up onAuthStateChange listener');
         const { data: { subscription: sub } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          console.log(`[AUTH] Auth state change: ${event}`, session?.user?.email || 'no user');
+          
           setSession(session);
           setUser(session?.user ?? null);
           
           if (session?.user) {
-            const userProfile = await fetchProfile(session.user.id);
+            try {
+              console.log('[AUTH] Fetching profile for auth state change...');
+              const userProfile = await fetchProfile(session.user.id);
+              
+              if (!userProfile) {
+                console.error('[AUTH] Failed to fetch profile during auth state change');
+              }
+            } catch (error) {
+              console.error('[AUTH] Error fetching profile during auth state change:', error);
+            }
             
-            // Send welcome email after email verification
-            if (
-              event === 'SIGNED_IN' || 
-              event === 'USER_UPDATED' || 
-              event === 'TOKEN_REFRESHED'
-            ) {
+            // Send welcome email ONLY after email verification (USER_UPDATED when email_confirmed_at is set)
+            // Don't trigger on TOKEN_REFRESHED - that happens too frequently
+            // SIGNED_IN is handled in initial session load above, so skip here to avoid duplicates
+            if (event === 'USER_UPDATED') {
               const userId = session.user.id;
               const emailConfirmed = session.user.email_confirmed_at;
               const email = session.user.email;
               
-              // Only send if email is confirmed and hasn't been sent before
+              // Only send if email was just confirmed (not already sent) and not in progress
               if (
                 emailConfirmed && 
                 email && 
-                !welcomeEmailSentRef.current.has(userId)
+                !welcomeEmailSentRef.current.has(userId) &&
+                !welcomeEmailInProgressRef.current.has(userId)
               ) {
+                // Mark as in progress immediately to prevent race conditions
+                welcomeEmailInProgressRef.current.add(userId);
+                
                 try {
+                  console.log(`[AUTH] User email verified - triggering welcome email for ${email}`);
+                  
                   // Fire and forget - don't block on email
                   sendWelcomeEmail(email, {
-                    userName: userProfile?.name || email.split('@')[0],
+                    userName: profile?.full_name || profile?.name || session.user.user_metadata?.name || email.split('@')[0],
                     loginUrl: 'https://theenclosure.co.uk/login',
                     dashboardUrl: 'https://theenclosure.co.uk/dashboard',
                   }).then((result) => {
                     if (result.success) {
                       welcomeEmailSentRef.current.add(userId);
+                      console.log(`[AUTH] Welcome email successfully sent to ${email}`);
+                    } else {
+                      console.error(`[AUTH] Failed to send welcome email to ${email}:`, result.error);
                     }
                   }).catch((error) => {
-                    console.error('Failed to send welcome email:', error);
-                    // Don't show error to user - email failure shouldn't block their experience
+                    console.error(`[AUTH] Error sending welcome email to ${email}:`, error);
+                  }).finally(() => {
+                    // Remove from in-progress set regardless of success/failure
+                    welcomeEmailInProgressRef.current.delete(userId);
                   });
                 } catch (error) {
-                  console.error('Error triggering welcome email:', error);
+                  console.error(`[AUTH] Error triggering welcome email for ${email}:`, error);
+                  welcomeEmailInProgressRef.current.delete(userId);
+                }
+              } else {
+                if (!emailConfirmed) {
+                  console.log(`[AUTH] USER_UPDATED event - email not confirmed yet for ${email}`);
+                } else if (welcomeEmailSentRef.current.has(userId)) {
+                  console.log(`[AUTH] USER_UPDATED event - welcome email already sent to ${email}`);
+                } else if (welcomeEmailInProgressRef.current.has(userId)) {
+                  console.log(`[AUTH] USER_UPDATED event - welcome email already in progress for ${email}`);
                 }
               }
+            } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+              // These events fire too frequently - don't trigger welcome emails here
+              // SIGNED_IN is handled in initial session load
+              // TOKEN_REFRESHED happens every hour and shouldn't trigger emails
+              console.log(`[AUTH] Skipping welcome email for ${event} event`);
             }
           } else {
             setProfile(null);
