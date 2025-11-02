@@ -26,7 +26,7 @@ export default function ChangePassword() {
 
       const { data, error } = await supabase
         .from("users")
-        .select("must_change_password")
+        .select("requires_password_change")
         .eq("id", user.id)
         .single();
 
@@ -36,7 +36,7 @@ export default function ChangePassword() {
       }
 
       // If password change not required, redirect to dashboard
-      if (!data?.must_change_password && !profile?.requires_password_change) {
+      if (!data?.requires_password_change && !profile?.requires_password_change) {
         navigate("/dashboard");
       }
     };
@@ -86,12 +86,11 @@ export default function ChangePassword() {
     try {
       await updatePassword(newPassword);
 
-      // Update user record - clear must_change_password flag and set password_changed_at
+      // Update user record - clear requires_password_change flag and set password_changed_at
       if (user) {
         const { error: updateError } = await supabase
           .from("users")
           .update({
-            must_change_password: false,
             requires_password_change: false,
             password_changed_at: new Date().toISOString(),
           })
@@ -126,7 +125,7 @@ export default function ChangePassword() {
           <Logo />
         </div>
 
-        {(profile?.requires_password_change || profile?.must_change_password) && (
+        {profile?.requires_password_change && (
           <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start">
             <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
             <div>

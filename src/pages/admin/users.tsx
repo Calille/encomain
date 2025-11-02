@@ -30,7 +30,7 @@ export default function UsersManagement() {
     role: "user" as "admin" | "user",
     status: "active" as "active" | "inactive" | "suspended",
     password: "",
-    must_change_password: true,
+    requires_password_change: true,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -157,7 +157,7 @@ export default function UsersManagement() {
             full_name: formData.full_name || null,
             role: formData.role,
             status: formData.status,
-            must_change_password: formData.must_change_password,
+            requires_password_change: formData.requires_password_change,
           },
         }
       );
@@ -187,7 +187,7 @@ export default function UsersManagement() {
         role: "user",
         status: "active",
         password: "",
-        must_change_password: true,
+        requires_password_change: true,
       });
       setPasswordCopied(false);
       setIsCreateDialogOpen(false);
@@ -442,12 +442,12 @@ export default function UsersManagement() {
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  id="must_change_password"
-                  checked={formData.must_change_password}
-                  onChange={(e) => setFormData({ ...formData, must_change_password: e.target.checked })}
+                  id="requires_password_change"
+                  checked={formData.requires_password_change}
+                  onChange={(e) => setFormData({ ...formData, requires_password_change: e.target.checked })}
                   className="h-4 w-4 rounded border-gray-300 text-[#1A4D2E] focus:ring-[#1A4D2E]"
                 />
-                <Label htmlFor="must_change_password" className="text-sm font-normal cursor-pointer">
+                <Label htmlFor="requires_password_change" className="text-sm font-normal cursor-pointer">
                   Require password change on first login
                 </Label>
               </div>
@@ -475,7 +475,7 @@ export default function UsersManagement() {
                     role: "user",
                     status: "active",
                     password: "",
-                    must_change_password: true,
+                    requires_password_change: true,
                   });
                   setPasswordCopied(false);
                 }}

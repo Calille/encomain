@@ -372,13 +372,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      // Clear the requires_password_change and must_change_password flags, set password_changed_at
+      // Clear the requires_password_change flag, set password_changed_at
       if (user) {
         await supabase
           .from("users")
           .update({ 
             requires_password_change: false,
-            must_change_password: false,
             password_changed_at: new Date().toISOString(),
           })
           .eq("id", user.id);

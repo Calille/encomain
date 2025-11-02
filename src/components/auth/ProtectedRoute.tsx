@@ -40,8 +40,8 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     );
   }
 
-  // Check if user needs to change password (check both old and new field for compatibility)
-  const mustChangePassword = profile?.must_change_password || profile?.requires_password_change;
+  // Check if user needs to change password
+  const mustChangePassword = profile?.requires_password_change || false;
   if (mustChangePassword && location.pathname !== "/change-password") {
     return <Navigate to="/change-password" replace />;
   }

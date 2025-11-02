@@ -323,39 +323,60 @@ export type Database = {
       }
       users: {
         Row: {
+          address: string | null
+          city: string | null
+          country: string | null
           created_at: string
           current_plan: string | null
           email: string
           full_name: string | null
           id: string
           last_login: string | null
+          name: string | null
+          password_changed_at: string | null
+          phone: string | null
           plan_started_at: string | null
+          postcode: string | null
           requires_password_change: boolean | null
           role: string
           status: string
           updated_at: string
         }
         Insert: {
+          address?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           current_plan?: string | null
           email: string
           full_name?: string | null
           id: string
           last_login?: string | null
+          name?: string | null
+          password_changed_at?: string | null
+          phone?: string | null
           plan_started_at?: string | null
+          postcode?: string | null
           requires_password_change?: boolean | null
           role?: string
           status?: string
           updated_at?: string
         }
         Update: {
+          address?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           current_plan?: string | null
           email?: string
           full_name?: string | null
           id?: string
           last_login?: string | null
+          name?: string | null
+          password_changed_at?: string | null
+          phone?: string | null
           plan_started_at?: string | null
+          postcode?: string | null
           requires_password_change?: boolean | null
           role?: string
           status?: string
