@@ -108,7 +108,7 @@ export default function ContactPage() {
                       calendlySection.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                   }}
-                  className="bg-white text-[#1A4D2E] px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 shadow-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#1A4D2E]"
+                  className="bg-white text-[#1A4D2E] px-6 py-3 sm:px-8 sm:py-4 rounded-lg font-semibold text-base sm:text-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 shadow-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#1A4D2E] min-h-[44px]"
                 >
                   Book Your Call
                 </button>

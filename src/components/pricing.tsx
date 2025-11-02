@@ -108,7 +108,7 @@ function PricingCard({
 
       <button
         onClick={() => console.log(`Selected: ${title}`)}
-        className={`w-full py-3 rounded-lg font-semibold transition-colors duration-200 ${
+        className={`w-full py-4 rounded-lg font-semibold transition-colors duration-200 min-h-[44px] flex items-center justify-center ${
           featured
             ? 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800'
             : 'border-2 border-gray-300 text-gray-900 hover:border-blue-600 hover:text-blue-600'
@@ -356,7 +356,7 @@ export default function PricingSection() {
           role="tabpanel"
           className="transition-opacity duration-300"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-16">
             {currentPackages.map((pkg, index) => (
               <PricingCard key={index} {...pkg} />
             ))}

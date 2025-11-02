@@ -156,7 +156,7 @@ export function LoginForm() {
 
         <Button
           type="submit"
-          className="w-full bg-[#1A4D2E] hover:bg-[#1A4D2E]/90 text-white py-6"
+          className="w-full bg-[#1A4D2E] hover:bg-[#1A4D2E]/90 text-white py-4 sm:py-6 min-h-[44px]"
           disabled={isLoading}
         >
           {isLoading ? "Logging in..." : "Log in"}

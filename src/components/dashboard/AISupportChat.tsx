@@ -183,7 +183,7 @@ export default function AISupportChat() {
             initial={{ opacity: 0, x: 300 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 300 }}
-            className="fixed bottom-6 right-6 z-50 w-96 h-[600px] max-h-[calc(100vh-3rem)] bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col"
+            className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-[calc(100vw-2rem)] max-w-[384px] sm:w-96 h-[calc(100vh-8rem)] max-h-[600px] bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col"
           >
             {/* Header */}
             <div className="bg-[#1A4D2E] text-white p-4 rounded-t-lg flex items-center justify-between">

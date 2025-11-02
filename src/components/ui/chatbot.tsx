@@ -244,29 +244,31 @@ export function Chatbot() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
       {/* Chat button */}
       <button
         onClick={toggleChat}
-        className="flex items-center justify-center w-16 h-16 rounded-full bg-[#1A4D2E] text-white shadow-lg hover:bg-[#1A4D2E]/90 transition-all duration-300 hover:scale-105"
+        className="flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#1A4D2E] text-white shadow-lg hover:bg-[#1A4D2E]/90 transition-all duration-300 hover:scale-105 min-h-[44px] min-w-[44px]"
+        aria-label={isOpen ? "Close chat" : "Open chat"}
       >
-        {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
+        {isOpen ? <X size={20} className="sm:w-6 sm:h-6" /> : <MessageCircle size={20} className="sm:w-6 sm:h-6" />}
       </button>
 
       {/* Chat window */}
       {isOpen && (
-        <div className="absolute bottom-20 right-0 w-80 sm:w-96 h-[500px] bg-white rounded-lg shadow-xl flex flex-col overflow-hidden border border-gray-200">
+        <div className="absolute bottom-16 right-0 sm:bottom-20 w-[calc(100vw-2rem)] max-w-[320px] sm:max-w-[384px] h-[calc(100vh-8rem)] max-h-[500px] bg-white rounded-lg shadow-xl flex flex-col overflow-hidden border border-gray-200">
           {/* Header */}
-          <div className="bg-[#1A4D2E] text-white p-4 flex items-center justify-between">
-            <div className="flex items-center">
-              <Zap className="mr-2" size={20} />
-              <h3 className="font-semibold">The Enclosure AI Assistant</h3>
+          <div className="bg-[#1A4D2E] text-white p-3 sm:p-4 flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center min-w-0">
+              <Zap className="mr-2 flex-shrink-0 w-4 h-4 sm:w-5 sm:h-5" size={16} />
+              <h3 className="font-semibold text-sm sm:text-base truncate">The Enclosure AI Assistant</h3>
             </div>
             <button
               onClick={toggleChat}
-              className="text-white hover:text-gray-200"
+              className="text-white hover:text-gray-200 flex-shrink-0 ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label="Close chat"
             >
-              <X size={20} />
+              <X size={18} className="sm:w-5 sm:h-5" />
             </button>
           </div>
 
@@ -329,7 +331,7 @@ export function Chatbot() {
                 />
                 <Button
                   onClick={handleSubmitEmail}
-                  className="bg-[#2D5F3F] hover:bg-[#2D5F3F]/90 text-white"
+                  className="bg-[#2D5F3F] hover:bg-[#2D5F3F]/90 text-white min-h-[44px] px-4"
                 >
                   Submit
                 </Button>
@@ -365,7 +367,8 @@ export function Chatbot() {
               />
               <Button
                 onClick={handleSendMessage}
-                className="bg-[#1A4D2E] hover:bg-[#1A4D2E]/90"
+                className="bg-[#1A4D2E] hover:bg-[#1A4D2E]/90 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="Send message"
               >
                 <Send size={18} />
               </Button>

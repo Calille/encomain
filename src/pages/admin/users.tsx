@@ -537,38 +537,39 @@ export default function UsersManagement() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">User</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Email</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Role</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Status</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Created</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600">Actions</th>
-                </tr>
-              </thead>
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <div className="inline-block min-w-full align-middle px-4 sm:px-0">
+              <table className="w-full min-w-[720px]">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">User</th>
+                    <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Email</th>
+                    <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Role</th>
+                    <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Status</th>
+                    <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Created</th>
+                    <th className="text-right py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Actions</th>
+                  </tr>
+                </thead>
               <tbody>
                 {filteredUsers.map((user) => (
                   <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-4 px-4">
+                    <td className="py-4 px-3 sm:px-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#1A4D2E] flex items-center justify-center text-white font-medium">
+                        <div className="w-10 h-10 rounded-full bg-[#1A4D2E] flex items-center justify-center text-white font-medium flex-shrink-0">
                           {user.full_name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
                         </div>
-                        <span className="font-medium">{user.full_name || "No name"}</span>
+                        <span className="font-medium truncate">{user.full_name || "No name"}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-sm text-gray-600">{user.email}</td>
-                    <td className="py-4 px-4">
+                    <td className="py-4 px-3 sm:px-4 text-sm text-gray-600 whitespace-nowrap truncate max-w-[200px]">{user.email}</td>
+                    <td className="py-4 px-3 sm:px-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         user.role === "admin" ? "bg-purple-100 text-purple-800" : "bg-gray-100 text-gray-800"
                       }`}>
                         {user.role}
                       </span>
                     </td>
-                    <td className="py-4 px-4">
+                    <td className="py-4 px-3 sm:px-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         user.status === "active" ? "bg-green-100 text-green-800" : 
                         user.status === "suspended" ? "bg-red-100 text-red-800" :
@@ -577,16 +578,17 @@ export default function UsersManagement() {
                         {user.status}
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-sm text-gray-600">
+                    <td className="py-4 px-3 sm:px-4 text-sm text-gray-600 whitespace-nowrap">
                       {format(new Date(user.created_at), "PP")}
                     </td>
-                    <td className="py-4 px-4">
+                    <td className="py-4 px-3 sm:px-4">
                       <div className="flex items-center justify-end gap-2">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => openEditDialog(user)}
-                          className="hover:bg-blue-50"
+                          className="hover:bg-blue-50 min-h-[44px] min-w-[44px]"
+                          aria-label="Edit user"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -594,7 +596,8 @@ export default function UsersManagement() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleToggleStatus(user)}
-                          className={user.status === "active" ? "hover:bg-red-50" : "hover:bg-green-50"}
+                          className={`${user.status === "active" ? "hover:bg-red-50" : "hover:bg-green-50"} min-h-[44px] min-w-[44px]`}
+                          aria-label={user.status === "active" ? "Suspend user" : "Activate user"}
                         >
                           {user.status === "active" ? (
                             <Ban className="h-4 w-4 text-red-600" />
@@ -608,6 +611,7 @@ export default function UsersManagement() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </Card>

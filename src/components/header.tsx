@@ -41,16 +41,16 @@ export default function Header() {
         pillTextColor="#1A4D2E"
       />
       
-      {/* Account Dropdown - positioned in top left */}
-      <div className="fixed top-4 left-4 z-[9999]">
+      {/* Account Dropdown - positioned in top left, responsive */}
+      <div className="fixed top-2 left-2 sm:top-4 sm:left-4 z-[9998]">
         {user && profile ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-md hover:shadow-lg transition-all border border-gray-200 hover:border-[#1A4D2E]">
-                <div className="w-8 h-8 rounded-full bg-[#1A4D2E] flex items-center justify-center text-white font-medium">
+              <button className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-white rounded-full shadow-md hover:shadow-lg transition-all border border-gray-200 hover:border-[#1A4D2E] min-h-[44px] min-w-[44px]">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1A4D2E] flex items-center justify-center text-white font-medium text-sm sm:text-base flex-shrink-0">
                   {profile.full_name?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
                 </div>
-                <span className="text-sm font-medium text-[#1A4D2E] hidden sm:inline">
+                <span className="text-xs sm:text-sm font-medium text-[#1A4D2E] hidden sm:inline">
                   {profile.full_name || 'Account'}
                 </span>
               </button>
@@ -96,10 +96,10 @@ export default function Header() {
         ) : (
           <Link
             to="/login"
-            className="flex items-center gap-2 px-4 py-2 bg-[#1A4D2E] text-white rounded-full shadow-md hover:shadow-lg transition-all hover:bg-[#1A4D2E]/90"
+            className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-[#1A4D2E] text-white rounded-full shadow-md hover:shadow-lg transition-all hover:bg-[#1A4D2E]/90 min-h-[44px] min-w-[44px]"
           >
-            <User className="w-4 h-4" />
-            <span className="text-sm font-medium">Login</span>
+            <User className="w-4 h-4 flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-medium hidden sm:inline">Login</span>
           </Link>
         )}
       </div>

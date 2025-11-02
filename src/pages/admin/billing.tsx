@@ -603,39 +603,41 @@ export default function BillingManagement() {
                 <p className="text-gray-600">No billing records found</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Client</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Amount</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Period</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Status</th>
-                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600">Actions</th>
-                    </tr>
-                  </thead>
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <div className="inline-block min-w-full align-middle px-4 sm:px-0">
+                  <table className="w-full min-w-[640px]">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Client</th>
+                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Amount</th>
+                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Period</th>
+                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Status</th>
+                        <th className="text-right py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Actions</th>
+                      </tr>
+                    </thead>
                   <tbody>
                     {filteredBilling.map((item) => (
                       <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-4 px-4 font-medium">{getUserName(item.user_id)}</td>
-                        <td className="py-4 px-4 text-sm">
+                        <td className="py-4 px-3 sm:px-4 font-medium whitespace-nowrap">{getUserName(item.user_id)}</td>
+                        <td className="py-4 px-3 sm:px-4 text-sm whitespace-nowrap">
                           {item.currency === "GBP" ? "£" : "$"}{item.amount.toFixed(2)}
                         </td>
-                        <td className="py-4 px-4 text-sm text-gray-600">
+                        <td className="py-4 px-3 sm:px-4 text-sm text-gray-600 whitespace-nowrap">
                           {format(new Date(item.billing_period_start), "MMM d")} - {format(new Date(item.billing_period_end), "MMM d, yyyy")}
                         </td>
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-3 sm:px-4 whitespace-nowrap">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
                             {item.status}
                           </span>
                         </td>
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-3 sm:px-4">
                           <div className="flex items-center justify-end gap-2">
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => openEditBillingDialog(item)}
-                              className="hover:bg-blue-50"
+                              className="hover:bg-blue-50 min-h-[44px] min-w-[44px]"
+                              aria-label="Edit billing"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -643,7 +645,8 @@ export default function BillingManagement() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteBilling(item)}
-                              className="hover:bg-red-50 text-red-600"
+                              className="hover:bg-red-50 text-red-600 min-h-[44px] min-w-[44px]"
+                              aria-label="Delete billing"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -653,6 +656,7 @@ export default function BillingManagement() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             )}
           </Card>
@@ -798,31 +802,32 @@ export default function BillingManagement() {
                 <p className="text-gray-600">No invoices found</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Invoice #</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Client</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Amount</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Issue Date</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Due Date</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Status</th>
-                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-600">Actions</th>
-                    </tr>
-                  </thead>
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <div className="inline-block min-w-full align-middle px-4 sm:px-0">
+                  <table className="w-full min-w-[800px]">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Invoice #</th>
+                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Client</th>
+                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Amount</th>
+                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Issue Date</th>
+                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Due Date</th>
+                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Status</th>
+                        <th className="text-right py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Actions</th>
+                      </tr>
+                    </thead>
                   <tbody>
                     {filteredInvoices.map((invoice) => (
                       <tr key={invoice.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-4 px-4 font-mono text-sm">{invoice.invoice_number}</td>
-                        <td className="py-4 px-4 font-medium">{getUserName(invoice.user_id)}</td>
-                        <td className="py-4 px-4 text-sm">
+                        <td className="py-4 px-3 sm:px-4 font-mono text-sm whitespace-nowrap">{invoice.invoice_number}</td>
+                        <td className="py-4 px-3 sm:px-4 font-medium whitespace-nowrap">{getUserName(invoice.user_id)}</td>
+                        <td className="py-4 px-3 sm:px-4 text-sm whitespace-nowrap">
                           {invoice.currency === "GBP" ? "£" : "$"}{invoice.amount.toFixed(2)}
                         </td>
-                        <td className="py-4 px-4 text-sm text-gray-600">
+                        <td className="py-4 px-3 sm:px-4 text-sm text-gray-600 whitespace-nowrap">
                           {format(new Date(invoice.issue_date), "PP")}
                         </td>
-                        <td className="py-4 px-4 text-sm text-gray-600">
+                        <td className="py-4 px-3 sm:px-4 text-sm text-gray-600 whitespace-nowrap">
                           {format(new Date(invoice.due_date), "PP")}
                         </td>
                         <td className="py-4 px-4">
@@ -841,13 +846,14 @@ export default function BillingManagement() {
                             </SelectContent>
                           </Select>
                         </td>
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-3 sm:px-4">
                           <div className="flex items-center justify-end">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="hover:bg-blue-50"
+                              className="hover:bg-blue-50 min-h-[44px] min-w-[44px]"
                               title="Download PDF"
+                              aria-label="Download PDF"
                             >
                               <Download className="h-4 w-4" />
                             </Button>
@@ -857,6 +863,7 @@ export default function BillingManagement() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             )}
           </Card>

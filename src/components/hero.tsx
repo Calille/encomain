@@ -50,7 +50,7 @@ export default function Hero() {
       </div>
 
       <Container className="relative">
-        <div className="mx-auto max-w-3xl pt-20 pb-64 sm:pt-32 sm:pb-80">
+        <div className="mx-auto max-w-3xl pt-12 pb-32 sm:pt-24 sm:pb-48 md:pt-32 md:pb-64 lg:pb-80">
           <div className="text-center">
             <h1 className="text-4xl font-bold tracking-tight text-[#1A1A1A] sm:text-6xl leading-tight animate-fade-in">
               Outdated Website?<br />
@@ -60,16 +60,16 @@ export default function Hero() {
               Modern design. Smart strategy. Proven to convert.<br />
               We build websites that turn clicks into clients.
             </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6 animate-fade-in-delayed-2">
-              <Link to="/contact">
-                <Button className="bg-[#2D5F3F] hover:bg-[#2D5F3F]/90 text-white font-medium px-8 py-6 text-lg shadow-lg transition-transform hover:scale-105">
+            <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6 animate-fade-in-delayed-2">
+              <Link to="/contact" className="w-full sm:w-auto">
+                <Button className="bg-[#2D5F3F] hover:bg-[#2D5F3F]/90 text-white font-medium px-6 py-4 sm:px-8 sm:py-6 text-base sm:text-lg shadow-lg transition-transform hover:scale-105 w-full sm:w-auto min-h-[44px]">
                   Let's Redesign Your Site
                 </Button>
               </Link>
-              <Link to="/services">
+              <Link to="/services" className="w-full sm:w-auto">
                 <Button
                   variant="outline"
-                  className="border-[#1A4D2E] text-[#1A4D2E] hover:bg-[#1A4D2E]/10"
+                  className="border-[#1A4D2E] text-[#1A4D2E] hover:bg-[#1A4D2E]/10 w-full sm:w-auto min-h-[44px] px-6 py-4 sm:px-8 sm:py-6 text-base sm:text-lg"
                 >
                   See the Results
                 </Button>
