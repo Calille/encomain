@@ -276,6 +276,7 @@ export default function UsersManagement() {
       role: user.role as "admin" | "user",
       status: user.status as "active" | "inactive" | "suspended",
       password: "",
+      requires_password_change: user.requires_password_change ?? false,
     });
     setIsEditDialogOpen(true);
   };
