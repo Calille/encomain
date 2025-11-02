@@ -1,19 +1,28 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
+import { Checkbox } from "../ui/checkbox";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Logo } from "../ui/logo";
+import { useAuth } from "../../contexts/AuthContext";
+import { toast } from "../../hooks/use-toast";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const { signIn } = useAuth();
+
+  // Get the page they were trying to access before login
+  const from = (location.state as any)?.from?.pathname || "/dashboard";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,23 +30,39 @@ export function LoginForm() {
     setError("");
 
     try {
-      // Simulate login API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const result = await signIn(email, password, rememberMe);
+      const { error: signInError, requiresPasswordChange } = result;
 
-      // For demo purposes, hardcoded credentials
-      if (email === "demo@example.com" && password === "password") {
-        // Store auth token in localStorage
-        localStorage.setItem("auth_token", "demo_token");
-        localStorage.setItem("user_email", email);
+      if (signInError) {
+        setError(signInError.message || "Invalid email or password");
+        toast({
+          title: "Login failed",
+          description: signInError.message || "Invalid email or password",
+          variant: "destructive",
+        });
+        return;
+      }
 
-        // Redirect to dashboard
-        navigate("/dashboard");
+      // Show success message
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully logged in.",
+      });
+
+      // Redirect based on password change requirement
+      if (requiresPasswordChange) {
+        navigate("/change-password", { replace: true });
       } else {
-        setError("Invalid email or password");
+        navigate(from, { replace: true });
       }
     } catch (err) {
       setError("An error occurred during login. Please try again.");
       console.error("Login error:", err);
+      toast({
+        title: "Error",
+        description: "An error occurred during login. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -115,6 +140,20 @@ export function LoginForm() {
           </div>
         </div>
 
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="remember"
+            checked={rememberMe}
+            onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+          />
+          <label
+            htmlFor="remember"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Remember me
+          </label>
+        </div>
+
         <Button
           type="submit"
           className="w-full bg-[#1A4D2E] hover:bg-[#1A4D2E]/90 text-white py-6"
@@ -126,13 +165,7 @@ export function LoginForm() {
 
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-600">
-          Don't have an account?{" "}
-          <Link
-            to="/signup"
-            className="text-[#1A4D2E] font-medium hover:underline"
-          >
-            Sign up
-          </Link>
+          Contact your administrator for account access.
         </p>
       </div>
 

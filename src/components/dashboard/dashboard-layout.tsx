@@ -1,8 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Container } from "../ui/container";
 import { Logo } from "../ui/logo";
-import { Button } from "../ui/button";
 import {
   LayoutDashboard,
   FileText,
@@ -13,8 +11,23 @@ import {
   X,
   Bell,
   User,
+  Shield,
+  ChevronDown,
+  MessageSquare,
+  ArrowUpCircle,
+  TrendingUp,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import AISupportChat from "./AISupportChat";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -23,33 +36,20 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, title }: DashboardLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const { user, profile, signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem("auth_token");
-    const email = localStorage.getItem("user_email");
-
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    setUserEmail(email);
-  }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("user_email");
-    localStorage.removeItem("user_name");
+  const handleLogout = async () => {
+    await signOut();
     navigate("/login");
   };
 
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Website Progress", href: "/dashboard/progress", icon: FileText },
+    { name: "Website Progress", href: "/dashboard/progress", icon: TrendingUp },
     { name: "Payments", href: "/dashboard/payments", icon: CreditCard },
+    { name: "Support", href: "/dashboard/support", icon: MessageSquare },
+    { name: "Upgrade", href: "/dashboard/upgrade", icon: ArrowUpCircle },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
   ];
 
@@ -174,14 +174,57 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
                   <Bell className="h-6 w-6" aria-hidden="true" />
                 </button>
 
-                <div className="flex items-center">
-                  <div className="h-8 w-8 rounded-full bg-[#1A4D2E] flex items-center justify-center text-white">
-                    <User className="h-5 w-5" />
-                  </div>
-                  <span className="ml-2 text-sm font-medium text-gray-700 hidden sm:block">
-                    {userEmail}
-                  </span>
-                </div>
+                {/* User Profile Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 hover:bg-gray-50 rounded-lg px-2 py-1 transition-colors">
+                      <div className="h-8 w-8 rounded-full bg-[#1A4D2E] flex items-center justify-center text-white">
+                        {profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || <User className="h-5 w-5" />}
+                      </div>
+                      <span className="ml-2 text-sm font-medium text-gray-700 hidden sm:block">
+                        {profile?.full_name || user?.email}
+                      </span>
+                      <ChevronDown className="h-4 w-4 text-gray-500 hidden sm:block" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium">{profile?.full_name || 'User'}</p>
+                        <p className="text-xs text-gray-500">{profile?.email || user?.email}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard" className="flex items-center cursor-pointer">
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin" className="flex items-center cursor-pointer">
+                          <Shield className="mr-2 h-4 w-4" />
+                          Admin Panel
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem asChild>
+                      <Link to="/settings" className="flex items-center cursor-pointer">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className="cursor-pointer text-red-600 focus:text-red-600"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>
@@ -189,6 +232,9 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
           <div className="px-4 sm:px-6 lg:px-8 py-8">{children}</div>
         </main>
       </div>
+      
+      {/* AI Support Chat - Floating button appears on all dashboard pages */}
+      <AISupportChat />
     </div>
   );
 }

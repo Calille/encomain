@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "../../components/dashboard/dashboard-layout";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
@@ -10,77 +10,166 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../components/ui/tabs";
-import { User, Mail, Lock, Bell, Shield } from "lucide-react";
+import { Checkbox } from "../../components/ui/checkbox";
+import { useAuth } from "../../contexts/AuthContext";
+import { supabase } from "../../lib/supabase";
+import { toast } from "../../hooks/use-toast";
+import { User, Mail, Lock, Bell, Shield, Eye, EyeOff, Save } from "lucide-react";
 
 export default function Settings() {
-  const [profileForm, setProfileForm] = useState({
-    name: localStorage.getItem("user_name") || "John Doe",
-    email: localStorage.getItem("user_email") || "hello@theenclosure.co.uk",
-    company: "Acme Inc.",
-    phone: "+1 (555) 123-4567",
-  });
+  const { profile, updateProfile, updatePassword } = useAuth();
+  
+  // Profile form state
+  const [fullName, setFullName] = useState(profile?.full_name || "");
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
+  // Password form state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
+  // Notification settings
   const [notificationSettings, setNotificationSettings] = useState({
     emailUpdates: true,
     projectMilestones: true,
     paymentReminders: true,
     marketingEmails: false,
   });
+  const [isUpdatingNotifications, setIsUpdatingNotifications] = useState(false);
 
-  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setProfileForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setPasswordForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleNotificationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-    setNotificationSettings((prev) => ({ ...prev, [name]: checked }));
-  };
-
-  const handleProfileSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Save to localStorage for demo purposes
-    localStorage.setItem("user_name", profileForm.name);
-    localStorage.setItem("user_email", profileForm.email);
-    alert("Profile updated successfully!");
-  };
-
-  const handlePasswordSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      alert("New passwords do not match!");
-      return;
+  // Update form when profile changes
+  useEffect(() => {
+    if (profile?.full_name) {
+      setFullName(profile.full_name);
     }
-    // In a real app, you would send this to your API
-    alert("Password updated successfully!");
-    setPasswordForm({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
+  }, [profile]);
+
+  const validatePassword = (password: string) => {
+    if (password.length < 8) {
+      return "Password must be at least 8 characters long";
+    }
+    if (!/[A-Z]/.test(password)) {
+      return "Password must contain at least one uppercase letter";
+    }
+    if (!/[a-z]/.test(password)) {
+      return "Password must contain at least one lowercase letter";
+    }
+    if (!/[0-9]/.test(password)) {
+      return "Password must contain at least one number";
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      return "Password must contain at least one special character";
+    }
+    return null;
   };
 
-  const handleNotificationSubmit = (e: React.FormEvent) => {
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you would send this to your API
-    alert("Notification preferences updated successfully!");
+    setIsUpdatingProfile(true);
+
+    try {
+      await updateProfile({
+        full_name: fullName,
+      });
+      
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully.",
+      });
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdatingPassword(true);
+
+    try {
+      // Validate passwords match
+      if (newPassword !== confirmPassword) {
+        toast({
+          title: "Error",
+          description: "Passwords do not match",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate password strength
+      const validationError = validatePassword(newPassword);
+      if (validationError) {
+        toast({
+          title: "Error",
+          description: validationError,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await updatePassword(newPassword);
+
+      // Clear form
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+
+      toast({
+        title: "Password updated",
+        description: "Your password has been changed successfully.",
+      });
+    } catch (error: any) {
+      console.error("Error updating password:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update password. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
+  const handleUpdateNotifications = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdatingNotifications(true);
+
+    try {
+      // In a real app, you would save this to the database
+      // For now, we'll just show a success message
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      toast({
+        title: "Preferences updated",
+        description: "Your notification preferences have been saved.",
+      });
+    } catch (error: any) {
+      console.error("Error updating notifications:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update preferences. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingNotifications(false);
+    }
   };
 
   return (
     <DashboardLayout title="Account Settings">
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
+        <TabsList className="grid w-full grid-cols-3 lg:w-[500px]">
           <TabsTrigger value="profile" className="flex items-center">
             <User className="mr-2 h-4 w-4" />
             Profile
@@ -98,23 +187,23 @@ export default function Settings() {
         {/* Profile Tab */}
         <TabsContent value="profile">
           <Card className="p-6 shadow-sm border border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900 mb-6">
+            <h2 className="text-lg font-semibold text-[#1A4D2E] mb-6">
               Personal Information
             </h2>
 
-            <form onSubmit={handleProfileSubmit} className="space-y-6">
+            <form onSubmit={handleUpdateProfile} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="fullName">Full Name</Label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                       <User className="h-5 w-5 text-gray-400" />
                     </div>
                     <Input
-                      id="name"
-                      name="name"
-                      value={profileForm.name}
-                      onChange={handleProfileChange}
+                      id="fullName"
+                      name="fullName"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
                       className="pl-10"
                       required
                     />
@@ -131,42 +220,56 @@ export default function Settings() {
                       id="email"
                       name="email"
                       type="email"
-                      value={profileForm.email}
-                      onChange={handleProfileChange}
-                      className="pl-10"
-                      required
+                      value={profile?.email || ""}
+                      disabled
+                      className="pl-10 bg-gray-50 cursor-not-allowed"
                     />
                   </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Email cannot be changed. Contact support if you need to update it.
+                  </p>
                 </div>
+              </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="company">Company Name (Optional)</Label>
+                  <Label>Role</Label>
                   <Input
-                    id="company"
-                    name="company"
-                    value={profileForm.company}
-                    onChange={handleProfileChange}
+                    type="text"
+                    value={profile?.role || ""}
+                    disabled
+                    className="bg-gray-50 cursor-not-allowed capitalize"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number (Optional)</Label>
+                  <Label>Account Status</Label>
                   <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    value={profileForm.phone}
-                    onChange={handleProfileChange}
+                    type="text"
+                    value={profile?.status || ""}
+                    disabled
+                    className="bg-gray-50 cursor-not-allowed capitalize"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end">
+              <div className="flex justify-end pt-4 border-t border-gray-200">
                 <Button
                   type="submit"
+                  disabled={isUpdatingProfile}
                   className="bg-[#1A4D2E] hover:bg-[#1A4D2E]/90"
                 >
-                  Save Changes
+                  {isUpdatingProfile ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Changes
+                    </>
+                  )}
                 </Button>
               </div>
             </form>
@@ -176,30 +279,12 @@ export default function Settings() {
         {/* Security Tab */}
         <TabsContent value="security">
           <Card className="p-6 shadow-sm border border-gray-200 mb-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-6">
+            <h2 className="text-lg font-semibold text-[#1A4D2E] mb-6">
               Change Password
             </h2>
 
-            <form onSubmit={handlePasswordSubmit} className="space-y-6">
+            <form onSubmit={handleUpdatePassword} className="space-y-6">
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword">Current Password</Label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <Input
-                      id="currentPassword"
-                      name="currentPassword"
-                      type="password"
-                      value={passwordForm.currentPassword}
-                      onChange={handlePasswordChange}
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="newPassword">New Password</Label>
                   <div className="relative">
@@ -209,12 +294,23 @@ export default function Settings() {
                     <Input
                       id="newPassword"
                       name="newPassword"
-                      type="password"
-                      value={passwordForm.newPassword}
-                      onChange={handlePasswordChange}
-                      className="pl-10"
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="pl-10 pr-10"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3"
+                    >
+                      {showNewPassword ? (
+                        <EyeOff className="h-5 w-5 text-gray-400" />
+                      ) : (
+                        <Eye className="h-5 w-5 text-gray-400" />
+                      )}
+                    </button>
                   </div>
                 </div>
 
@@ -227,43 +323,76 @@ export default function Settings() {
                     <Input
                       id="confirmPassword"
                       name="confirmPassword"
-                      type="password"
-                      value={passwordForm.confirmPassword}
-                      onChange={handlePasswordChange}
-                      className="pl-10"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="pl-10 pr-10"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-5 w-5 text-gray-400" />
+                      ) : (
+                        <Eye className="h-5 w-5 text-gray-400" />
+                      )}
+                    </button>
                   </div>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-600">
+                  <p className="font-medium mb-2">Password requirements:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>At least 8 characters long</li>
+                    <li>Contains uppercase and lowercase letters</li>
+                    <li>Contains at least one number</li>
+                    <li>Contains at least one special character</li>
+                  </ul>
                 </div>
               </div>
 
-              <div className="flex justify-end">
+              <div className="flex justify-end pt-4 border-t border-gray-200">
                 <Button
                   type="submit"
+                  disabled={isUpdatingPassword}
                   className="bg-[#1A4D2E] hover:bg-[#1A4D2E]/90"
                 >
-                  Update Password
+                  {isUpdatingPassword ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-4 w-4 mr-2" />
+                      Update Password
+                    </>
+                  )}
                 </Button>
               </div>
             </form>
           </Card>
 
           <Card className="p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
                 <Shield className="h-5 w-5 text-[#1A4D2E] mr-2" />
-                <h2 className="text-lg font-medium text-gray-900">
+                <h2 className="text-lg font-semibold text-gray-900">
                   Two-Factor Authentication
                 </h2>
               </div>
-              <Button variant="outline">Enable</Button>
+              <Button variant="outline" size="sm">
+                Enable
+              </Button>
             </div>
 
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-sm">
               Add an extra layer of security to your account by enabling
               two-factor authentication. When enabled, you'll be required to
-              enter a security code in addition to your password when signing
-              in.
+              enter a security code in addition to your password when signing in.
             </p>
           </Card>
         </TabsContent>
@@ -271,105 +400,104 @@ export default function Settings() {
         {/* Notifications Tab */}
         <TabsContent value="notifications">
           <Card className="p-6 shadow-sm border border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900 mb-6">
+            <h2 className="text-lg font-semibold text-[#1A4D2E] mb-6">
               Notification Preferences
             </h2>
 
-            <form onSubmit={handleNotificationSubmit} className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <div className="flex items-center h-5">
-                    <input
-                      id="emailUpdates"
-                      name="emailUpdates"
-                      type="checkbox"
-                      checked={notificationSettings.emailUpdates}
-                      onChange={handleNotificationChange}
-                      className="h-4 w-4 rounded border-gray-300 text-[#1A4D2E] focus:ring-[#1A4D2E]"
-                    />
-                  </div>
-                  <div className="ml-3 text-sm">
-                    <label
+            <form onSubmit={handleUpdateNotifications} className="space-y-6">
+              <div className="space-y-6">
+                <div className="flex items-start space-x-3">
+                  <Checkbox
+                    id="emailUpdates"
+                    checked={notificationSettings.emailUpdates}
+                    onCheckedChange={(checked) =>
+                      setNotificationSettings({
+                        ...notificationSettings,
+                        emailUpdates: checked as boolean,
+                      })
+                    }
+                  />
+                  <div className="flex-1">
+                    <Label
                       htmlFor="emailUpdates"
-                      className="font-medium text-gray-700"
+                      className="text-sm font-medium text-gray-700 cursor-pointer"
                     >
                       Email Updates
-                    </label>
-                    <p className="text-gray-500">
+                    </Label>
+                    <p className="text-sm text-gray-500 mt-1">
                       Receive email notifications about your website development
                       progress.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start">
-                  <div className="flex items-center h-5">
-                    <input
-                      id="projectMilestones"
-                      name="projectMilestones"
-                      type="checkbox"
-                      checked={notificationSettings.projectMilestones}
-                      onChange={handleNotificationChange}
-                      className="h-4 w-4 rounded border-gray-300 text-[#1A4D2E] focus:ring-[#1A4D2E]"
-                    />
-                  </div>
-                  <div className="ml-3 text-sm">
-                    <label
+                <div className="flex items-start space-x-3">
+                  <Checkbox
+                    id="projectMilestones"
+                    checked={notificationSettings.projectMilestones}
+                    onCheckedChange={(checked) =>
+                      setNotificationSettings({
+                        ...notificationSettings,
+                        projectMilestones: checked as boolean,
+                      })
+                    }
+                  />
+                  <div className="flex-1">
+                    <Label
                       htmlFor="projectMilestones"
-                      className="font-medium text-gray-700"
+                      className="text-sm font-medium text-gray-700 cursor-pointer"
                     >
                       Project Milestones
-                    </label>
-                    <p className="text-gray-500">
-                      Get notified when your project reaches important
-                      milestones.
+                    </Label>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Get notified when your project reaches important milestones.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start">
-                  <div className="flex items-center h-5">
-                    <input
-                      id="paymentReminders"
-                      name="paymentReminders"
-                      type="checkbox"
-                      checked={notificationSettings.paymentReminders}
-                      onChange={handleNotificationChange}
-                      className="h-4 w-4 rounded border-gray-300 text-[#1A4D2E] focus:ring-[#1A4D2E]"
-                    />
-                  </div>
-                  <div className="ml-3 text-sm">
-                    <label
+                <div className="flex items-start space-x-3">
+                  <Checkbox
+                    id="paymentReminders"
+                    checked={notificationSettings.paymentReminders}
+                    onCheckedChange={(checked) =>
+                      setNotificationSettings({
+                        ...notificationSettings,
+                        paymentReminders: checked as boolean,
+                      })
+                    }
+                  />
+                  <div className="flex-1">
+                    <Label
                       htmlFor="paymentReminders"
-                      className="font-medium text-gray-700"
+                      className="text-sm font-medium text-gray-700 cursor-pointer"
                     >
                       Payment Reminders
-                    </label>
-                    <p className="text-gray-500">
+                    </Label>
+                    <p className="text-sm text-gray-500 mt-1">
                       Receive reminders about upcoming or overdue payments.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start">
-                  <div className="flex items-center h-5">
-                    <input
-                      id="marketingEmails"
-                      name="marketingEmails"
-                      type="checkbox"
-                      checked={notificationSettings.marketingEmails}
-                      onChange={handleNotificationChange}
-                      className="h-4 w-4 rounded border-gray-300 text-[#1A4D2E] focus:ring-[#1A4D2E]"
-                    />
-                  </div>
-                  <div className="ml-3 text-sm">
-                    <label
+                <div className="flex items-start space-x-3">
+                  <Checkbox
+                    id="marketingEmails"
+                    checked={notificationSettings.marketingEmails}
+                    onCheckedChange={(checked) =>
+                      setNotificationSettings({
+                        ...notificationSettings,
+                        marketingEmails: checked as boolean,
+                      })
+                    }
+                  />
+                  <div className="flex-1">
+                    <Label
                       htmlFor="marketingEmails"
-                      className="font-medium text-gray-700"
+                      className="text-sm font-medium text-gray-700 cursor-pointer"
                     >
                       Marketing Emails
-                    </label>
-                    <p className="text-gray-500">
+                    </Label>
+                    <p className="text-sm text-gray-500 mt-1">
                       Receive promotional emails about our services and special
                       offers.
                     </p>
@@ -377,12 +505,23 @@ export default function Settings() {
                 </div>
               </div>
 
-              <div className="flex justify-end">
+              <div className="flex justify-end pt-4 border-t border-gray-200">
                 <Button
                   type="submit"
+                  disabled={isUpdatingNotifications}
                   className="bg-[#1A4D2E] hover:bg-[#1A4D2E]/90"
                 >
-                  Save Preferences
+                  {isUpdatingNotifications ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Preferences
+                    </>
+                  )}
                 </Button>
               </div>
             </form>

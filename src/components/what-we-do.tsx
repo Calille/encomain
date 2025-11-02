@@ -22,36 +22,36 @@ export const projects = [
     title: "Strategic Web Design",
     description:
       "We craft stunning, conversion-focused websites designed around clear goals, modern aesthetics, and exceptional user experience.",
-    link: "#",
+    link: "#web-design",
   },
   {
     title: "Brand Identity",
     description:
       "From logos to typography, we create cohesive brand systems that communicate trust, clarity, and personality across every touchpoint.",
-    link: "#",
+    link: "#brand-identity",
   },
   {
     title: "UI / UX Design",
     description:
       "Beautiful interfaces meet effortless navigation. We design intuitive digital experiences that keep visitors engaged and exploring.",
-    link: "#",
+    link: "#ui-ux",
   },
   {
     title: "AI-Powered Optimization",
     description:
       "Leverage automation and analytics to refine performance, SEO, and user satisfaction — keeping your website smart and efficient.",
-    link: "#",
+    link: "#ai-optimization",
   },
   {
     title: "Content & Copywriting",
     description:
       "Persuasive, clear, and conversion-driven. We write copy that connects with your audience and drives measurable action.",
-    link: "#",
+    link: "#copywriting",
   },
   {
     title: "Maintenance & Growth",
     description:
       "Stay ahead with ongoing updates, performance tracking, and support designed to evolve your site as your business grows.",
-    link: "#",
+    link: "#maintenance",
   },
 ];

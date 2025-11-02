@@ -6,6 +6,8 @@ import { Label } from "../ui/label";
 import { Eye, EyeOff, Lock, Mail, User, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Logo } from "../ui/logo";
+import { supabase } from "../../lib/supabase";
+import { notifyAdminNewUser } from "../../utils/emailHelpers";
 
 export function SignupForm() {
   const [username, setUsername] = useState("");
@@ -36,18 +38,65 @@ export function SignupForm() {
     }
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Sign up with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: username,
+          },
+        },
+      });
 
-      // For demo purposes, store in localStorage
-      localStorage.setItem("user_email", email);
-      localStorage.setItem("user_name", username);
-      localStorage.setItem("auth_token", "new_user_token");
+      if (authError) throw authError;
 
-      // Redirect to dashboard
-      navigate("/dashboard");
-    } catch (err) {
-      setError("An error occurred during registration. Please try again.");
+      if (authData.user) {
+        // Create user profile in database
+        const { error: profileError } = await supabase
+          .from("users")
+          .insert({
+            id: authData.user.id,
+            email: email,
+            name: username,
+            role: "user",
+            status: "active",
+          });
+
+        if (profileError) {
+          console.error("Error creating profile:", profileError);
+          // Don't fail signup if profile creation fails
+        }
+
+        // Notify admin of new user signup (fire and forget)
+        try {
+          notifyAdminNewUser("admin@theenclosure.co.uk", {
+            email: email,
+            name: username,
+            role: "user",
+          }, {
+            adminName: "Admin",
+            adminDashboardUrl: "https://theenclosure.co.uk/admin/users",
+          }).catch((error) => {
+            console.error("Failed to send admin alert:", error);
+            // Don't show error to user
+          });
+        } catch (error) {
+          console.error("Error triggering admin alert:", error);
+        }
+
+        // For demo purposes, store in localStorage (if still needed)
+        localStorage.setItem("user_email", email);
+        localStorage.setItem("user_name", username);
+        localStorage.setItem("auth_token", "new_user_token");
+
+        // Redirect to dashboard
+        navigate("/dashboard");
+      } else {
+        throw new Error("User creation failed");
+      }
+    } catch (err: any) {
+      setError(err.message || "An error occurred during registration. Please try again.");
       console.error("Signup error:", err);
     } finally {
       setIsLoading(false);
