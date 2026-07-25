@@ -5,7 +5,7 @@ export default function WhatWeDoSection() {
   return (
     <section className="mx-auto max-w-6xl px-8 py-16">
       <div className="mb-12 text-center">
-        <MarketingHeading level="h2" variant="section" className="text-marketing-forest">
+        <MarketingHeading level="h2" variant="section">
           Building digital experiences that convert.
         </MarketingHeading>
         <p className="mx-auto mt-4 max-w-2xl text-marketing-lg text-marketing-muted">

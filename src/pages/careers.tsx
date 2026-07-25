@@ -189,12 +189,12 @@ export default function Careers() {
           </Container>
         </section>
 
-        <section className="bg-marketing-forest py-20 text-white">
+        <section className="bg-marketing-forest py-20">
           <Container>
             <div className="mx-auto max-w-3xl text-center">
-              <h2 className="mb-6 font-marketing-display text-marketing-3xl font-medium md:text-marketing-4xl">
+              <MarketingHeading level="h2" variant="section" tone="dark" className="mb-6">
                 Let's build something brilliant together
-              </h2>
+              </MarketingHeading>
               <p className="mb-10 text-marketing-xl leading-relaxed text-white/80">
                 We collaborate with developers who love clean design, efficient builds, and careful craft. Think you'd fit in?
               </p>

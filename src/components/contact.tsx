@@ -1,7 +1,6 @@
 import { Container } from "./ui/container";
 import { useState } from "react";
 import { sendToGoogleSheets } from "../utils/googleSheets";
-import { t } from "../utils/i18n";
 import { MarketingHeading } from "./marketing/marketing-heading";
 
 declare global {
@@ -65,12 +64,12 @@ export default function Contact() {
     <section className="bg-marketing-forest py-24 sm:py-32">
       <Container>
         <div className="mx-auto max-w-2xl text-center">
-          <MarketingHeading level="p" variant="eyebrow">
-            {t("contact.subtitle", "Contact us")}
+          <MarketingHeading level="p" variant="eyebrow" tone="dark">
+            Contact
           </MarketingHeading>
-          <h2 className="mt-2 font-marketing-display text-marketing-3xl font-medium tracking-tight text-white sm:text-marketing-4xl">
-            {t("contact.title", "Ready to transform your website?")}
-          </h2>
+          <MarketingHeading level="h2" variant="section" tone="dark" className="mt-2">
+            Ready to talk about your project?
+          </MarketingHeading>
           <p className="mt-6 text-marketing-lg leading-8 text-white/80">
             Fill out the form below and we'll get back to you within 24 hours. Or{" "}
             <a href="/contact#book" className="underline underline-offset-2 hover:text-white">

@@ -17,7 +17,7 @@ export default function ContactPage() {
     <div className="bg-white">
       <Header />
       <main>
-        {/* Hero */}
+        {/* Hero: eyebrow → h1 → subhead */}
         <section className="relative bg-marketing-mint pt-32 overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
             <AnimatedBackground />
@@ -26,6 +26,9 @@ export default function ContactPage() {
 
           <Container className="relative pt-16 pb-20 sm:pt-24 sm:pb-24">
             <div className="mx-auto max-w-3xl text-center">
+              <MarketingHeading level="p" variant="eyebrow" className="mb-4">
+                Contact
+              </MarketingHeading>
               <MarketingHeading level="h1" variant="display">
                 Let's talk about what you're building
               </MarketingHeading>
@@ -45,7 +48,7 @@ export default function ContactPage() {
                   Get in touch
                 </MarketingHeading>
                 <p className="text-marketing-lg text-marketing-muted max-w-2xl mx-auto mb-8">
-                  Prefer email or a quick call? Reach us directly, or book a slot below.
+                  Fill out a form or book a call. We'll reply within 24 hours.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-marketing-lg">
                   <a
@@ -74,11 +77,7 @@ export default function ContactPage() {
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-marketing-forest/10">
                     <Calendar className="h-8 w-8 text-marketing-forest" strokeWidth={1.5} />
                   </div>
-                  <MarketingHeading
-                    level="h2"
-                    variant="section"
-                    className="text-marketing-2xl sm:text-marketing-3xl text-marketing-forest"
-                  >
+                  <MarketingHeading level="h2" variant="section">
                     Book a free intro call
                   </MarketingHeading>
                   <p className="mt-4 text-marketing-base text-marketing-muted max-w-xl mx-auto leading-relaxed">

@@ -1,54 +1,61 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Check, Code2, Boxes, Plug, Wrench } from "lucide-react";
+import { Check, Code2, Boxes, Zap, Database } from "lucide-react";
 import { Container } from "./ui/container";
 import { MarketingHeading } from "./marketing/marketing-heading";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
-// TODO: confirm current pricing with Josh
 const packages = [
   {
     name: "Essential",
-    // TODO: confirm current pricing with Josh
-    price: "TBD",
-    description: "A clear, professional site for businesses getting online properly for the first time.",
+    oneOff: "£1,749.99",
+    year1: "£50/month for year 1",
+    year2: "£37.50/month from year 2",
+    description: "For small businesses that need a professional presence online.",
     features: [
-      "Up to 5 responsive pages",
-      "Mobile-first design",
-      "Contact form with email notifications",
-      "Core SEO setup",
-      "Hosting and SSL guidance",
-      "One round of revisions",
+      "Up to 5 pages",
+      "Mobile-optimised responsive design",
+      "Contact form with email delivery",
+      "Basic on-page SEO setup",
+      "Hosting included",
+      "Basic database for form submissions and simple content",
+      "2 rounds of revisions during build",
     ],
     featured: false,
   },
   {
     name: "Professional",
-    // TODO: confirm current pricing with Josh
-    price: "TBD",
-    description: "For growing brands that need more pages, integrations, and conversion focus.",
+    oneOff: "£2,499.99",
+    year1: "£50/month for year 1",
+    year2: "£37.50/month from year 2",
+    description: "For businesses that need more than a brochure site.",
     features: [
-      "Up to 10 responsive pages",
-      "Advanced on-page SEO",
-      "Booking or CRM integration",
-      "Analytics and tracking setup",
-      "Subtle motion and micro-interactions",
-      "Two rounds of revisions",
+      "Up to 10 pages",
+      "Everything in Essential",
+      "Fully custom design, no templates",
+      "Blog or news section with content management",
+      "Lead capture forms with CRM integration",
+      "Google Business Profile setup and optimisation",
+      "Intermediate database for content, users, and custom data",
+      "3 rounds of revisions during build",
     ],
     featured: true,
   },
   {
     name: "Signature",
-    // TODO: confirm current pricing with Josh
-    price: "TBD",
-    description: "A premium build for brands that need custom design, copy, and deeper integrations.",
+    oneOff: "£3,999.99",
+    year1: "£100/month for year 1",
+    year2: "£75/month from year 2",
+    description: "For businesses that want a full digital operation.",
     features: [
-      "Up to 18 custom pages or e-commerce structure",
-      "Bespoke UI/UX design",
-      "Full copywriting for core pages",
-      "Custom integrations and APIs",
-      "Dedicated project contact",
-      "Three rounds of revisions",
+      "Unlimited pages",
+      "Everything in Professional",
+      "Custom web application features (booking, calculators, member areas)",
+      "Third-party integrations (Stripe, Mailchimp, HubSpot, and similar)",
+      "Custom automation and workflows",
+      "Enterprise database for high-traffic and complex data",
+      "Priority support in the monthly retainer",
+      "4 rounds of revisions during build",
     ],
     featured: false,
   },
@@ -58,45 +65,45 @@ const bespokeOfferings = [
   {
     icon: Code2,
     title: "Custom web applications",
-    description: "Purpose-built tools and experiences that go beyond a standard marketing site.",
+    description: "Purpose-built tools and experiences beyond a standard marketing site.",
   },
   {
     icon: Boxes,
     title: "SaaS products",
-    description: "Product interfaces, dashboards, and multi-tenant platforms shaped around your users.",
+    description: "Product interfaces, dashboards, and platforms shaped around your users.",
   },
   {
-    icon: Plug,
+    icon: Zap,
     title: "Integrations and automation",
-    description: "Stripe, CRM, and third-party API wiring that removes manual work from your day.",
+    description: "Stripe, CRM, and third-party API wiring that removes manual work.",
   },
   {
-    icon: Wrench,
-    title: "Internal tools and CRM builds",
-    description: "Admin panels, client portals, and internal systems tailored to how you actually work.",
+    icon: Database,
+    title: "Internal tools and CRM",
+    description: "Admin panels, client portals, and systems tailored to how you work.",
   },
 ];
 
 const faqs = [
   {
-    question: "How do payments work?",
+    question: "What does the monthly retainer cover?",
     answer:
-      "Projects typically start with a deposit, with the balance billed in agreed stages. Exact terms are confirmed on your intro call and in your proposal.",
+      "The monthly covers ongoing maintenance, backend fixes, and support if anything goes wrong with your site. Hosting is included in the build fee. Third-party services like paid advertising or premium tools are billed at cost.",
   },
   {
-    question: "How long does a standard website take?",
+    question: "What happens after year 2?",
     answer:
-      "Most package sites ship in a few weeks once content is ready. Larger or bespoke work takes longer, and we will set expectations clearly before we start.",
+      "The monthly stays at the year 2 rate for as long as you want us to maintain the site. There is no long-term contract, you can end the retainer at any time with 30 days notice.",
   },
   {
-    question: "Who owns the code and design?",
+    question: "Do I own the site?",
     answer:
-      "Once the project is paid in full, you own the final deliverables. We can also show completed work in our portfolio unless you ask us not to.",
+      "Yes. Once the build is complete and paid for, the code and content are yours. If you ever want to move to a different provider, we will hand everything over cleanly.",
   },
   {
-    question: "How many revisions are included?",
+    question: "How long does a build take?",
     answer:
-      "Each package includes a set number of revision rounds. Extra rounds or scope changes are quoted before we proceed.",
+      "Essential and Professional builds typically take 3 to 4 weeks. Signature and bespoke projects vary based on scope. We will give you a firm timeline during the intro call.",
   },
 ];
 
@@ -130,10 +137,10 @@ export default function PricingSection() {
               Pricing
             </MarketingHeading>
             <MarketingHeading level="h1" variant="display">
-              Straightforward pricing. No fluff.
+              Clear packages, or bespoke to fit.
             </MarketingHeading>
             <p className="mt-6 text-marketing-lg leading-8 text-marketing-muted max-w-2xl mx-auto">
-              Fixed packages for standard web design work, or a bespoke quote if your project is more ambitious. Every project starts with a free intro call.
+              Fixed packages for standard web design work, or a bespoke quote if your project needs something more custom. Every project starts with a free intro call.
             </p>
             <div className="mt-10">
               <CtaButton>Book a free intro call</CtaButton>
@@ -150,7 +157,7 @@ export default function PricingSection() {
               Standard packages
             </MarketingHeading>
             <p className="mt-4 text-marketing-lg text-marketing-muted">
-              For most business websites, these packages cover everything you need.
+              Everything you need to go live and stay live. One-off build fee plus a small monthly retainer that covers ongoing maintenance and support.
             </p>
           </div>
 
@@ -158,7 +165,7 @@ export default function PricingSection() {
             {packages.map((pkg) => (
               <div key={pkg.name} className="relative flex flex-col">
                 {pkg.featured && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 rounded-full bg-marketing-forest px-3 py-1 text-marketing-xs font-semibold text-white whitespace-nowrap">
+                  <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-marketing-forest px-3 py-1 text-marketing-xs font-semibold text-white">
                     Most popular
                   </span>
                 )}
@@ -172,10 +179,21 @@ export default function PricingSection() {
                   <h3 className="font-marketing-display text-marketing-2xl font-medium text-marketing-ink">
                     {pkg.name}
                   </h3>
-                  <p className="mt-3 font-marketing-display text-marketing-4xl font-semibold text-marketing-forest">
-                    {pkg.price === "TBD" ? "Price on request" : pkg.price}
-                  </p>
-                  <p className="mt-3 text-marketing-base text-marketing-muted">
+                  <div className="mt-4">
+                    <p className="font-marketing-display text-marketing-4xl font-semibold text-marketing-forest">
+                      {pkg.oneOff}
+                    </p>
+                    <p className="mt-1 text-marketing-sm text-marketing-ink">
+                      one-off
+                    </p>
+                    <p className="mt-3 text-marketing-sm text-marketing-ink">
+                      {pkg.year1}
+                    </p>
+                    <p className="mt-1 text-marketing-xs text-marketing-muted">
+                      {pkg.year2}
+                    </p>
+                  </div>
+                  <p className="mt-4 text-marketing-base text-marketing-muted">
                     {pkg.description}
                   </p>
                   <ul className="mt-8 flex-1 space-y-3">
@@ -200,6 +218,10 @@ export default function PricingSection() {
               </div>
             ))}
           </div>
+
+          <p className="mx-auto mt-10 max-w-3xl text-center text-marketing-sm text-marketing-muted leading-relaxed">
+            Prefer to pay annually? Ten months upfront covers the year and saves you two. Third-party services like paid advertising, premium integrations, and specialist tools are billed at cost when relevant.
+          </p>
         </Container>
       </section>
 
@@ -211,11 +233,11 @@ export default function PricingSection() {
               Something more ambitious?
             </MarketingHeading>
             <p className="mt-4 text-marketing-lg text-marketing-muted">
-              We also build custom software, SaaS applications, integrations, and internal tools. Every bespoke project is quoted individually based on scope.
+              We also build custom software, SaaS applications, integrations, and internal tools for businesses that have outgrown a standard website. Every bespoke project is quoted individually based on scope.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="mx-auto grid max-w-4xl grid-cols-1 gap-8 sm:grid-cols-2">
             {bespokeOfferings.map((item) => {
               const Icon = item.icon;
               return (
@@ -224,14 +246,14 @@ export default function PricingSection() {
                   className="rounded-2xl border border-marketing-border bg-white p-8"
                 >
                   <Icon
-                    className="h-7 w-7 text-marketing-forest mb-4"
+                    className="mb-4 h-7 w-7 text-marketing-forest"
                     strokeWidth={1.5}
                     aria-hidden="true"
                   />
                   <h3 className="font-marketing-display text-marketing-xl font-medium text-marketing-ink">
                     {item.title}
                   </h3>
-                  <p className="mt-3 text-marketing-base text-marketing-muted leading-relaxed">
+                  <p className="mt-3 text-marketing-base leading-relaxed text-marketing-muted">
                     {item.description}
                   </p>
                 </div>
@@ -245,14 +267,14 @@ export default function PricingSection() {
         </Container>
       </section>
 
-      {/* Draft-first offer */}
+      {/* Draft-first */}
       <section className="py-20 sm:py-28 bg-white">
         <Container>
           <div className="mx-auto max-w-2xl text-center">
             <MarketingHeading level="h2" variant="section">
               Not sure yet? Start with a draft.
             </MarketingHeading>
-            <p className="mt-4 text-marketing-lg text-marketing-muted leading-relaxed">
+            <p className="mt-4 text-marketing-lg leading-relaxed text-marketing-muted">
               For a small fee, we will design and prototype a draft of your site before you commit to the full project. If you go ahead, the cost of the draft comes off your final invoice.
             </p>
             <div className="mt-10">
@@ -265,7 +287,7 @@ export default function PricingSection() {
       {/* FAQ */}
       <section className="py-20 sm:py-28 bg-marketing-mint">
         <Container>
-          <div className="mx-auto max-w-2xl text-center mb-12">
+          <div className="mx-auto mb-12 max-w-2xl text-center">
             <MarketingHeading level="h2" variant="section">
               Common questions
             </MarketingHeading>
@@ -279,7 +301,7 @@ export default function PricingSection() {
                 <h3 className="font-marketing-display text-marketing-lg font-medium text-marketing-ink">
                   {faq.question}
                 </h3>
-                <p className="mt-2 text-marketing-base text-marketing-muted leading-relaxed">
+                <p className="mt-2 text-marketing-base leading-relaxed text-marketing-muted">
                   {faq.answer}
                 </p>
               </div>

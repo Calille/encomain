@@ -1,5 +1,6 @@
 import { Container } from "./ui/container";
 import { Link } from "react-router-dom";
+import { MarketingHeading } from "./marketing/marketing-heading";
 
 export default function CTA() {
   return (
@@ -20,9 +21,9 @@ export default function CTA() {
           </div>
 
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="font-marketing-display text-marketing-3xl font-medium tracking-tight text-white sm:text-marketing-4xl">
+            <MarketingHeading level="h2" variant="section" tone="dark">
               Ready to talk about your project?
-            </h2>
+            </MarketingHeading>
             <p className="mx-auto mt-6 max-w-xl text-marketing-lg leading-8 text-white/75">
               Book a free intro call and discover how we can improve your online presence.
             </p>

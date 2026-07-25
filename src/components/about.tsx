@@ -115,9 +115,9 @@ export default function About() {
         <section className="py-20 sm:py-24 bg-marketing-forest">
           <Container>
             <div className="mx-auto max-w-2xl text-center">
-              <h2 className="font-marketing-display text-marketing-3xl sm:text-marketing-4xl font-medium text-white tracking-tight">
+              <MarketingHeading level="h2" variant="section" tone="dark">
                 Ready to talk about your project?
-              </h2>
+              </MarketingHeading>
               <div className="mt-8">
                 <Link
                   to="/contact#book"
