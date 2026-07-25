@@ -42,6 +42,7 @@ export function AnimatedBackground() {
       }
 
       getRandomColor() {
+        // Matches marketing tokens: forest, sage, ink
         const colors = ["#1A4D2E", "#7FA99B", "#1A1A1A"];
         return colors[Math.floor(Math.random() * colors.length)];
       }

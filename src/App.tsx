@@ -63,7 +63,7 @@ function App() {
       <ScrollToTop />
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          {/* Public marketing (unchanged visually for this branch) */}
+          {/* Public marketing */}
           <Route path="/" element={<Home />} />
           <Route path="/services" element={<Services />} />
           <Route path="/pricing" element={<PricingPage />} />
