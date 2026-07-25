@@ -12,14 +12,24 @@ import { MarketingHeading } from "./marketing/marketing-heading";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { MARKETING_CONFIG, whatsappLink } from "../config/marketing";
 
+const CAL_UI = { hideEventTypeDetails: false, layout: "month_view" as const };
+const CAL_CONFIG = { layout: "month_view" as const, useSlotsViewOnSmallScreen: "true" };
+
 export default function ContactPage() {
   useDocumentTitle("Contact");
 
+  // Configure Cal UI once on mount; Cal component mounts separately below
   useEffect(() => {
+    let cancelled = false;
     (async function () {
       const cal = await getCalApi({ namespace: MARKETING_CONFIG.cal.namespace });
-      cal("ui", { hideEventTypeDetails: false, layout: "month_view" });
+      if (!cancelled) {
+        cal("ui", CAL_UI);
+      }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -128,12 +138,13 @@ export default function ContactPage() {
                     Free 30-minute intro call. No pitch, no strings, just a conversation about what you're trying to build.
                   </p>
                 </div>
-                <div className="overflow-hidden rounded-xl border border-marketing-border bg-white">
+                {/* Explicit height so Cal's height:100% has a containing block */}
+                <div className="h-[900px] w-full overflow-hidden rounded-xl border border-marketing-border bg-white md:h-[700px]">
                   <Cal
                     namespace={MARKETING_CONFIG.cal.namespace}
                     calLink={MARKETING_CONFIG.cal.calLink}
-                    style={{ width: "100%", minHeight: "600px" }}
-                    config={{ layout: "month_view", useSlotsViewOnSmallScreen: "true" }}
+                    style={{ width: "100%", height: "100%", overflow: "hidden" }}
+                    config={CAL_CONFIG}
                   />
                 </div>
               </div>
