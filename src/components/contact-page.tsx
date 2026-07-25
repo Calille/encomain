@@ -12,8 +12,22 @@ import { MarketingHeading } from "./marketing/marketing-heading";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { MARKETING_CONFIG, whatsappLink } from "../config/marketing";
 
-const CAL_UI = { hideEventTypeDetails: false, layout: "month_view" as const };
-const CAL_CONFIG = { layout: "month_view" as const, useSlotsViewOnSmallScreen: "true" };
+const CAL_UI = {
+  hideEventTypeDetails: false,
+  layout: "month_view" as const,
+  theme: "light" as const,
+  styles: {
+    branding: {
+      brandColor: "#1A4D2E",
+    },
+  },
+};
+
+const CAL_CONFIG = {
+  layout: "month_view" as const,
+  theme: "light" as const,
+  useSlotsViewOnSmallScreen: "true",
+};
 
 export default function ContactPage() {
   useDocumentTitle("Contact");
@@ -138,12 +152,12 @@ export default function ContactPage() {
                     Free 30-minute intro call. No pitch, no strings, just a conversation about what you're trying to build.
                   </p>
                 </div>
-                {/* Explicit height so Cal's height:100% has a containing block */}
-                <div className="h-[900px] w-full overflow-hidden rounded-xl border border-marketing-border bg-white md:h-[700px]">
+                {/* Explicit pixel height so Cal's height:inherit resolves correctly */}
+                <div className="h-[900px] w-full rounded-xl border border-marketing-border bg-white md:h-[700px]">
                   <Cal
                     namespace={MARKETING_CONFIG.cal.namespace}
                     calLink={MARKETING_CONFIG.cal.calLink}
-                    style={{ width: "100%", height: "100%", overflow: "hidden" }}
+                    style={{ width: "100%", height: "100%" }}
                     config={CAL_CONFIG}
                   />
                 </div>
