@@ -38,7 +38,7 @@ This audit examines the website's responsiveness across all device sizes. The au
 5. **Navigation Menu Items** - Spacing between items could be improved
 6. **Table Responsive Design** - Tables need better mobile layouts
 7. **Dialog/Modal Sizing** - Some dialogs may be too large on mobile
-8. **Contact Page Calendly** - May need better mobile optimization
+8. **Contact Page Cal.com** - Uses slots view on small screens
 
 ### 🟢 Low Priority Enhancements
 

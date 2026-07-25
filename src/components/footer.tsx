@@ -1,7 +1,9 @@
 import { Container } from "./ui/container";
 import { Link } from "react-router-dom";
+import { Mail, MessageCircle } from "lucide-react";
 import { Logo } from "./ui/logo";
 import { t } from "../utils/i18n";
+import { whatsappLink } from "../config/marketing";
 
 const navigation = {
   main: [
@@ -28,6 +30,24 @@ export default function Footer() {
                 "If your website looks like it's from 2013, it is costing you leads."
               )}
             </p>
+            <div className="space-y-3">
+              <a
+                href="mailto:hello@theenclosure.co.uk"
+                className="flex items-center gap-2 text-marketing-sm text-marketing-muted transition-colors hover:text-marketing-forest"
+              >
+                <Mail className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+                hello@theenclosure.co.uk
+              </a>
+              <a
+                href={whatsappLink()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-marketing-sm text-marketing-muted transition-colors hover:text-marketing-forest"
+              >
+                <MessageCircle className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+                WhatsApp
+              </a>
+            </div>
           </div>
           <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
             <div className="md:grid md:grid-cols-2 md:gap-8">

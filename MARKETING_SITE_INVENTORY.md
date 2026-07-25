@@ -64,9 +64,9 @@ There is **no dedicated marketing layout component**. Each page composes its own
 |--------|--------|
 | **Route** | `/contact` (L71) |
 | **File** | `src/components/contact-page.tsx` (~122 lines) |
-| **Purpose** | Contact details, Calendly booking, FAQ, final CTA |
+| **Purpose** | Contact details, Cal.com booking, FAQ, WhatsApp CTA |
 | **Length** | **Medium–long** |
-| **Components used** | `Header`, `Footer`, `Container`, `AnimatedBackground`, `Calendly`, `FAQ`, `Chatbot`, `StickyCTA`; lucide `Calendar` |
+| **Components used** | `Header`, `Footer`, `Container`, `AnimatedBackground`, `@calcom/embed-react`, `FAQ`, `Chatbot`, `StickyCTA`; lucide `Calendar` |
 | **Shell** | Own chrome; soft mint hero matching About/Careers/legal |
 
 ### 1.6 Careers — `/careers`
@@ -141,7 +141,7 @@ There is **no dedicated marketing layout component**. Each page composes its own
 | **Cookie consent** | `ui/cookie-consent.tsx` | Global | Small bottom-left card; `system-ui` font override; Accept `#1f4d36` |
 | **AnimatedBackground** | `ui/animated-background.tsx` | About, Contact, Careers, Privacy, Terms | Canvas particles `#1A4D2E` / `#7FA99B` / `#1A1A1A` |
 | **Threads (WebGL)** | `ui/threads.tsx` (+ `threads.css`) | Home hero only | ogl shader ribbons; green RGB colour |
-| **Calendly embed** | `ui/calendly.tsx` | Contact | 700px iframe |
+| **Cal.com embed** | `@calcom/embed-react` via `contact-page.tsx` | Contact | Inline calendar (`id="book"`) |
 | **Container** | `ui/container.tsx` | Most pages | `max-w-7xl` + `px-4 sm:px-6 lg:px-8` |
 | **Logo** | `ui/logo.tsx` | Footer (+ unsubscribe uses app Logo) | PNG from `src/assets/images/logo.png` |
 
@@ -235,7 +235,7 @@ Marketing does **not** load a separate display/serif font. It inherits the **app
 
 - `trust-section.tsx`: `text-[10px]`, `text-[22px]`, `text-[13px]`, `text-[15px]`, `text-[16px]` (L10–60)
 - Cookie consent: no font-size in style; uses `text-base` / `text-xs` / `text-sm`
-- Calendly: height/width only (`calendly.tsx` L27)
+- Cal.com: minHeight 600px via embed style
 - No `fontSize:` style attributes found on marketing pages (clip-path / animationDelay only)
 
 ### 3.4 Weights, line-heights, tracking
@@ -441,7 +441,7 @@ Also in unused: `services-new.tsx`, `testimonials.tsx`, `before-after.tsx`, `cli
 | `lang="en-GB"` (`index.html` L2) | “SEO Optimization” in footer (`footer.tsx` L77) vs “SEO Optimisation” on Services (`services.tsx` L78) |
 | “colour palette” (`pricing.tsx` L259) | “organizational” in Privacy (`privacy-policy.tsx` L78) |
 | “SEO-optimised” (`website-story.tsx` L20) | “optimization” in What We Do AI card (`what-we-do.tsx` L40–42) |
-| £ pricing, UK phone `07877 700 777`, `.co.uk` | “licenses” spelling in Pricing exclusions (`pricing.tsx` L425) |
+| £ pricing, WhatsApp (`wa.me`), `.co.uk` | Plain-text phone removed from marketing; use WhatsApp CTAs |
 | UK GDPR / Data Protection Act 2018 | — |
 
 ### Emoji / exclamation
@@ -480,7 +480,7 @@ Also in unused: `services-new.tsx`, `testimonials.tsx`, `before-after.tsx`, `cli
 | **motion** (`motion/react`) | `card-hover-effect.tsx` (What We Do) | Marketing-primary |
 | **lucide-react** | Icons throughout | Shared |
 | **react-router-dom** | Links / routes | Shared |
-| Calendly (external script/iframe) | Contact | Marketing-only integration |
+| Cal.com (`@calcom/embed-react`) | Contact | Marketing-only integration |
 | Google Sheets util | Home contact form | Marketing lead-gen |
 
 ### In package.json but not driving live marketing routes
@@ -574,7 +574,7 @@ Every file that sets type size/weight/tracking or loads fonts for marketing chro
 - `src/components/ui/cookie-consent.tsx` (fontFamily override)
 - `src/components/ui/PillNav.jsx` + `src/components/ui/PillNav.css`
 - `src/components/ui/card-hover-effect.tsx`
-- `src/components/ui/calendly.tsx` (layout only)
+- `src/config/marketing.ts` (Cal.com + WhatsApp config)
 
 **Shared config (affects marketing whether you want it or not)**
 
@@ -652,7 +652,7 @@ src/
 │       ├── cookie-consent.tsx
 │       ├── animated-background.tsx
 │       ├── threads.tsx + threads.css
-│       ├── calendly.tsx
+│       ├── (calendly.tsx removed; Cal.com embed on contact-page)
 │       ├── container.tsx
 │       ├── logo.tsx
 │       ├── card-hover-effect.tsx
@@ -701,7 +701,7 @@ Appendix B — Screenshot descriptions
 ### Contact `/contact`
 
 **Above the fold:** Soft mint hero “Let's Build Something Great Together”.  
-**Below:** Phone/email links → Calendly “Book a Free Consultation” card → green gradient “Ready to Get Started?” CTA → FAQ accordion on mint → footer. Chatbot + sticky CTA.
+**Below:** WhatsApp/email cards → Cal.com “Book a free intro call” embed (`#book`) → FAQ accordion on mint → footer. Chatbot + sticky CTA.
 
 ### Careers `/careers`
 

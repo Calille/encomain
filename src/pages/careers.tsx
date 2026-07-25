@@ -4,7 +4,7 @@ import Header from "../components/header";
 import Footer from "../components/footer";
 import { MarketingHeading } from "../components/marketing/marketing-heading";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
-import { Mail, Phone, Check, Calendar, DollarSign, Sparkles } from "lucide-react";
+import { Mail, Check, Calendar, DollarSign, Sparkles } from "lucide-react";
 
 export default function Careers() {
   useDocumentTitle("Careers");
@@ -167,13 +167,6 @@ export default function Careers() {
                     >
                       <Mail className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
                       <span>josh@theenclosure.co.uk</span>
-                    </a>
-                    <a
-                      href="tel:07877700777"
-                      className="flex items-center gap-3 font-semibold text-marketing-forest transition-colors hover:text-marketing-forest-dark"
-                    >
-                      <Phone className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
-                      <span>07877 700 777</span>
                     </a>
                   </div>
                 </div>

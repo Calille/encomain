@@ -232,7 +232,7 @@ export function Chatbot() {
       lowerMessage.includes("reach")
     ) {
       return {
-        text: "You can reach us at josh@theenclosure.co.uk or call 07877 700 777. You can also book a free intro call on our contact page.",
+        text: "You can reach us at josh@theenclosure.co.uk, message us on WhatsApp from the contact page, or book a free intro call there.",
         showEmailCapture: true,
       };
     } else {

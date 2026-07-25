@@ -1,23 +1,32 @@
+import { useEffect } from "react";
+import Cal, { getCalApi } from "@calcom/embed-react";
+import { Calendar, Mail, MessageCircle } from "lucide-react";
 import { Container } from "./ui/container";
 import { AnimatedBackground } from "./ui/animated-background";
-import { Calendar, Mail, Phone } from "lucide-react";
 import Header from "./header";
 import Footer from "./footer";
 import { Chatbot } from "./ui/chatbot";
 import StickyCTA from "./sticky-cta";
-import { Calendly } from "./ui/calendly";
 import FAQ from "./faq";
 import { MarketingHeading } from "./marketing/marketing-heading";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { MARKETING_CONFIG, whatsappLink } from "../config/marketing";
 
 export default function ContactPage() {
   useDocumentTitle("Contact");
+
+  useEffect(() => {
+    (async function () {
+      const cal = await getCalApi({ namespace: MARKETING_CONFIG.cal.namespace });
+      cal("ui", { hideEventTypeDetails: false, layout: "month_view" });
+    })();
+  }, []);
 
   return (
     <div className="bg-white">
       <Header />
       <main>
-        {/* Hero: eyebrow → h1 → subhead */}
+        {/* Hero: eyebrow → h1 → subhead → CTAs */}
         <section className="relative bg-marketing-mint pt-32 overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
             <AnimatedBackground />
@@ -35,11 +44,27 @@ export default function ContactPage() {
               <p className="mt-6 text-marketing-lg leading-8 text-marketing-muted max-w-2xl mx-auto">
                 Whether you're ready to start or still exploring ideas, we're happy to walk through your goals and what a good next step looks like.
               </p>
+              <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <a
+                  href="#book"
+                  className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-marketing-ink px-6 py-3 text-marketing-base font-semibold text-white transition-colors hover:bg-marketing-forest"
+                >
+                  Book a free intro call
+                </a>
+                <a
+                  href={whatsappLink()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-marketing-forest px-6 py-3 text-marketing-base font-semibold text-marketing-forest transition-colors hover:bg-marketing-forest/10"
+                >
+                  Message on WhatsApp
+                </a>
+              </div>
             </div>
           </Container>
         </section>
 
-        {/* Contact details + booking */}
+        {/* Contact options + booking */}
         <section className="py-20 sm:py-28 bg-white">
           <Container>
             <div className="max-w-4xl mx-auto mb-16">
@@ -47,32 +72,53 @@ export default function ContactPage() {
                 <MarketingHeading level="h2" variant="section" className="mb-4">
                   Get in touch
                 </MarketingHeading>
-                <p className="text-marketing-lg text-marketing-muted max-w-2xl mx-auto mb-8">
+                <p className="text-marketing-lg text-marketing-muted max-w-2xl mx-auto mb-10">
                   Fill out a form or book a call. We'll reply within 24 hours.
                 </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-marketing-lg">
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left">
                   <a
-                    href="tel:07877700777"
-                    className="flex items-center gap-2 text-marketing-forest font-semibold hover:text-marketing-forest-dark transition-colors"
+                    href={whatsappLink()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-2xl border border-marketing-border bg-marketing-cream p-6 transition-colors hover:border-marketing-forest/40"
                   >
-                    <Phone className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
-                    07877 700 777
+                    <MessageCircle
+                      className="mb-4 h-7 w-7 text-marketing-forest"
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                    />
+                    <p className="font-semibold text-marketing-ink text-marketing-lg">
+                      Message us on WhatsApp
+                    </p>
+                    <p className="mt-2 text-marketing-sm text-marketing-muted">
+                      Quick questions or a chat before booking.
+                    </p>
                   </a>
-                  <span className="hidden sm:block text-marketing-border">|</span>
+
                   <a
                     href="mailto:hello@theenclosure.co.uk"
-                    className="flex items-center gap-2 text-marketing-forest font-semibold hover:text-marketing-forest-dark transition-colors"
+                    className="rounded-2xl border border-marketing-border bg-marketing-cream p-6 transition-colors hover:border-marketing-forest/40"
                   >
-                    <Mail className="h-5 w-5" strokeWidth={1.5} aria-hidden="true" />
-                    hello@theenclosure.co.uk
+                    <Mail
+                      className="mb-4 h-7 w-7 text-marketing-forest"
+                      strokeWidth={1.5}
+                      aria-hidden="true"
+                    />
+                    <p className="font-semibold text-marketing-ink text-marketing-lg">
+                      Email us
+                    </p>
+                    <p className="mt-2 text-marketing-sm text-marketing-muted">
+                      hello@theenclosure.co.uk
+                    </p>
                   </a>
                 </div>
               </div>
             </div>
 
-            {/* Calendly: id="book" for /contact#book anchors */}
+            {/* Cal.com booking: id="book" for /contact#book anchors */}
             <div className="max-w-4xl mx-auto" id="book">
-              <div className="rounded-2xl border border-marketing-border bg-white p-8">
+              <div className="rounded-2xl border border-marketing-border bg-marketing-cream p-6 sm:p-8">
                 <div className="text-center mb-8">
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-marketing-forest/10">
                     <Calendar className="h-8 w-8 text-marketing-forest" strokeWidth={1.5} />
@@ -84,10 +130,14 @@ export default function ContactPage() {
                     Free 30-minute intro call. No pitch, no strings, just a conversation about what you're trying to build.
                   </p>
                 </div>
-                <Calendly
-                  url="https://calendly.com/management-theenclosure/30min"
-                  className="rounded-xl overflow-hidden border border-marketing-border"
-                />
+                <div className="overflow-hidden rounded-xl border border-marketing-border bg-white">
+                  <Cal
+                    namespace={MARKETING_CONFIG.cal.namespace}
+                    calLink={MARKETING_CONFIG.cal.calLink}
+                    style={{ width: "100%", minHeight: "600px" }}
+                    config={{ layout: "month_view", useSlotsViewOnSmallScreen: "true" }}
+                  />
+                </div>
               </div>
             </div>
           </Container>

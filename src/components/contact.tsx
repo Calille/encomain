@@ -2,6 +2,7 @@ import { Container } from "./ui/container";
 import { useState } from "react";
 import { sendToGoogleSheets } from "../utils/googleSheets";
 import { MarketingHeading } from "./marketing/marketing-heading";
+import { whatsappLink } from "../config/marketing";
 
 declare global {
   interface Window {
@@ -74,6 +75,15 @@ export default function Contact() {
             Fill out the form below and we'll get back to you within 24 hours. Or{" "}
             <a href="/contact#book" className="underline underline-offset-2 hover:text-white">
               book a free intro call
+            </a>
+            . Prefer WhatsApp?{" "}
+            <a
+              href={whatsappLink()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 hover:text-white"
+            >
+              Message us here
             </a>
             .
           </p>
