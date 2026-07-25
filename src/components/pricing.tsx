@@ -131,11 +131,8 @@ export default function PricingSection() {
     <div className="bg-white">
       {/* Hero */}
       <section className="relative bg-marketing-mint pt-32 overflow-hidden">
-        <Container className="relative pt-16 pb-20 sm:pt-24 sm:pb-24">
+        <Container className="relative pt-20 pb-20 sm:pt-28 sm:pb-24">
           <div className="mx-auto max-w-3xl text-center">
-            <MarketingHeading level="p" variant="eyebrow" className="mb-4">
-              Pricing
-            </MarketingHeading>
             <MarketingHeading level="h1" variant="display">
               Clear packages, or bespoke to fit.
             </MarketingHeading>

@@ -26,45 +26,34 @@ export default function ContactPage() {
     <div className="bg-white">
       <Header />
       <main>
-        {/* Hero: eyebrow → h1 → subhead → CTAs */}
+        {/* Hero: one primary CTA */}
         <section className="relative bg-marketing-mint pt-32 overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
             <AnimatedBackground />
             <div className="absolute left-0 top-0 h-full w-full bg-marketing-mint opacity-90" />
           </div>
 
-          <Container className="relative pt-16 pb-20 sm:pt-24 sm:pb-24">
+          <Container className="relative pt-20 pb-20 sm:pt-28 sm:pb-24">
             <div className="mx-auto max-w-3xl text-center">
-              <MarketingHeading level="p" variant="eyebrow" className="mb-4">
-                Contact
-              </MarketingHeading>
               <MarketingHeading level="h1" variant="display">
                 Let's talk about what you're building
               </MarketingHeading>
               <p className="mt-6 text-marketing-lg leading-8 text-marketing-muted max-w-2xl mx-auto">
                 Whether you're ready to start or still exploring ideas, we're happy to walk through your goals and what a good next step looks like.
               </p>
-              <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <div className="mt-10">
                 <a
                   href="#book"
                   className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-marketing-ink px-6 py-3 text-marketing-base font-semibold text-white transition-colors hover:bg-marketing-forest"
                 >
                   Book a free intro call
                 </a>
-                <a
-                  href={whatsappLink()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-marketing-forest px-6 py-3 text-marketing-base font-semibold text-marketing-forest transition-colors hover:bg-marketing-forest/10"
-                >
-                  Message on WhatsApp
-                </a>
               </div>
             </div>
           </Container>
         </section>
 
-        {/* Contact options + booking */}
+        {/* Write-first contact methods */}
         <section className="py-20 sm:py-28 bg-white">
           <Container>
             <div className="max-w-4xl mx-auto mb-16">
@@ -73,7 +62,7 @@ export default function ContactPage() {
                   Get in touch
                 </MarketingHeading>
                 <p className="text-marketing-lg text-marketing-muted max-w-2xl mx-auto mb-10">
-                  Fill out a form or book a call. We'll reply within 24 hours.
+                  Prefer to write? Message us directly or drop us an email, we'll reply within 24 hours.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left">
@@ -113,6 +102,15 @@ export default function ContactPage() {
                     </p>
                   </a>
                 </div>
+
+                <p className="mt-8 text-marketing-sm text-marketing-muted">
+                  <a
+                    href="#book"
+                    className="underline underline-offset-2 transition-colors hover:text-marketing-forest"
+                  >
+                    Or scroll down to book a call
+                  </a>
+                </p>
               </div>
             </div>
 
