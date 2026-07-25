@@ -1,18 +1,55 @@
 import { useEffect, useState } from "react";
-import { DashboardLayout } from "../../components/dashboard/dashboard-layout";
+import { AdminLayout } from "../../components/admin/admin-layout";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { Badge } from "../../components/ui/badge";
+import { Skeleton } from "../../components/ui/skeleton";
+import { EmptyState } from "../../components/ui/empty-state";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../../components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
 import { supabase } from "../../lib/supabase";
 import { Tables } from "../../types/supabase";
-import { Users as UsersIcon, Plus, Edit, Ban, CheckCircle, Search, Mail, Eye, EyeOff, Copy, Check } from "lucide-react";
+import {
+  Users as UsersIcon,
+  Plus,
+  Edit,
+  Ban,
+  CheckCircle,
+  Search,
+  Eye,
+  EyeOff,
+  Copy,
+  Check,
+} from "lucide-react";
 import { toast } from "../../hooks/use-toast";
 import { format } from "date-fns";
+import { sendWelcomeEmail } from "../../utils/emailHelpers";
 
 type User = Tables<"users">;
+
+function statusVariant(
+  status: string
+): "success" | "destructive" | "secondary" {
+  if (status === "active") return "success";
+  if (status === "suspended") return "destructive";
+  return "secondary";
+}
 
 export default function UsersManagement() {
   const [users, setUsers] = useState<User[]>([]);
@@ -23,7 +60,6 @@ export default function UsersManagement() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  // Form state
   const [formData, setFormData] = useState({
     email: "",
     full_name: "",
@@ -62,11 +98,11 @@ export default function UsersManagement() {
     fetchUsers();
   }, []);
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = 
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesStatus = statusFilter === "all" || user.status === statusFilter;
 
     return matchesSearch && matchesStatus;
@@ -74,52 +110,51 @@ export default function UsersManagement() {
 
   const generateRandomPassword = () => {
     const length = 12;
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    const charset =
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
     let password = "";
-    
-    // Ensure at least one of each type
-    password += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(Math.random() * 26)]; // Uppercase
-    password += "abcdefghijklmnopqrstuvwxyz"[Math.floor(Math.random() * 26)]; // Lowercase
-    password += "0123456789"[Math.floor(Math.random() * 10)]; // Number
-    password += "!@#$%^&*"[Math.floor(Math.random() * 8)]; // Special char
-    
-    // Fill the rest randomly
+
+    password += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(Math.random() * 26)];
+    password += "abcdefghijklmnopqrstuvwxyz"[Math.floor(Math.random() * 26)];
+    password += "0123456789"[Math.floor(Math.random() * 10)];
+    password += "!@#$%^&*"[Math.floor(Math.random() * 8)];
+
     for (let i = password.length; i < length; i++) {
       password += charset[Math.floor(Math.random() * charset.length)];
     }
-    
-    // Shuffle the password
-    return password.split('').sort(() => Math.random() - 0.5).join('');
+
+    return password
+      .split("")
+      .sort(() => Math.random() - 0.5)
+      .join("");
   };
 
-  // Copy password to clipboard
   const copyPassword = async () => {
     if (!formData.password) return;
     try {
       await navigator.clipboard.writeText(formData.password);
       setPasswordCopied(true);
       toast({
-        title: "Copied!",
-        description: "Password copied to clipboard",
+        title: "Copied",
+        description: "Password copied to clipboard.",
       });
       setTimeout(() => setPasswordCopied(false), 2000);
-    } catch (error) {
+    } catch {
       toast({
         title: "Failed to copy",
-        description: "Please copy the password manually",
+        description: "Please copy the password manually.",
         variant: "destructive",
       });
     }
   };
 
-  // Validate password strength
   const validatePassword = (pwd: string) => {
     const minLength = pwd.length >= 8;
     const hasUppercase = /[A-Z]/.test(pwd);
     const hasLowercase = /[a-z]/.test(pwd);
     const hasNumber = /[0-9]/.test(pwd);
     const hasSpecial = /[!@#$%^&*]/.test(pwd);
-    
+
     return {
       minLength,
       hasUppercase,
@@ -130,24 +165,34 @@ export default function UsersManagement() {
     };
   };
 
+  const resetCreateForm = () => {
+    setFormData({
+      email: "",
+      full_name: "",
+      role: "user",
+      status: "active",
+      password: "",
+      requires_password_change: true,
+    });
+    setPasswordCopied(false);
+  };
+
   const handleCreateUser = async () => {
     setIsSubmitting(true);
 
     try {
       const tempPassword = formData.password || generateRandomPassword();
 
-      // Validate password if provided
       if (!tempPassword || tempPassword.length < 8) {
         toast({
-          title: "Invalid Password",
-          description: "Password must be at least 8 characters",
+          title: "Invalid password",
+          description: "Password must be at least 8 characters.",
           variant: "destructive",
         });
         setIsSubmitting(false);
         return;
       }
 
-      // Use Edge Function to create user (uses service role key server-side)
       const { data: functionData, error: functionError } = await supabase.functions.invoke(
         "admin-create-user",
         {
@@ -175,28 +220,31 @@ export default function UsersManagement() {
         throw new Error("User creation failed - no success response");
       }
 
+      try {
+        await sendWelcomeEmail(formData.email, {
+          userName: formData.full_name || formData.email.split("@")[0],
+          loginUrl: "https://theenclosure.co.uk/login",
+          dashboardUrl: "https://theenclosure.co.uk/dashboard",
+        });
+      } catch (welcomeError) {
+        console.error("Welcome email failed after user creation:", welcomeError);
+      }
+
       toast({
-        title: "User created successfully! 🎉",
-        description: `User ${formData.email} has been created. Temporary password: ${tempPassword}. Remember to share the credentials securely with the user.`,
+        title: "User created",
+        description: `User ${formData.email} has been created. Temporary password: ${tempPassword}. Share the credentials securely with the user.`,
       });
 
-      // Reset form
-      setFormData({
-        email: "",
-        full_name: "",
-        role: "user",
-        status: "active",
-        password: "",
-        requires_password_change: true,
-      });
-      setPasswordCopied(false);
+      resetCreateForm();
       setIsCreateDialogOpen(false);
       fetchUsers();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error creating user:", error);
+      const message =
+        error instanceof Error ? error.message : "Failed to create user. Please try again.";
       toast({
         title: "Error",
-        description: error.message || "Failed to create user. Please try again.",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -281,64 +329,78 @@ export default function UsersManagement() {
     setIsEditDialogOpen(true);
   };
 
-  if (loading) {
-    return (
-      <DashboardLayout title="User Management">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-[#1A4D2E] border-r-transparent"></div>
-            <p className="mt-4 text-[#1A4D2E] font-medium">Loading users...</p>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  const passwordChecks = validatePassword(formData.password);
 
   return (
-    <DashboardLayout title="User Management">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-[#1A4D2E]">User Management</h1>
-          <p className="text-gray-600 mt-1">Manage user accounts and permissions</p>
+    <AdminLayout title="Users">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="relative max-w-xs flex-1">
+          <Search
+            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            strokeWidth={1.5}
+          />
+          <Input
+            placeholder="Search name or email"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
         </div>
+        <select
+          className="h-9 rounded-sm border border-border bg-surface px-2 text-sm"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="all">All statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="suspended">Suspended</option>
+        </select>
+
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#1A4D2E] hover:bg-[#1A4D2E]/90">
-              <Plus className="h-4 w-4 mr-2" />
-              Create User
+            <Button size="sm" className="ml-auto gap-1.5">
+              <Plus className="h-4 w-4" strokeWidth={1.5} />
+              Create user
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Create New User</DialogTitle>
+              <DialogTitle>Create new user</DialogTitle>
               <DialogDescription>
                 Set up a new user account with admin-defined credentials.
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={(e) => { e.preventDefault(); handleCreateUser(); }} className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="full_name">Full Name *</Label>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleCreateUser();
+              }}
+              className="grid gap-4 py-2"
+            >
+              <div className="space-y-1.5">
+                <Label htmlFor="full_name">Full name</Label>
                 <Input
                   id="full_name"
-                  placeholder="John Smith"
+                  placeholder="Alex Smith"
                   value={formData.full_name}
                   onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="john@example.com"
+                  placeholder="alex@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password *</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -352,9 +414,14 @@ export default function UsersManagement() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" strokeWidth={1.5} />
+                    ) : (
+                      <Eye className="h-4 w-4" strokeWidth={1.5} />
+                    )}
                   </button>
                 </div>
                 <div className="flex gap-2">
@@ -362,75 +429,98 @@ export default function UsersManagement() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => setFormData({ ...formData, password: generateRandomPassword() })}
+                    onClick={() =>
+                      setFormData({ ...formData, password: generateRandomPassword() })
+                    }
                   >
-                    Generate Password
+                    Generate password
                   </Button>
-                  {formData.password && validatePassword(formData.password).isValid && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={copyPassword}
-                    >
+                  {formData.password && passwordChecks.isValid && (
+                    <Button type="button" variant="outline" size="sm" onClick={copyPassword}>
                       {passwordCopied ? (
                         <>
-                          <Check className="h-4 w-4 mr-1" />
-                          Copied!
+                          <Check className="mr-1 h-4 w-4" strokeWidth={1.5} />
+                          Copied
                         </>
                       ) : (
                         <>
-                          <Copy className="h-4 w-4 mr-1" />
-                          Copy Password
+                          <Copy className="mr-1 h-4 w-4" strokeWidth={1.5} />
+                          Copy password
                         </>
                       )}
                     </Button>
                   )}
                 </div>
-                
-                {/* Password Strength Indicator */}
                 {formData.password && (
-                  <div className="space-y-1 text-xs mt-2">
-                    <div className={validatePassword(formData.password).minLength ? "text-green-600" : "text-gray-500"}>
-                      {validatePassword(formData.password).minLength ? "✓" : "○"} At least 8 characters
+                  <div className="mt-2 space-y-1 text-xs">
+                    <div
+                      className={
+                        passwordChecks.minLength ? "text-success" : "text-muted-foreground"
+                      }
+                    >
+                      {passwordChecks.minLength ? "Met:" : "Needed:"} at least 8 characters
                     </div>
-                    <div className={validatePassword(formData.password).hasUppercase ? "text-green-600" : "text-gray-500"}>
-                      {validatePassword(formData.password).hasUppercase ? "✓" : "○"} One uppercase letter
+                    <div
+                      className={
+                        passwordChecks.hasUppercase ? "text-success" : "text-muted-foreground"
+                      }
+                    >
+                      {passwordChecks.hasUppercase ? "Met:" : "Needed:"} one uppercase letter
                     </div>
-                    <div className={validatePassword(formData.password).hasLowercase ? "text-green-600" : "text-gray-500"}>
-                      {validatePassword(formData.password).hasLowercase ? "✓" : "○"} One lowercase letter
+                    <div
+                      className={
+                        passwordChecks.hasLowercase ? "text-success" : "text-muted-foreground"
+                      }
+                    >
+                      {passwordChecks.hasLowercase ? "Met:" : "Needed:"} one lowercase letter
                     </div>
-                    <div className={validatePassword(formData.password).hasNumber ? "text-green-600" : "text-gray-500"}>
-                      {validatePassword(formData.password).hasNumber ? "✓" : "○"} One number
+                    <div
+                      className={
+                        passwordChecks.hasNumber ? "text-success" : "text-muted-foreground"
+                      }
+                    >
+                      {passwordChecks.hasNumber ? "Met:" : "Needed:"} one number
                     </div>
-                    <div className={validatePassword(formData.password).hasSpecial ? "text-green-600" : "text-gray-500"}>
-                      {validatePassword(formData.password).hasSpecial ? "✓" : "○"} One special character (!@#$%^&*)
+                    <div
+                      className={
+                        passwordChecks.hasSpecial ? "text-success" : "text-muted-foreground"
+                      }
+                    >
+                      {passwordChecks.hasSpecial ? "Met:" : "Needed:"} one special character
+                      (!@#$%^&*)
                     </div>
                   </div>
                 )}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="role">Role</Label>
                 <Select
                   value={formData.role}
-                  onValueChange={(value) => setFormData({ ...formData, role: value as "admin" | "user" })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, role: value as "admin" | "user" })
+                  }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="role">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="user">User (Client)</SelectItem>
+                    <SelectItem value="user">User (client)</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="status">Status</Label>
                 <Select
                   value={formData.status}
-                  onValueChange={(value) => setFormData({ ...formData, status: value as "active" | "inactive" | "suspended" })}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      status: value as "active" | "inactive" | "suspended",
+                    })
+                  }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="status">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -440,45 +530,44 @@ export default function UsersManagement() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="requires_password_change"
                   checked={formData.requires_password_change}
-                  onChange={(e) => setFormData({ ...formData, requires_password_change: e.target.checked })}
-                  className="h-4 w-4 rounded border-gray-300 text-[#1A4D2E] focus:ring-[#1A4D2E]"
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      requires_password_change: e.target.checked,
+                    })
+                  }
+                  className="h-4 w-4 rounded-sm border-border text-accent focus:ring-ring"
                 />
-                <Label htmlFor="requires_password_change" className="text-sm font-normal cursor-pointer">
+                <Label
+                  htmlFor="requires_password_change"
+                  className="cursor-pointer text-sm font-normal"
+                >
                   Require password change on first login
                 </Label>
               </div>
-              <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                <div className="flex items-start gap-2">
-                  <span className="text-yellow-600 text-lg">📋</span>
-                  <div>
-                    <p className="text-sm font-semibold text-yellow-800">Important: Share Credentials Securely</p>
-                    <p className="text-xs text-yellow-700 mt-1">
-                      After creating this user, you must share the email and password with them through a secure channel (phone call, in-person, encrypted message). They will NOT receive an email from the system.
-                    </p>
-                  </div>
-                </div>
+              <div className="rounded-sm border border-warning/30 bg-warning/10 p-3">
+                <p className="text-sm font-medium text-foreground">
+                  Share credentials securely
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  After creating this user, share the email and password through a secure
+                  channel. A welcome email is sent when creation succeeds, but the temporary
+                  password must still be shared separately.
+                </p>
               </div>
             </form>
             <DialogFooter>
-              <Button 
+              <Button
                 type="button"
-                variant="outline" 
+                variant="outline"
                 onClick={() => {
                   setIsCreateDialogOpen(false);
-                  setFormData({
-                    email: "",
-                    full_name: "",
-                    role: "user",
-                    status: "active",
-                    password: "",
-                    requires_password_change: true,
-                  });
-                  setPasswordCopied(false);
+                  resetCreateForm();
                 }}
                 disabled={isSubmitting}
               >
@@ -487,122 +576,91 @@ export default function UsersManagement() {
               <Button
                 type="submit"
                 onClick={handleCreateUser}
-                disabled={isSubmitting || !formData.email || !formData.full_name || !formData.password || !validatePassword(formData.password).isValid}
-                className="bg-[#1A4D2E] hover:bg-[#1A4D2E]/90"
+                disabled={
+                  isSubmitting ||
+                  !formData.email ||
+                  !formData.full_name ||
+                  !formData.password ||
+                  !passwordChecks.isValid
+                }
               >
-                {isSubmitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Creating...
-                  </>
-                ) : (
-                  "Create User"
-                )}
+                {isSubmitting ? "Creating…" : "Create user"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
-      <Card className="p-6 shadow-sm border border-gray-200">
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search users..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A4D2E]"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="suspended">Suspended</option>
-          </select>
-        </div>
-
-        {/* Users Table */}
-        {filteredUsers.length === 0 ? (
-          <div className="text-center py-12">
-            <UsersIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">
-              {searchQuery || statusFilter !== "all" ? "No users match your filters" : "No users yet"}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <div className="inline-block min-w-full align-middle px-4 sm:px-0">
-              <table className="w-full min-w-[720px]">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">User</th>
-                    <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Email</th>
-                    <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Role</th>
-                    <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Status</th>
-                    <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Created</th>
-                    <th className="text-right py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Actions</th>
-                  </tr>
-                </thead>
-              <tbody>
+      {loading ? (
+        <Skeleton className="h-64 w-full" />
+      ) : filteredUsers.length === 0 ? (
+        <Card>
+          <EmptyState
+            icon={UsersIcon}
+            message={
+              searchQuery || statusFilter !== "all"
+                ? "No users match your filters."
+                : "No users yet."
+            }
+          />
+        </Card>
+      ) : (
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-border bg-muted/50 text-xs text-muted-foreground">
+                <tr>
+                  <th className="px-3 py-2 font-medium">Name</th>
+                  <th className="px-3 py-2 font-medium">Email</th>
+                  <th className="px-3 py-2 font-medium">Role</th>
+                  <th className="px-3 py-2 font-medium">Status</th>
+                  <th className="px-3 py-2 font-medium">Created</th>
+                  <th className="px-3 py-2 font-medium text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-4 px-3 sm:px-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#1A4D2E] flex items-center justify-center text-white font-medium flex-shrink-0">
-                          {user.full_name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
-                        </div>
-                        <span className="font-medium truncate">{user.full_name || "No name"}</span>
-                      </div>
+                  <tr
+                    key={user.id}
+                    className="transition-colors-fast hover:bg-muted/40"
+                  >
+                    <td className="px-3 py-2.5 font-medium text-foreground">
+                      {user.full_name || "Not set"}
                     </td>
-                    <td className="py-4 px-3 sm:px-4 text-sm text-gray-600 whitespace-nowrap truncate max-w-[200px]">{user.email}</td>
-                    <td className="py-4 px-3 sm:px-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.role === "admin" ? "bg-purple-100 text-purple-800" : "bg-gray-100 text-gray-800"
-                      }`}>
+                    <td className="px-3 py-2.5 text-muted-foreground">{user.email}</td>
+                    <td className="px-3 py-2.5">
+                      <Badge variant={user.role === "admin" ? "default" : "secondary"}>
                         {user.role}
-                      </span>
+                      </Badge>
                     </td>
-                    <td className="py-4 px-3 sm:px-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.status === "active" ? "bg-green-100 text-green-800" : 
-                        user.status === "suspended" ? "bg-red-100 text-red-800" :
-                        "bg-gray-100 text-gray-800"
-                      }`}>
-                        {user.status}
-                      </span>
+                    <td className="px-3 py-2.5">
+                      <Badge variant={statusVariant(user.status)}>{user.status}</Badge>
                     </td>
-                    <td className="py-4 px-3 sm:px-4 text-sm text-gray-600 whitespace-nowrap">
+                    <td className="px-3 py-2.5 text-muted-foreground">
                       {format(new Date(user.created_at), "PP")}
                     </td>
-                    <td className="py-4 px-3 sm:px-4">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="px-3 py-2.5">
+                      <div className="flex items-center justify-end gap-1">
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
                           onClick={() => openEditDialog(user)}
-                          className="hover:bg-blue-50 min-h-[44px] min-w-[44px]"
                           aria-label="Edit user"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-4 w-4" strokeWidth={1.5} />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
                           onClick={() => handleToggleStatus(user)}
-                          className={`${user.status === "active" ? "hover:bg-red-50" : "hover:bg-green-50"} min-h-[44px] min-w-[44px]`}
-                          aria-label={user.status === "active" ? "Suspend user" : "Activate user"}
+                          aria-label={
+                            user.status === "active" ? "Deactivate user" : "Activate user"
+                          }
                         >
                           {user.status === "active" ? (
-                            <Ban className="h-4 w-4 text-red-600" />
+                            <Ban className="h-4 w-4 text-destructive" strokeWidth={1.5} />
                           ) : (
-                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <CheckCircle className="h-4 w-4 text-success" strokeWidth={1.5} />
                           )}
                         </Button>
                       </div>
@@ -611,41 +669,41 @@ export default function UsersManagement() {
                 ))}
               </tbody>
             </table>
-            </div>
           </div>
-        )}
-      </Card>
+        </Card>
+      )}
 
-      {/* Edit User Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
+            <DialogTitle>Edit user</DialogTitle>
             <DialogDescription>
               Update user information and permissions.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
+          <div className="grid gap-4 py-2">
+            <div className="space-y-1.5">
               <Label>Email</Label>
-              <Input value={formData.email} disabled className="bg-gray-50" />
-              <p className="text-xs text-gray-500">Email cannot be changed</p>
+              <Input value={formData.email} disabled className="bg-muted" />
+              <p className="text-xs text-muted-foreground">Email cannot be changed.</p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit_full_name">Full Name</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit_full_name">Full name</Label>
               <Input
                 id="edit_full_name"
                 value={formData.full_name}
                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="edit_role">Role</Label>
               <Select
                 value={formData.role}
-                onValueChange={(value) => setFormData({ ...formData, role: value as "admin" | "user" })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, role: value as "admin" | "user" })
+                }
               >
-                <SelectTrigger>
+                <SelectTrigger id="edit_role">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -654,13 +712,18 @@ export default function UsersManagement() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="edit_status">Status</Label>
               <Select
                 value={formData.status}
-                onValueChange={(value) => setFormData({ ...formData, status: value as "active" | "inactive" | "suspended" })}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    status: value as "active" | "inactive" | "suspended",
+                  })
+                }
               >
-                <SelectTrigger>
+                <SelectTrigger id="edit_status">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -675,17 +738,12 @@ export default function UsersManagement() {
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>
-            <Button
-              onClick={handleUpdateUser}
-              disabled={isSubmitting}
-              className="bg-[#1A4D2E] hover:bg-[#1A4D2E]/90"
-            >
-              {isSubmitting ? "Updating..." : "Update User"}
+            <Button onClick={handleUpdateUser} disabled={isSubmitting}>
+              {isSubmitting ? "Updating…" : "Update user"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardLayout>
+    </AdminLayout>
   );
 }
-

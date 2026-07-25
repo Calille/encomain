@@ -1,12 +1,30 @@
 import { useEffect, useState } from "react";
-import { DashboardLayout } from "../../components/dashboard/dashboard-layout";
+import { Link } from "react-router-dom";
+import { AdminLayout } from "../../components/admin/admin-layout";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../../components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
+import { Badge } from "../../components/ui/badge";
+import { Skeleton } from "../../components/ui/skeleton";
+import { EmptyState } from "../../components/ui/empty-state";
 import { supabase } from "../../lib/supabase";
 import { Tables } from "../../types/supabase";
 import { DollarSign, FileText, Plus, Edit, Trash2, Search, Download } from "lucide-react";
@@ -17,6 +35,37 @@ import { sendPaymentReceipt } from "../../utils/emailHelpers";
 type Billing = Tables<"billing">;
 type Invoice = Tables<"invoices">;
 type User = Tables<"users">;
+
+type StatusBadgeVariant = "success" | "warning" | "destructive" | "secondary";
+
+function getStatusBadgeVariant(status: string): StatusBadgeVariant {
+  switch (status) {
+    case "paid":
+      return "success";
+    case "pending":
+    case "sent":
+      return "warning";
+    case "overdue":
+      return "destructive";
+    case "cancelled":
+      return "secondary";
+    default:
+      return "secondary";
+  }
+}
+
+function formatCurrency(amount: number, currency: string) {
+  if (currency === "GBP") {
+    return `£${amount.toFixed(2)}`;
+  }
+  return `$${amount.toFixed(2)}`;
+}
+
+const selectClassName =
+  "h-9 rounded-sm border border-border bg-surface px-2 text-sm text-foreground";
+
+const inlineStatusSelectClassName =
+  "h-8 rounded-sm border border-border bg-surface px-2 text-xs text-foreground";
 
 export default function BillingManagement() {
   const [billing, setBilling] = useState<Billing[]>([]);
@@ -31,7 +80,6 @@ export default function BillingManagement() {
   const [isEditBillingDialogOpen, setIsEditBillingDialogOpen] = useState(false);
   const [selectedBilling, setSelectedBilling] = useState<Billing | null>(null);
 
-  // Form state for billing
   const [billingFormData, setBillingFormData] = useState({
     user_id: "",
     amount: "",
@@ -41,7 +89,6 @@ export default function BillingManagement() {
     billing_period_end: "",
   });
 
-  // Form state for invoice
   const [invoiceFormData, setInvoiceFormData] = useState({
     user_id: "",
     amount: "",
@@ -96,25 +143,25 @@ export default function BillingManagement() {
     fetchData();
   }, []);
 
-  const filteredBilling = billing.filter(item => {
-    const user = users.find(u => u.id === item.user_id);
-    const matchesSearch = 
+  const filteredBilling = billing.filter((item) => {
+    const user = users.find((u) => u.id === item.user_id);
+    const matchesSearch =
       user?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user?.email.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesStatus = statusFilter === "all" || item.status === statusFilter;
     const matchesUser = userFilter === "all" || item.user_id === userFilter;
 
     return matchesSearch && matchesStatus && matchesUser;
   });
 
-  const filteredInvoices = invoices.filter(invoice => {
-    const user = users.find(u => u.id === invoice.user_id);
-    const matchesSearch = 
+  const filteredInvoices = invoices.filter((invoice) => {
+    const user = users.find((u) => u.id === invoice.user_id);
+    const matchesSearch =
       invoice.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user?.email.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesStatus = statusFilter === "all" || invoice.status === statusFilter;
     const matchesUser = userFilter === "all" || invoice.user_id === userFilter;
 
@@ -122,7 +169,7 @@ export default function BillingManagement() {
   });
 
   const getUserName = (userId: string) => {
-    const user = users.find(u => u.id === userId);
+    const user = users.find((u) => u.id === userId);
     return user?.full_name || user?.email || "Unknown";
   };
 
@@ -130,16 +177,14 @@ export default function BillingManagement() {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from("billing")
-        .insert({
-          user_id: billingFormData.user_id,
-          amount: parseFloat(billingFormData.amount),
-          currency: billingFormData.currency,
-          status: billingFormData.status,
-          billing_period_start: billingFormData.billing_period_start,
-          billing_period_end: billingFormData.billing_period_end,
-        });
+      const { error } = await supabase.from("billing").insert({
+        user_id: billingFormData.user_id,
+        amount: parseFloat(billingFormData.amount),
+        currency: billingFormData.currency,
+        status: billingFormData.status,
+        billing_period_start: billingFormData.billing_period_start,
+        billing_period_end: billingFormData.billing_period_end,
+      });
 
       if (error) throw error;
 
@@ -148,7 +193,6 @@ export default function BillingManagement() {
         description: "Billing record has been created successfully.",
       });
 
-      // Reset form
       setBillingFormData({
         user_id: "",
         amount: "",
@@ -175,17 +219,15 @@ export default function BillingManagement() {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from("invoices")
-        .insert({
-          user_id: invoiceFormData.user_id,
-          amount: parseFloat(invoiceFormData.amount),
-          currency: invoiceFormData.currency,
-          status: invoiceFormData.status,
-          issue_date: invoiceFormData.issue_date,
-          due_date: invoiceFormData.due_date,
-          description: invoiceFormData.description,
-        });
+      const { error } = await supabase.from("invoices").insert({
+        user_id: invoiceFormData.user_id,
+        amount: parseFloat(invoiceFormData.amount),
+        currency: invoiceFormData.currency,
+        status: invoiceFormData.status,
+        issue_date: invoiceFormData.issue_date,
+        due_date: invoiceFormData.due_date,
+        description: invoiceFormData.description,
+      });
 
       if (error) throw error;
 
@@ -194,7 +236,6 @@ export default function BillingManagement() {
         description: "Invoice has been created successfully.",
       });
 
-      // Reset form
       setInvoiceFormData({
         user_id: "",
         amount: "",
@@ -246,37 +287,37 @@ export default function BillingManagement() {
         description: "Billing record has been updated successfully.",
       });
 
-      // Send payment receipt email if status changed to paid
       if (statusChangedToPaid) {
         try {
-          // Fetch user email
           const { data: userData } = await supabase
             .from("users")
-            .select("email, name")
+            .select("email, full_name")
             .eq("id", selectedBilling.user_id)
             .single();
 
           if (userData?.email) {
             const transactionId = `txn-${selectedBilling.id}-${Date.now()}`;
-            
-            // Fire and forget - don't block on email
-            sendPaymentReceipt(userData.email, {
-              transactionId: transactionId,
-              amount: parseFloat(billingFormData.amount),
-              currency: selectedBilling.currency || "GBP",
-              paymentMethod: "Bank Transfer", // Default, adjust as needed
-              paymentDate: new Date().toISOString(),
-              status: "completed",
-            }, {
-              userName: userData.name || userData.email.split("@")[0],
-              receiptUrl: `https://theenclosure.co.uk/receipts/${transactionId}`,
-            }).catch((error) => {
+
+            sendPaymentReceipt(
+              userData.email,
+              {
+                transactionId: transactionId,
+                amount: parseFloat(billingFormData.amount),
+                currency: selectedBilling.currency || "GBP",
+                paymentMethod: "Bank Transfer",
+                paymentDate: new Date().toISOString(),
+                status: "completed",
+              },
+              {
+                userName: userData.full_name || userData.email.split("@")[0],
+                receiptUrl: `https://theenclosure.co.uk/receipts/${transactionId}`,
+              }
+            ).catch((error) => {
               console.error("Failed to send payment receipt:", error);
             });
           }
         } catch (error) {
           console.error("Error sending payment receipt:", error);
-          // Don't show error to admin - email failure shouldn't block the update
         }
       }
 
@@ -296,15 +337,16 @@ export default function BillingManagement() {
   };
 
   const handleDeleteBilling = async (item: Billing) => {
-    if (!confirm("Are you sure you want to delete this billing record? This action cannot be undone.")) {
+    if (
+      !confirm(
+        "Are you sure you want to delete this billing record? This action cannot be undone."
+      )
+    ) {
       return;
     }
 
     try {
-      const { error } = await supabase
-        .from("billing")
-        .delete()
-        .eq("id", item.id);
+      const { error } = await supabase.from("billing").delete().eq("id", item.id);
 
       if (error) throw error;
 
@@ -332,7 +374,7 @@ export default function BillingManagement() {
 
       const { error } = await supabase
         .from("invoices")
-        .update({ 
+        .update({
           status: newStatus,
           paid_date: newStatus === "paid" ? format(new Date(), "yyyy-MM-dd") : null,
         })
@@ -345,39 +387,39 @@ export default function BillingManagement() {
         description: `Invoice status changed to ${newStatus}.`,
       });
 
-      // Send payment receipt email if status changed to paid
       if (statusChangedToPaid) {
         try {
-          // Fetch user email
           const { data: userData } = await supabase
             .from("users")
-            .select("email, name")
+            .select("email, full_name")
             .eq("id", invoice.user_id)
             .single();
 
           if (userData?.email) {
             const transactionId = `txn-inv-${invoice.id}-${Date.now()}`;
-            
-            // Fire and forget - don't block on email
-            sendPaymentReceipt(userData.email, {
-              transactionId: transactionId,
-              invoiceNumber: invoice.invoice_number || `INV-${invoice.id}`,
-              amount: invoice.amount,
-              currency: invoice.currency || "GBP",
-              paymentMethod: "Bank Transfer", // Default, adjust as needed
-              paymentDate: new Date().toISOString(),
-              status: "completed",
-            }, {
-              userName: userData.name || userData.email.split("@")[0],
-              receiptUrl: `https://theenclosure.co.uk/receipts/${transactionId}`,
-              invoiceUrl: `https://theenclosure.co.uk/invoices/${invoice.invoice_number || invoice.id}`,
-            }).catch((error) => {
+
+            sendPaymentReceipt(
+              userData.email,
+              {
+                transactionId: transactionId,
+                invoiceNumber: invoice.invoice_number || `INV-${invoice.id}`,
+                amount: invoice.amount,
+                currency: invoice.currency || "GBP",
+                paymentMethod: "Bank Transfer",
+                paymentDate: new Date().toISOString(),
+                status: "completed",
+              },
+              {
+                userName: userData.full_name || userData.email.split("@")[0],
+                receiptUrl: `https://theenclosure.co.uk/receipts/${transactionId}`,
+                invoiceUrl: `https://theenclosure.co.uk/invoices/${invoice.invoice_number || invoice.id}`,
+              }
+            ).catch((error) => {
               console.error("Failed to send payment receipt:", error);
             });
           }
         } catch (error) {
           console.error("Error sending payment receipt:", error);
-          // Don't show error to admin - email failure shouldn't block the update
         }
       }
 
@@ -398,70 +440,121 @@ export default function BillingManagement() {
       user_id: item.user_id,
       amount: item.amount.toString(),
       currency: item.currency,
-      status: item.status as any,
+      status: item.status as "paid" | "pending" | "overdue" | "cancelled",
       billing_period_start: item.billing_period_start,
       billing_period_end: item.billing_period_end,
     });
     setIsEditBillingDialogOpen(true);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "paid":
-        return "bg-green-100 text-green-800";
-      case "pending":
-      case "sent":
-        return "bg-yellow-100 text-yellow-800";
-      case "overdue":
-        return "bg-red-100 text-red-800";
-      case "cancelled":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  const billingFilters = (
+    <div className="mb-6 flex flex-col gap-4 md:flex-row">
+      <div className="relative flex-1">
+        <Search
+          className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+          strokeWidth={1.5}
+        />
+        <Input
+          placeholder="Search..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+      <select
+        value={statusFilter}
+        onChange={(e) => setStatusFilter(e.target.value)}
+        className={selectClassName}
+      >
+        <option value="all">All Status</option>
+        <option value="pending">Pending</option>
+        <option value="paid">Paid</option>
+        <option value="overdue">Overdue</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+      <select
+        value={userFilter}
+        onChange={(e) => setUserFilter(e.target.value)}
+        className={selectClassName}
+      >
+        <option value="all">All Clients</option>
+        {users.map((user) => (
+          <option key={user.id} value={user.id}>
+            {user.full_name || user.email}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 
-  if (loading) {
-    return (
-      <DashboardLayout title="Billing Management">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-[#1A4D2E] border-r-transparent"></div>
-            <p className="mt-4 text-[#1A4D2E] font-medium">Loading billing data...</p>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  const invoiceFilters = (
+    <div className="mb-6 flex flex-col gap-4 md:flex-row">
+      <div className="relative flex-1">
+        <Search
+          className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+          strokeWidth={1.5}
+        />
+        <Input
+          placeholder="Search invoices..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+      <select
+        value={statusFilter}
+        onChange={(e) => setStatusFilter(e.target.value)}
+        className={selectClassName}
+      >
+        <option value="all">All Status</option>
+        <option value="sent">Sent</option>
+        <option value="paid">Paid</option>
+        <option value="overdue">Overdue</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+      <select
+        value={userFilter}
+        onChange={(e) => setUserFilter(e.target.value)}
+        className={selectClassName}
+      >
+        <option value="all">All Clients</option>
+        {users.map((user) => (
+          <option key={user.id} value={user.id}>
+            {user.full_name || user.email}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 
   return (
-    <DashboardLayout title="Billing Management">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-[#1A4D2E]">Billing & Invoices</h1>
-          <p className="text-gray-600 mt-1">Manage billing records and invoices</p>
-        </div>
+    <AdminLayout title="Billing & Invoices">
+      <div className="mb-4 rounded-sm border border-border bg-muted/50 px-4 py-2.5 text-sm text-muted-foreground">
+        Also see:{" "}
+        <Link to="/admin/payments" className="text-accent hover:underline">
+          Payments
+        </Link>{" "}
+        for the full CRM view.
       </div>
 
       <Tabs defaultValue="billing" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
-          <TabsTrigger value="billing">
-            <DollarSign className="h-4 w-4 mr-2" />
+        <TabsList className="mb-4 grid w-full grid-cols-2 lg:w-[400px]">
+          <TabsTrigger value="billing" className="gap-1.5">
+            <DollarSign className="h-4 w-4" strokeWidth={1.5} />
             Billing Records
           </TabsTrigger>
-          <TabsTrigger value="invoices">
-            <FileText className="h-4 w-4 mr-2" />
+          <TabsTrigger value="invoices" className="gap-1.5">
+            <FileText className="h-4 w-4" strokeWidth={1.5} />
             Invoices
           </TabsTrigger>
         </TabsList>
 
-        {/* Billing Tab */}
         <TabsContent value="billing">
           <div className="mb-4 flex justify-end">
             <Dialog open={isBillingDialogOpen} onOpenChange={setIsBillingDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-[#1A4D2E] hover:bg-[#1A4D2E]/90">
-                  <Plus className="h-4 w-4 mr-2" />
+                <Button size="sm" className="gap-1.5">
+                  <Plus className="h-4 w-4" strokeWidth={1.5} />
                   Add Billing Record
                 </Button>
               </DialogTrigger>
@@ -477,13 +570,15 @@ export default function BillingManagement() {
                     <Label htmlFor="billing_user">Client *</Label>
                     <Select
                       value={billingFormData.user_id}
-                      onValueChange={(value) => setBillingFormData({ ...billingFormData, user_id: value })}
+                      onValueChange={(value) =>
+                        setBillingFormData({ ...billingFormData, user_id: value })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select a client" />
                       </SelectTrigger>
                       <SelectContent>
-                        {users.map(user => (
+                        {users.map((user) => (
                           <SelectItem key={user.id} value={user.id}>
                             {user.full_name || user.email}
                           </SelectItem>
@@ -499,7 +594,9 @@ export default function BillingManagement() {
                       step="0.01"
                       placeholder="0.00"
                       value={billingFormData.amount}
-                      onChange={(e) => setBillingFormData({ ...billingFormData, amount: e.target.value })}
+                      onChange={(e) =>
+                        setBillingFormData({ ...billingFormData, amount: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -507,7 +604,12 @@ export default function BillingManagement() {
                     <Label htmlFor="billing_status">Status *</Label>
                     <Select
                       value={billingFormData.status}
-                      onValueChange={(value) => setBillingFormData({ ...billingFormData, status: value as any })}
+                      onValueChange={(value) =>
+                        setBillingFormData({
+                          ...billingFormData,
+                          status: value as "paid" | "pending" | "overdue" | "cancelled",
+                        })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -527,7 +629,12 @@ export default function BillingManagement() {
                         id="period_start"
                         type="date"
                         value={billingFormData.billing_period_start}
-                        onChange={(e) => setBillingFormData({ ...billingFormData, billing_period_start: e.target.value })}
+                        onChange={(e) =>
+                          setBillingFormData({
+                            ...billingFormData,
+                            billing_period_start: e.target.value,
+                          })
+                        }
                         required
                       />
                     </div>
@@ -537,7 +644,12 @@ export default function BillingManagement() {
                         id="period_end"
                         type="date"
                         value={billingFormData.billing_period_end}
-                        onChange={(e) => setBillingFormData({ ...billingFormData, billing_period_end: e.target.value })}
+                        onChange={(e) =>
+                          setBillingFormData({
+                            ...billingFormData,
+                            billing_period_end: e.target.value,
+                          })
+                        }
                         required
                       />
                     </div>
@@ -550,7 +662,6 @@ export default function BillingManagement() {
                   <Button
                     onClick={handleCreateBilling}
                     disabled={isSubmitting || !billingFormData.user_id || !billingFormData.amount}
-                    className="bg-[#1A4D2E] hover:bg-[#1A4D2E]/90"
                   >
                     {isSubmitting ? "Creating..." : "Create Record"}
                   </Button>
@@ -559,96 +670,65 @@ export default function BillingManagement() {
             </Dialog>
           </div>
 
-          <Card className="p-6 shadow-sm border border-gray-200">
-            {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A4D2E]"
-              >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="paid">Paid</option>
-                <option value="overdue">Overdue</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-              <select
-                value={userFilter}
-                onChange={(e) => setUserFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A4D2E]"
-              >
-                <option value="all">All Clients</option>
-                {users.map(user => (
-                  <option key={user.id} value={user.id}>
-                    {user.full_name || user.email}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <Card className="p-6">
+            {billingFilters}
 
-            {/* Billing Table */}
-            {filteredBilling.length === 0 ? (
-              <div className="text-center py-12">
-                <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No billing records found</p>
-              </div>
+            {loading ? (
+              <Skeleton className="h-64 w-full" />
+            ) : filteredBilling.length === 0 ? (
+              <EmptyState icon={DollarSign} message="No billing records found." />
             ) : (
-              <div className="overflow-x-auto -mx-4 sm:mx-0">
-                <div className="inline-block min-w-full align-middle px-4 sm:px-0">
-                  <table className="w-full min-w-[640px]">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Client</th>
-                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Amount</th>
-                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Period</th>
-                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Status</th>
-                        <th className="text-right py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Actions</th>
-                      </tr>
-                    </thead>
-                  <tbody>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[640px] text-left text-sm">
+                  <thead className="border-b border-border bg-muted/50 text-xs text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2 font-medium">Client</th>
+                      <th className="px-3 py-2 font-medium">Amount</th>
+                      <th className="px-3 py-2 font-medium">Period</th>
+                      <th className="px-3 py-2 font-medium">Status</th>
+                      <th className="px-3 py-2 text-right font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
                     {filteredBilling.map((item) => (
-                      <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-4 px-3 sm:px-4 font-medium whitespace-nowrap">{getUserName(item.user_id)}</td>
-                        <td className="py-4 px-3 sm:px-4 text-sm whitespace-nowrap">
-                          {item.currency === "GBP" ? "£" : "$"}{item.amount.toFixed(2)}
+                      <tr
+                        key={item.id}
+                        className="transition-colors-fast hover:bg-muted/40"
+                      >
+                        <td className="whitespace-nowrap px-3 py-2.5 font-medium text-foreground">
+                          {getUserName(item.user_id)}
                         </td>
-                        <td className="py-4 px-3 sm:px-4 text-sm text-gray-600 whitespace-nowrap">
-                          {format(new Date(item.billing_period_start), "MMM d")} - {format(new Date(item.billing_period_end), "MMM d, yyyy")}
+                        <td className="whitespace-nowrap px-3 py-2.5 font-mono-nums">
+                          {formatCurrency(item.amount, item.currency)}
                         </td>
-                        <td className="py-4 px-3 sm:px-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
+                        <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">
+                          {format(new Date(item.billing_period_start), "MMM d")} -{" "}
+                          {format(new Date(item.billing_period_end), "MMM d, yyyy")}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2.5">
+                          <Badge variant={getStatusBadgeVariant(item.status)}>
                             {item.status}
-                          </span>
+                          </Badge>
                         </td>
-                        <td className="py-4 px-3 sm:px-4">
-                          <div className="flex items-center justify-end gap-2">
+                        <td className="px-3 py-2.5">
+                          <div className="flex items-center justify-end gap-1">
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => openEditBillingDialog(item)}
-                              className="hover:bg-blue-50 min-h-[44px] min-w-[44px]"
+                              className="min-h-[44px] min-w-[44px]"
                               aria-label="Edit billing"
                             >
-                              <Edit className="h-4 w-4" />
+                              <Edit className="h-4 w-4" strokeWidth={1.5} />
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteBilling(item)}
-                              className="hover:bg-red-50 text-red-600 min-h-[44px] min-w-[44px]"
+                              className="min-h-[44px] min-w-[44px] text-destructive hover:text-destructive"
                               aria-label="Delete billing"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4" strokeWidth={1.5} />
                             </Button>
                           </div>
                         </td>
@@ -656,19 +736,17 @@ export default function BillingManagement() {
                     ))}
                   </tbody>
                 </table>
-                </div>
               </div>
             )}
           </Card>
         </TabsContent>
 
-        {/* Invoices Tab */}
         <TabsContent value="invoices">
           <div className="mb-4 flex justify-end">
             <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-[#1A4D2E] hover:bg-[#1A4D2E]/90">
-                  <Plus className="h-4 w-4 mr-2" />
+                <Button size="sm" className="gap-1.5">
+                  <Plus className="h-4 w-4" strokeWidth={1.5} />
                   Create Invoice
                 </Button>
               </DialogTrigger>
@@ -684,13 +762,15 @@ export default function BillingManagement() {
                     <Label htmlFor="invoice_user">Client *</Label>
                     <Select
                       value={invoiceFormData.user_id}
-                      onValueChange={(value) => setInvoiceFormData({ ...invoiceFormData, user_id: value })}
+                      onValueChange={(value) =>
+                        setInvoiceFormData({ ...invoiceFormData, user_id: value })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select a client" />
                       </SelectTrigger>
                       <SelectContent>
-                        {users.map(user => (
+                        {users.map((user) => (
                           <SelectItem key={user.id} value={user.id}>
                             {user.full_name || user.email}
                           </SelectItem>
@@ -706,7 +786,9 @@ export default function BillingManagement() {
                       step="0.01"
                       placeholder="0.00"
                       value={invoiceFormData.amount}
-                      onChange={(e) => setInvoiceFormData({ ...invoiceFormData, amount: e.target.value })}
+                      onChange={(e) =>
+                        setInvoiceFormData({ ...invoiceFormData, amount: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -716,7 +798,9 @@ export default function BillingManagement() {
                       id="invoice_description"
                       placeholder="Services rendered..."
                       value={invoiceFormData.description}
-                      onChange={(e) => setInvoiceFormData({ ...invoiceFormData, description: e.target.value })}
+                      onChange={(e) =>
+                        setInvoiceFormData({ ...invoiceFormData, description: e.target.value })
+                      }
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -726,7 +810,9 @@ export default function BillingManagement() {
                         id="issue_date"
                         type="date"
                         value={invoiceFormData.issue_date}
-                        onChange={(e) => setInvoiceFormData({ ...invoiceFormData, issue_date: e.target.value })}
+                        onChange={(e) =>
+                          setInvoiceFormData({ ...invoiceFormData, issue_date: e.target.value })
+                        }
                         required
                       />
                     </div>
@@ -736,7 +822,9 @@ export default function BillingManagement() {
                         id="due_date"
                         type="date"
                         value={invoiceFormData.due_date}
-                        onChange={(e) => setInvoiceFormData({ ...invoiceFormData, due_date: e.target.value })}
+                        onChange={(e) =>
+                          setInvoiceFormData({ ...invoiceFormData, due_date: e.target.value })
+                        }
                         required
                       />
                     </div>
@@ -749,7 +837,6 @@ export default function BillingManagement() {
                   <Button
                     onClick={handleCreateInvoice}
                     disabled={isSubmitting || !invoiceFormData.user_id || !invoiceFormData.amount}
-                    className="bg-[#1A4D2E] hover:bg-[#1A4D2E]/90"
                   >
                     {isSubmitting ? "Creating..." : "Create Invoice"}
                   </Button>
@@ -758,104 +845,78 @@ export default function BillingManagement() {
             </Dialog>
           </div>
 
-          <Card className="p-6 shadow-sm border border-gray-200">
-            {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search invoices..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A4D2E]"
-              >
-                <option value="all">All Status</option>
-                <option value="sent">Sent</option>
-                <option value="paid">Paid</option>
-                <option value="overdue">Overdue</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-              <select
-                value={userFilter}
-                onChange={(e) => setUserFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A4D2E]"
-              >
-                <option value="all">All Clients</option>
-                {users.map(user => (
-                  <option key={user.id} value={user.id}>
-                    {user.full_name || user.email}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <Card className="p-6">
+            {invoiceFilters}
 
-            {/* Invoices Table */}
-            {filteredInvoices.length === 0 ? (
-              <div className="text-center py-12">
-                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No invoices found</p>
-              </div>
+            {loading ? (
+              <Skeleton className="h-64 w-full" />
+            ) : filteredInvoices.length === 0 ? (
+              <EmptyState icon={FileText} message="No invoices found." />
             ) : (
-              <div className="overflow-x-auto -mx-4 sm:mx-0">
-                <div className="inline-block min-w-full align-middle px-4 sm:px-0">
-                  <table className="w-full min-w-[800px]">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Invoice #</th>
-                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Client</th>
-                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Amount</th>
-                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Issue Date</th>
-                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Due Date</th>
-                        <th className="text-left py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Status</th>
-                        <th className="text-right py-3 px-3 sm:px-4 text-sm font-semibold text-gray-600 whitespace-nowrap">Actions</th>
-                      </tr>
-                    </thead>
-                  <tbody>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[800px] text-left text-sm">
+                  <thead className="border-b border-border bg-muted/50 text-xs text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2 font-medium">Invoice #</th>
+                      <th className="px-3 py-2 font-medium">Client</th>
+                      <th className="px-3 py-2 font-medium">Amount</th>
+                      <th className="px-3 py-2 font-medium">Issue Date</th>
+                      <th className="px-3 py-2 font-medium">Due Date</th>
+                      <th className="px-3 py-2 font-medium">Status</th>
+                      <th className="px-3 py-2 text-right font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
                     {filteredInvoices.map((invoice) => (
-                      <tr key={invoice.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-4 px-3 sm:px-4 font-mono text-sm whitespace-nowrap">{invoice.invoice_number}</td>
-                        <td className="py-4 px-3 sm:px-4 font-medium whitespace-nowrap">{getUserName(invoice.user_id)}</td>
-                        <td className="py-4 px-3 sm:px-4 text-sm whitespace-nowrap">
-                          {invoice.currency === "GBP" ? "£" : "$"}{invoice.amount.toFixed(2)}
+                      <tr
+                        key={invoice.id}
+                        className="transition-colors-fast hover:bg-muted/40"
+                      >
+                        <td className="whitespace-nowrap px-3 py-2.5 font-mono-nums">
+                          {invoice.invoice_number}
                         </td>
-                        <td className="py-4 px-3 sm:px-4 text-sm text-gray-600 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-3 py-2.5 font-medium text-foreground">
+                          {getUserName(invoice.user_id)}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2.5 font-mono-nums">
+                          {formatCurrency(invoice.amount, invoice.currency)}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">
                           {format(new Date(invoice.issue_date), "PP")}
                         </td>
-                        <td className="py-4 px-3 sm:px-4 text-sm text-gray-600 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">
                           {format(new Date(invoice.due_date), "PP")}
                         </td>
-                        <td className="py-4 px-4">
-                          <Select
-                            value={invoice.status}
-                            onValueChange={(value) => handleUpdateInvoiceStatus(invoice, value)}
-                          >
-                            <SelectTrigger className={`w-32 ${getStatusColor(invoice.status)}`}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="sent">Sent</SelectItem>
-                              <SelectItem value="paid">Paid</SelectItem>
-                              <SelectItem value="overdue">Overdue</SelectItem>
-                              <SelectItem value="cancelled">Cancelled</SelectItem>
-                            </SelectContent>
-                          </Select>
+                        <td className="px-3 py-2.5">
+                          <div className="flex items-center gap-2">
+                            <Badge variant={getStatusBadgeVariant(invoice.status)}>
+                              {invoice.status}
+                            </Badge>
+                            <select
+                              value={invoice.status}
+                              onChange={(e) =>
+                                handleUpdateInvoiceStatus(invoice, e.target.value)
+                              }
+                              className={inlineStatusSelectClassName}
+                              aria-label={`Change status for invoice ${invoice.invoice_number}`}
+                            >
+                              <option value="sent">Sent</option>
+                              <option value="paid">Paid</option>
+                              <option value="overdue">Overdue</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
+                          </div>
                         </td>
-                        <td className="py-4 px-3 sm:px-4">
+                        <td className="px-3 py-2.5">
                           <div className="flex items-center justify-end">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="hover:bg-blue-50 min-h-[44px] min-w-[44px]"
+                              className="min-h-[44px] min-w-[44px]"
                               title="Download PDF"
                               aria-label="Download PDF"
                             >
-                              <Download className="h-4 w-4" />
+                              <Download className="h-4 w-4" strokeWidth={1.5} />
                             </Button>
                           </div>
                         </td>
@@ -863,26 +924,26 @@ export default function BillingManagement() {
                     ))}
                   </tbody>
                 </table>
-                </div>
               </div>
             )}
           </Card>
         </TabsContent>
       </Tabs>
 
-      {/* Edit Billing Dialog */}
       <Dialog open={isEditBillingDialogOpen} onOpenChange={setIsEditBillingDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Billing Record</DialogTitle>
-            <DialogDescription>
-              Update billing information.
-            </DialogDescription>
+            <DialogDescription>Update billing information.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label>Client</Label>
-              <Input value={getUserName(billingFormData.user_id)} disabled className="bg-gray-50" />
+              <Input
+                value={getUserName(billingFormData.user_id)}
+                disabled
+                className="bg-muted"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit_amount">Amount</Label>
@@ -891,14 +952,21 @@ export default function BillingManagement() {
                 type="number"
                 step="0.01"
                 value={billingFormData.amount}
-                onChange={(e) => setBillingFormData({ ...billingFormData, amount: e.target.value })}
+                onChange={(e) =>
+                  setBillingFormData({ ...billingFormData, amount: e.target.value })
+                }
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit_status">Status</Label>
               <Select
                 value={billingFormData.status}
-                onValueChange={(value) => setBillingFormData({ ...billingFormData, status: value as any })}
+                onValueChange={(value) =>
+                  setBillingFormData({
+                    ...billingFormData,
+                    status: value as "paid" | "pending" | "overdue" | "cancelled",
+                  })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -918,7 +986,12 @@ export default function BillingManagement() {
                   id="edit_period_start"
                   type="date"
                   value={billingFormData.billing_period_start}
-                  onChange={(e) => setBillingFormData({ ...billingFormData, billing_period_start: e.target.value })}
+                  onChange={(e) =>
+                    setBillingFormData({
+                      ...billingFormData,
+                      billing_period_start: e.target.value,
+                    })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -927,7 +1000,12 @@ export default function BillingManagement() {
                   id="edit_period_end"
                   type="date"
                   value={billingFormData.billing_period_end}
-                  onChange={(e) => setBillingFormData({ ...billingFormData, billing_period_end: e.target.value })}
+                  onChange={(e) =>
+                    setBillingFormData({
+                      ...billingFormData,
+                      billing_period_end: e.target.value,
+                    })
+                  }
                 />
               </div>
             </div>
@@ -936,17 +1014,12 @@ export default function BillingManagement() {
             <Button variant="outline" onClick={() => setIsEditBillingDialogOpen(false)}>
               Cancel
             </Button>
-            <Button
-              onClick={handleUpdateBilling}
-              disabled={isSubmitting}
-              className="bg-[#1A4D2E] hover:bg-[#1A4D2E]/90"
-            >
+            <Button onClick={handleUpdateBilling} disabled={isSubmitting}>
               {isSubmitting ? "Updating..." : "Update Record"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardLayout>
+    </AdminLayout>
   );
 }
-

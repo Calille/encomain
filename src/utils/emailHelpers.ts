@@ -9,10 +9,14 @@ export interface EmailResponse {
   success: boolean;
   messageId?: string;
   error?: string;
+  /** True when the Edge Function skipped send because welcome_email_sent_at was already set */
+  skipped?: boolean;
+  reason?: string;
 }
 
 /**
- * Send welcome email to new user
+ * Send welcome email to new user (idempotent server-side).
+ * Prefer calling this only from admin user-creation flows, not on every login.
  */
 export async function sendWelcomeEmail(
   email: string,
@@ -37,7 +41,12 @@ export async function sendWelcomeEmail(
       return { success: false, error: error.message };
     }
 
-    return { success: true, messageId: data?.messageId };
+    return {
+      success: true,
+      messageId: data?.messageId,
+      skipped: Boolean(data?.skipped),
+      reason: data?.reason,
+    };
   } catch (error) {
     console.error('Error sending welcome email:', error);
     return {

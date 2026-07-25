@@ -30,3 +30,7 @@ dist-ssr
 **/tempobook/storyboards/
 
 core
+
+# Supabase CLI local cache
+supabase/.temp/
+

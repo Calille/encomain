@@ -2,11 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../contexts/AuthContext";
 import { Button } from "../ui/button";
-import { Card } from "../ui/card";
 import { Input } from "../ui/input";
 import { ScrollArea } from "../ui/scroll-area";
 import { useToast } from "../../hooks/use-toast";
-import { Bot, Send, X, Loader2, Sparkles } from "lucide-react";
+import { Bot, Send, X, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 
@@ -39,7 +38,7 @@ export default function AISupportChat() {
         {
           id: "1",
           role: "assistant",
-          content: `Hi${profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}! I'm your AI assistant from The Enclosure. I can help you with:\n\n• Project status updates\n• Billing and payment questions\n• General support inquiries\n• Understanding our services\n\nWhat can I help you with today?`,
+          content: `Hi${profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}. I am your AI assistant from The Enclosure. I can help you with:\n\n• Project status updates\n• Billing and payment questions\n• General support enquiries\n• Understanding our services\n\nWhat can I help you with today?`,
           timestamp: new Date(),
         },
       ]);
@@ -122,10 +121,10 @@ export default function AISupportChat() {
       lowerMessage.includes("progress")
     ) {
       if (context.websites.length === 0) {
-        return "I don't see any active projects in your account yet. Would you like to discuss starting a new website project?";
+        return "I do not see any active projects in your account yet. Would you like to discuss starting a new website project?";
       }
       const website = context.websites[0];
-      return `Your project "${website.name}" is currently ${website.progress_percentage}% complete with status: ${website.status}. Is there anything specific you'd like to know about your project?`;
+      return `Your project "${website.name}" is currently ${website.progress_percentage}% complete with status: ${website.status}. Is there anything specific you would like to know about your project?`;
     }
 
     if (
@@ -134,24 +133,24 @@ export default function AISupportChat() {
       lowerMessage.includes("bill")
     ) {
       if (context.invoices.length === 0) {
-        return "You don't have any invoices at the moment. When we start working on your project, invoices will appear here.";
+        return "You do not have any invoices at the moment. When we start working on your project, invoices will appear here.";
       }
       const unpaid = context.invoices.filter((inv: any) => inv.status !== "paid");
       if (unpaid.length > 0) {
         return `You have ${unpaid.length} outstanding invoice(s). You can view and pay them in the Payments section of your dashboard. Would you like me to explain the payment process?`;
       }
-      return "All your invoices are paid up! You're all set. 🎉";
+      return "All your invoices are paid up. You are all set.";
     }
 
     if (lowerMessage.includes("upgrade") || lowerMessage.includes("plan")) {
-      return "We offer three pricing tiers:\n\n• **Essential** - £1,997 + £79/month\n• **Growth** - £2,997 + £129/month\n• **Ultimate** - £4,997 + £199/month\n\nWould you like to know more about what's included in each tier?";
+      return "We offer three pricing tiers:\n\n• Essential: £1,997 + £79/month\n• Growth: £2,997 + £129/month\n• Ultimate: £4,997 + £199/month\n\nWould you like to know more about what is included in each tier?";
     }
 
     if (lowerMessage.includes("support") || lowerMessage.includes("help")) {
-      return "For complex issues, I recommend creating a support ticket in the 'Support Requests' section. Our team typically responds within 24 hours. Is there a specific issue I can help with right now?";
+      return "For complex issues, I recommend creating a support ticket in the Support Requests section. Our team typically responds within 24 hours. Is there a specific issue I can help with right now?";
     }
 
-    return "I'd be happy to help! Could you provide more details about your question? I can assist with project updates, billing inquiries, service information, and general support.";
+    return "I would be happy to help. Could you provide more details about your question? I can assist with project updates, billing enquiries, service information, and general support.";
   };
 
   return (
@@ -167,10 +166,10 @@ export default function AISupportChat() {
           >
             <Button
               onClick={() => setIsOpen(true)}
-              className="h-14 w-14 rounded-full bg-[#1A4D2E] hover:bg-[#1A4D2E]/90 shadow-lg"
+              className="h-12 w-12 rounded-md shadow-float"
               size="icon"
             >
-              <Bot className="h-6 w-6" />
+              <Bot className="h-5 w-5" strokeWidth={1.5} />
             </Button>
           </motion.div>
         )}
@@ -183,24 +182,23 @@ export default function AISupportChat() {
             initial={{ opacity: 0, x: 300 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 300 }}
-            className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-[calc(100vw-2rem)] max-w-[384px] sm:w-96 h-[calc(100vh-8rem)] max-h-[600px] bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col"
+            className="fixed bottom-4 right-4 z-50 flex h-[calc(100vh-8rem)] max-h-[600px] w-[calc(100vw-2rem)] max-w-[384px] flex-col rounded-md border border-border bg-surface shadow-float sm:bottom-6 sm:right-6 sm:w-96"
           >
             {/* Header */}
-            <div className="bg-[#1A4D2E] text-white p-4 rounded-t-lg flex items-center justify-between">
+            <div className="flex items-center justify-between border-b border-border bg-muted/50 p-4">
               <div className="flex items-center gap-2">
-                <Bot className="h-5 w-5" />
+                <Bot className="h-5 w-5 text-accent" strokeWidth={1.5} />
                 <div>
-                  <h3 className="font-semibold">Enclosure AI</h3>
-                  <p className="text-xs text-white/80">Always here to help</p>
+                  <h3 className="text-sm font-semibold text-foreground">Enclosure AI</h3>
+                  <p className="text-xs text-muted-foreground">Always here to help</p>
                 </div>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsOpen(false)}
-                className="text-white hover:bg-white/20"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" strokeWidth={1.5} />
               </Button>
             </div>
 
@@ -215,14 +213,14 @@ export default function AISupportChat() {
                     className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[80%] rounded-lg p-3 ${
+                      className={`max-w-[80%] rounded-sm p-3 ${
                         message.role === "user"
-                          ? "bg-[#1A4D2E] text-white"
-                          : "bg-gray-100 text-gray-900"
+                          ? "bg-accent text-accent-foreground"
+                          : "bg-muted text-foreground"
                       }`}
                     >
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                      <p className="text-xs opacity-70 mt-1">
+                      <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+                      <p className="mt-1 text-xs opacity-70">
                         {format(message.timestamp, "h:mm a")}
                       </p>
                     </div>
@@ -230,9 +228,9 @@ export default function AISupportChat() {
                 ))}
                 {isLoading && (
                   <div className="flex justify-start">
-                    <div className="bg-gray-100 rounded-lg p-3 flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin text-gray-600" />
-                      <span className="text-sm text-gray-600">AI is thinking...</span>
+                    <div className="flex items-center gap-2 rounded-sm bg-muted p-3">
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" strokeWidth={1.5} />
+                      <span className="text-sm text-muted-foreground">AI is thinking...</span>
                     </div>
                   </div>
                 )}
@@ -240,7 +238,7 @@ export default function AISupportChat() {
             </ScrollArea>
 
             {/* Input */}
-            <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200">
+            <form onSubmit={handleSubmit} className="border-t border-border p-4">
               <div className="flex gap-2">
                 <Input
                   value={input}
@@ -252,10 +250,9 @@ export default function AISupportChat() {
                 <Button
                   type="submit"
                   disabled={isLoading || !input.trim()}
-                  className="bg-[#1A4D2E] hover:bg-[#1A4D2E]/90"
                   size="icon"
                 >
-                  <Send className="h-4 w-4" />
+                  <Send className="h-4 w-4" strokeWidth={1.5} />
                 </Button>
               </div>
             </form>

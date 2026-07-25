@@ -4,21 +4,18 @@ import UpgradeOptions from "../../components/dashboard/UpgradeOptions";
 export default function Upgrade() {
   return (
     <DashboardLayout title="Upgrade Your Plan">
-      <div className="space-y-8">
-        {/* Header */}
+      <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1A4D2E] mb-2">
-            Upgrade Your Plan
-          </h1>
-          <p className="text-gray-600">
+          <h2 className="text-xl font-semibold tracking-tight text-foreground">
+            Upgrade your plan
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             Unlock more features and take your website to the next level
           </p>
         </div>
 
-        {/* Upgrade Options */}
         <UpgradeOptions />
       </div>
     </DashboardLayout>
   );
 }
-

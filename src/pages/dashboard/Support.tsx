@@ -5,31 +5,21 @@ import ReferralProgram from "../../components/dashboard/ReferralProgram";
 export default function Support() {
   return (
     <DashboardLayout title="Support & Referrals">
-      <div className="space-y-8">
-        {/* Header */}
+      <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1A4D2E] mb-2">
-            Support & Referrals
-          </h1>
-          <p className="text-gray-600">
+          <h2 className="text-xl font-semibold tracking-tight text-foreground">
+            Support & referrals
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             Get help with your projects and earn rewards by referring friends
           </p>
         </div>
 
-        {/* Grid layout for desktop, stacked for mobile */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Support Tickets */}
-          <div>
-            <SupportTickets />
-          </div>
-
-          {/* Referral Program */}
-          <div>
-            <ReferralProgram />
-          </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <SupportTickets />
+          <ReferralProgram />
         </div>
       </div>
     </DashboardLayout>
   );
 }
-

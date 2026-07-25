@@ -6,14 +6,13 @@ interface LogoProps {
   color?: string;
 }
 
-export function Logo({ className, color = "#1A4D2E" }: LogoProps) {
+export function Logo({ className }: LogoProps) {
   return (
     <div className={cn("flex items-center", className)}>
-      {/* Logo image */}
-      <img 
-        src={logoImage} 
-        alt="The Enclosure Logo" 
-        className="h-14 w-auto" 
+      <img
+        src={logoImage}
+        alt="The Enclosure"
+        className="h-14 w-auto"
       />
     </div>
   );

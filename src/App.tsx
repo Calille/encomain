@@ -1,16 +1,15 @@
 import { Suspense, lazy } from "react";
-import { useRoutes, Routes, Route } from "react-router-dom";
+import { useRoutes, Routes, Route, Navigate } from "react-router-dom";
 import routes from "tempo-routes";
 import ScrollToTop from "./components/ScrollToTop";
 import { CookieConsent } from "./components/ui/cookie-consent";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { Toaster } from "./components/ui/toaster";
+import { Skeleton } from "./components/ui/skeleton";
 
-// Eager load homepage for fast FCP (First Contentful Paint)
 import Home from "./components/home";
 
-// Lazy load all other routes to reduce initial bundle size
 const Services = lazy(() => import("./components/services"));
 const PricingPage = lazy(() => import("./components/pricing-page"));
 const About = lazy(() => import("./components/about"));
@@ -19,12 +18,12 @@ const Careers = lazy(() => import("./pages/careers"));
 const PrivacyPolicy = lazy(() => import("./pages/privacy-policy"));
 const TermsOfService = lazy(() => import("./pages/terms-of-service"));
 
-// Auth pages
 const LoginPage = lazy(() => import("./pages/login"));
 const ForgotPassword = lazy(() => import("./pages/forgot-password"));
 const ChangePassword = lazy(() => import("./pages/change-password"));
+const RoleLanding = lazy(() => import("./pages/role-landing"));
+const UnsubscribePage = lazy(() => import("./pages/unsubscribe"));
 
-// Dashboard pages
 const UserDashboard = lazy(() => import("./pages/dashboard/user-dashboard"));
 const WebsiteProgress = lazy(() => import("./pages/dashboard/progress"));
 const Payments = lazy(() => import("./pages/dashboard/payments"));
@@ -33,19 +32,26 @@ const Upgrade = lazy(() => import("./pages/dashboard/Upgrade"));
 const Settings = lazy(() => import("./pages/dashboard/settings"));
 const AccountSettings = lazy(() => import("./pages/account-settings"));
 
-// Admin pages
-const AdminDashboard = lazy(() => import("./pages/admin/index"));
+const AdminOverview = lazy(() => import("./pages/admin/dashboard"));
+const AdminClients = lazy(() => import("./pages/admin/clients"));
+const AdminClientDetail = lazy(() => import("./pages/admin/client-detail"));
+const AdminPayments = lazy(() => import("./pages/admin/payments"));
+const AdminAudits = lazy(() => import("./pages/admin/audits"));
+const AdminOutreach = lazy(() => import("./pages/admin/outreach"));
+const AdminSettings = lazy(() => import("./pages/admin/settings"));
+const AdminSuppressions = lazy(() => import("./pages/admin/suppressions"));
 const UsersManagement = lazy(() => import("./pages/admin/users"));
 const WebsitesManagement = lazy(() => import("./pages/admin/websites"));
 const BillingManagement = lazy(() => import("./pages/admin/billing"));
+const LegacyAdminIndex = lazy(() => import("./pages/admin/index"));
 
-// Optimized loading component
 function PageLoader() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F8FAF9]">
-      <div className="text-center">
-        <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-[#1A4D2E] border-r-transparent"></div>
-        <p className="mt-4 text-[#1A4D2E] font-medium">Loading...</p>
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="w-full max-w-md space-y-3 px-4">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-28 w-full" />
+        <Skeleton className="h-28 w-full" />
       </div>
     </div>
   );
@@ -57,7 +63,7 @@ function App() {
       <ScrollToTop />
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          {/* Public routes */}
+          {/* Public marketing (unchanged visually for this branch) */}
           <Route path="/" element={<Home />} />
           <Route path="/services" element={<Services />} />
           <Route path="/pricing" element={<PricingPage />} />
@@ -66,74 +72,191 @@ function App() {
           <Route path="/careers" element={<Careers />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
-          
-          {/* Auth routes */}
+          <Route path="/unsubscribe" element={<UnsubscribePage />} />
+
+          {/* Auth */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/change-password" element={
-            <ProtectedRoute>
-              <ChangePassword />
-            </ProtectedRoute>
-          } />
+          <Route
+            path="/change-password"
+            element={
+              <ProtectedRoute>
+                <ChangePassword />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/app"
+            element={
+              <ProtectedRoute>
+                <RoleLanding />
+              </ProtectedRoute>
+            }
+          />
 
-          {/* User dashboard routes */}
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <UserDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/dashboard/progress" element={
-            <ProtectedRoute>
-              <WebsiteProgress />
-            </ProtectedRoute>
-          } />
-          <Route path="/dashboard/payments" element={
-            <ProtectedRoute>
-              <Payments />
-            </ProtectedRoute>
-          } />
-          <Route path="/dashboard/support" element={
-            <ProtectedRoute>
-              <Support />
-            </ProtectedRoute>
-          } />
-          <Route path="/dashboard/upgrade" element={
-            <ProtectedRoute>
-              <Upgrade />
-            </ProtectedRoute>
-          } />
-          <Route path="/dashboard/settings" element={
-            <ProtectedRoute>
-              <Settings />
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <AccountSettings />
-            </ProtectedRoute>
-          } />
+          {/* Client portal */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <UserDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/progress"
+            element={
+              <ProtectedRoute>
+                <WebsiteProgress />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/payments"
+            element={
+              <ProtectedRoute>
+                <Payments />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/support"
+            element={
+              <ProtectedRoute>
+                <Support />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/upgrade"
+            element={
+              <ProtectedRoute>
+                <Upgrade />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <AccountSettings />
+              </ProtectedRoute>
+            }
+          />
 
-          {/* Admin routes */}
-          <Route path="/admin" element={
-            <ProtectedRoute requireAdmin>
-              <AdminDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/users" element={
-            <ProtectedRoute requireAdmin>
-              <UsersManagement />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/websites" element={
-            <ProtectedRoute requireAdmin>
-              <WebsitesManagement />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/billing" element={
-            <ProtectedRoute requireAdmin>
-              <BillingManagement />
-            </ProtectedRoute>
-          } />
+          {/* Admin CRM */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requireAdmin>
+                <Navigate to="/admin/dashboard" replace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminOverview />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/clients"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminClients />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/clients/:id"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminClientDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/payments"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminPayments />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/audits"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminAudits />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/outreach"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminOutreach />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/suppressions"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminSuppressions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute requireAdmin>
+                <UsersManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/websites"
+            element={
+              <ProtectedRoute requireAdmin>
+                <WebsitesManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/billing"
+            element={
+              <ProtectedRoute requireAdmin>
+                <BillingManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/legacy"
+            element={
+              <ProtectedRoute requireAdmin>
+                <LegacyAdminIndex />
+              </ProtectedRoute>
+            }
+          />
 
           {import.meta.env.VITE_TEMPO === "true" && (
             <Route path="/tempobook/*" />
