@@ -106,7 +106,7 @@ Your website is a **comprehensive, production-ready web application** built with
 - ✅ Multiple contact methods:
   - Email: hello@theenclosure.co.uk
   - Phone support
-- ✅ **Calendly Integration** - Schedule meetings directly
+- ✅ **Cal.com Integration** - Schedule meetings directly
 - ✅ **Contact Form** with:
   - Name, email, message fields
   - Google Sheets integration
@@ -481,7 +481,7 @@ Your website is a **comprehensive, production-ready web application** built with
 - ✅ **Card Hover Effects** - Interactive card animations
 - ✅ **Chatbot** - AI chat interface
 - ✅ **Cookie Consent** - GDPR-compliant cookie banner
-- ✅ **Calendly Integration** - Schedule meetings
+- ✅ **Cal.com Integration** - Schedule meetings
 - ✅ **Trust Badge** - Social proof badges
 - ✅ **Sticky CTA** - Floating call-to-action
 - ✅ **Form Submission Status** - Form feedback UI
@@ -530,8 +530,8 @@ Your website is a **comprehensive, production-ready web application** built with
 - ✅ Background retry on page load
 - ✅ Periodic retry (every 5 minutes)
 
-### **3. Calendly Integration**
-- ✅ Embedded Calendly widget
+### **3. Cal.com Integration**
+- ✅ Embedded Cal.com widget (`@calcom/embed-react`)
 - ✅ Schedule meetings directly
 - ✅ Available on contact page
 

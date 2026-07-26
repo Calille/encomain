@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 
 export default function StickyCTA() {
@@ -7,9 +6,7 @@ export default function StickyCTA() {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Show the sticky CTA after scrolling down 500px
-      const scrollY = window.scrollY;
-      setIsVisible(scrollY > 500);
+      setIsVisible(window.scrollY > 500);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -19,14 +16,12 @@ export default function StickyCTA() {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-40 md:hidden">
-      <Link to="/contact">
-        <Button
-          className="bg-[#2D5F3F] hover:bg-[#2D5F3F]/90 text-white w-full"
-          size="sm"
-        >
-          Book Your Free Consultation Call
-        </Button>
+    <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-marketing-border bg-white p-4 shadow-lg md:hidden">
+      <Link
+        to="/contact#book"
+        className="flex w-full items-center justify-center rounded-lg bg-marketing-forest px-4 py-3 text-marketing-sm font-semibold text-white transition-colors hover:bg-marketing-forest-dark min-h-[44px]"
+      >
+        Book a free intro call
       </Link>
     </div>
   );

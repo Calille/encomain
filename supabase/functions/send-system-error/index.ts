@@ -46,11 +46,13 @@ serve(async (req) => {
       low: 'Low',
     };
 
+    // TODO: revert to josh@theenclosure.co.uk once custom domain
+    // inbound email routing is sorted
     const result = await sendEmail({
-      to: body.adminEmail,
+      to: 'joshwicks2015@gmail.com',
       subject: `${severityLabels[body.severity] || body.severity} System Error Alert: ${body.errorType}`,
       html: emailHtml,
-      from: 'The Enclosure <admin@theenclosure.co.uk>',
+      from: 'The Enclosure <noreply@theenclosure.co.uk>',
     });
 
     if (!result.success) {

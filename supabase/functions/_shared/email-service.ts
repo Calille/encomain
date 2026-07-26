@@ -4,6 +4,7 @@
  */
 import { Resend } from 'npm:resend@4.0.0';
 import { render } from 'npm:@react-email/components@0.0.28';
+export { buildCorsHeaders, corsHeaders, handleCors, getAllowedOrigin } from './cors.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const resend = new Resend(RESEND_API_KEY);
@@ -16,6 +17,8 @@ export interface EmailOptions {
   replyTo?: string;
   cc?: string | string[];
   bcc?: string | string[];
+  /** Resend idempotency key to avoid duplicate sends on retries */
+  idempotencyKey?: string;
 }
 
 export interface EmailResponse {
@@ -39,10 +42,9 @@ export async function sendEmail(
       };
     }
 
-    // Set default from address
-    const from = options.from || 'The Enclosure <notifications@theenclosure.co.uk>';
+    const from = options.from || 'The Enclosure <noreply@theenclosure.co.uk>';
 
-    const { data, error } = await resend.emails.send({
+    const sendPayload = {
       from,
       to: Array.isArray(options.to) ? options.to : [options.to],
       subject: options.subject,
@@ -50,7 +52,11 @@ export async function sendEmail(
       replyTo: options.replyTo,
       cc: options.cc,
       bcc: options.bcc,
-    });
+    };
+
+    const { data, error } = options.idempotencyKey
+      ? await resend.emails.send(sendPayload, { idempotencyKey: options.idempotencyKey })
+      : await resend.emails.send(sendPayload);
 
     if (error) {
       console.error('Resend error:', error);
@@ -88,23 +94,3 @@ export async function renderEmailTemplate(
     throw new Error('Failed to render email template');
   }
 }
-
-/**
- * CORS headers for Edge Function responses
- */
-export const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-
-/**
- * Handle CORS preflight requests
- */
-export function handleCors(request: Request): Response | null {
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-  return null;
-}
-

@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Checkbox } from "../ui/checkbox";
+import { Card, CardContent, CardHeader } from "../ui/card";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
-import { Link } from "react-router-dom";
 import { Logo } from "../ui/logo";
 import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "../../hooks/use-toast";
+import { ThemeToggle } from "../theme-toggle";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -18,11 +19,7 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const location = useLocation();
   const { signIn } = useAuth();
-
-  // Get the page they were trying to access before login
-  const from = (location.state as any)?.from?.pathname || "/dashboard";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,17 +40,16 @@ export function LoginForm() {
         return;
       }
 
-      // Show success message
       toast({
-        title: "Welcome back!",
+        title: "Signed in",
         description: "You have successfully logged in.",
       });
 
-      // Redirect based on password change requirement
       if (requiresPasswordChange) {
         navigate("/change-password", { replace: true });
       } else {
-        navigate(from, { replace: true });
+        // Role-aware landing waits for profile, then routes admin vs client
+        navigate("/app", { replace: true });
       }
     } catch (err) {
       setError("An error occurred during login. Please try again.");
@@ -69,121 +65,119 @@ export function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8 border border-gray-200">
-      <div className="flex justify-center mb-6">
-        <Logo />
+    <div className="relative w-full max-w-md">
+      <div className="absolute -top-12 right-0">
+        <ThemeToggle />
       </div>
-
-      <h2 className="text-2xl font-bold text-center text-[#1A4D2E] mb-6">
-        Log in to your account
-      </h2>
-
-      {error && (
-        <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4 text-sm">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Mail className="h-5 w-5 text-gray-400" />
-            </div>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="pl-10"
-              required
-            />
+      <Card className="border-border bg-surface">
+        <CardHeader className="items-center space-y-4 pb-2 pt-6">
+          <Logo className="[&_img]:h-12" />
+          <div className="text-center">
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">
+              Log in to your account
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Client progress portal
+            </p>
           </div>
-        </div>
+        </CardHeader>
+        <CardContent className="pb-6">
+          {error && (
+            <div className="mb-4 rounded-sm border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </div>
+          )}
 
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <Label htmlFor="password">Password</Label>
-            <Link
-              to="/forgot-password"
-              className="text-sm text-[#1A4D2E] hover:underline"
-            >
-              Forgot password?
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                  strokeWidth={1.5}
+                />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-9"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-accent hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <Lock
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                  strokeWidth={1.5}
+                />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-9 pr-9"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" strokeWidth={1.5} />
+                  ) : (
+                    <Eye className="h-4 w-4" strokeWidth={1.5} />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="remember"
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+              />
+              <label htmlFor="remember" className="text-sm text-muted-foreground">
+                Remember me
+              </label>
+            </div>
+
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Signing in..." : "Log in"}
+            </Button>
+          </form>
+
+          <p className="mt-5 text-center text-sm text-muted-foreground">
+            Contact your administrator for account access.
+          </p>
+
+          <p className="mt-4 border-t border-border pt-4 text-center text-xs text-muted-foreground">
+            By logging in, you agree to our{" "}
+            <Link to="/terms-of-service" className="text-accent hover:underline">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link to="/privacy-policy" className="text-accent hover:underline">
+              Privacy Policy
             </Link>
-          </div>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Lock className="h-5 w-5 text-gray-400" />
-            </div>
-            <Input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="pl-10"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 flex items-center pr-3"
-            >
-              {showPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-400" />
-              ) : (
-                <Eye className="h-5 w-5 text-gray-400" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="remember"
-            checked={rememberMe}
-            onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-          />
-          <label
-            htmlFor="remember"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Remember me
-          </label>
-        </div>
-
-        <Button
-          type="submit"
-          className="w-full bg-[#1A4D2E] hover:bg-[#1A4D2E]/90 text-white py-4 sm:py-6 min-h-[44px]"
-          disabled={isLoading}
-        >
-          {isLoading ? "Logging in..." : "Log in"}
-        </Button>
-      </form>
-
-      <div className="mt-6 text-center">
-        <p className="text-sm text-gray-600">
-          Contact your administrator for account access.
-        </p>
-      </div>
-
-      <div className="mt-8 pt-6 border-t border-gray-200 text-center">
-        <p className="text-xs text-gray-500">
-          By logging in, you agree to our{" "}
-          <Link
-            to="/terms-of-service"
-            className="text-[#1A4D2E] hover:underline"
-          >
-            Terms of Service
-          </Link>{" "}
-          and{" "}
-          <Link to="/privacy-policy" className="text-[#1A4D2E] hover:underline">
-            Privacy Policy
-          </Link>
-        </p>
-      </div>
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

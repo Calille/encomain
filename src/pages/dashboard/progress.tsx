@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "../../components/dashboard/dashboard-layout";
-import { Card } from "../../components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
+import { EmptyState } from "../../components/ui/empty-state";
+import { Skeleton } from "../../components/ui/skeleton";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../lib/supabase";
 import { Tables } from "../../types/supabase";
@@ -17,11 +20,29 @@ import {
 } from "lucide-react";
 import { toast } from "../../hooks/use-toast";
 import { format } from "date-fns";
-import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
 type Website = Tables<"websites">;
 type ProjectUpdate = Tables<"project_updates">;
+
+function statusVariant(
+  status: string
+): "default" | "secondary" | "destructive" | "success" | "warning" | "outline" {
+  switch (status) {
+    case "active":
+    case "completed":
+    case "milestone":
+      return "success";
+    case "in_progress":
+    case "progress":
+      return "default";
+    case "on_hold":
+    case "issue":
+      return "warning";
+    default:
+      return "secondary";
+  }
+}
 
 export default function WebsiteProgress() {
   const { user } = useAuth();
@@ -37,7 +58,6 @@ export default function WebsiteProgress() {
       try {
         setLoading(true);
 
-        // Fetch websites
         const { data: websitesData, error: websitesError } = await supabase
           .from("websites")
           .select("*")
@@ -47,7 +67,6 @@ export default function WebsiteProgress() {
         if (websitesError) throw websitesError;
         setWebsites(websitesData || []);
 
-        // Fetch project updates
         const { data: updatesData, error: updatesError } = await supabase
           .from("project_updates")
           .select("*")
@@ -57,7 +76,6 @@ export default function WebsiteProgress() {
         if (updatesError) throw updatesError;
         setProjectUpdates(updatesData || []);
 
-        // Auto-select first website if available
         if (websitesData && websitesData.length > 0 && !selectedWebsite) {
           setSelectedWebsite(websitesData[0].id);
         }
@@ -75,7 +93,6 @@ export default function WebsiteProgress() {
 
     fetchData();
 
-    // Subscribe to real-time updates
     const websitesChannel = supabase
       .channel("websites-progress")
       .on(
@@ -110,45 +127,30 @@ export default function WebsiteProgress() {
     };
   }, [user, selectedWebsite]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-      case "completed":
-        return "bg-green-100 text-green-800";
-      case "in_progress":
-        return "bg-blue-100 text-blue-800";
-      case "on_hold":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
-        return <CheckCircle2 className="h-4 w-4" />;
+        return <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.5} />;
       case "in_progress":
-        return <Clock className="h-4 w-4" />;
+        return <Clock className="h-3.5 w-3.5" strokeWidth={1.5} />;
       case "on_hold":
-        return <AlertCircle className="h-4 w-4" />;
+        return <AlertCircle className="h-3.5 w-3.5" strokeWidth={1.5} />;
       default:
-        return <Clock className="h-4 w-4" />;
+        return <Clock className="h-3.5 w-3.5" strokeWidth={1.5} />;
     }
   };
 
   const getUpdateIcon = (type: string) => {
     switch (type) {
       case "milestone":
-        return <CheckCircle2 className="h-5 w-5 text-green-600" />;
-      case "progress":
-        return <TrendingUp className="h-5 w-5 text-blue-600" />;
-      case "issue":
-        return <AlertCircle className="h-5 w-5 text-yellow-600" />;
       case "completed":
-        return <CheckCircle2 className="h-5 w-5 text-green-600" />;
+        return <CheckCircle2 className="h-4 w-4 text-success" strokeWidth={1.5} />;
+      case "progress":
+        return <TrendingUp className="h-4 w-4 text-accent" strokeWidth={1.5} />;
+      case "issue":
+        return <AlertCircle className="h-4 w-4 text-warning" strokeWidth={1.5} />;
       default:
-        return <MessageSquare className="h-5 w-5 text-gray-600" />;
+        return <MessageSquare className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />;
     }
   };
 
@@ -160,12 +162,12 @@ export default function WebsiteProgress() {
   if (loading) {
     return (
       <DashboardLayout title="Website Progress">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-[#1A4D2E] border-r-transparent"></div>
-            <p className="mt-4 text-[#1A4D2E] font-medium">Loading progress...</p>
-          </div>
+        <div className="mb-6 space-y-2">
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-4 w-64" />
         </div>
+        <Skeleton className="mb-4 h-24 w-full" />
+        <Skeleton className="h-64 w-full" />
       </DashboardLayout>
     );
   }
@@ -173,19 +175,16 @@ export default function WebsiteProgress() {
   if (websites.length === 0) {
     return (
       <DashboardLayout title="Website Progress">
-        <Card className="p-12 text-center">
-          <Globe className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            No Websites Yet
-          </h3>
-          <p className="text-gray-600 mb-6">
-            Your websites will appear here once they've been created.
-          </p>
-          <Link to="/dashboard">
-            <Button className="bg-[#1A4D2E] hover:bg-[#1A4D2E]/90">
-              Go to Dashboard
+        <Card>
+          <EmptyState
+            icon={Globe}
+            message="No websites yet. They will appear here once created."
+          />
+          <div className="flex justify-center pb-8">
+            <Button asChild>
+              <Link to="/dashboard">Go to Dashboard</Link>
             </Button>
-          </Link>
+          </div>
         </Card>
       </DashboardLayout>
     );
@@ -194,194 +193,161 @@ export default function WebsiteProgress() {
   return (
     <DashboardLayout title="Website Progress">
       <div className="space-y-6">
-        {/* Website Selector */}
         {websites.length > 1 && (
-          <Card className="p-4 shadow-sm border border-gray-200">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Select Website
-            </label>
-            <select
-              value={selectedWebsite || ""}
-              onChange={(e) => setSelectedWebsite(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A4D2E]"
-            >
-              {websites.map((website) => (
-                <option key={website.id} value={website.id}>
-                  {website.name}
-                </option>
-              ))}
-            </select>
+          <Card>
+            <CardContent className="p-4">
+              <label className="mb-2 block text-sm font-medium text-foreground">
+                Select website
+              </label>
+              <select
+                value={selectedWebsite || ""}
+                onChange={(e) => setSelectedWebsite(e.target.value)}
+                className="h-9 w-full rounded-sm border border-border bg-surface px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {websites.map((website) => (
+                  <option key={website.id} value={website.id}>
+                    {website.name}
+                  </option>
+                ))}
+              </select>
+            </CardContent>
           </Card>
         )}
 
         {selectedWebsiteData && (
           <>
-            {/* Overall Progress Card */}
-            <Card className="p-6 shadow-sm border border-gray-200">
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-[#1A4D2E] mb-2">
-                    {selectedWebsiteData.name}
-                  </h2>
+            <Card>
+              <CardHeader className="flex-row items-start justify-between space-y-0">
+                <div>
+                  <CardTitle className="text-xl">{selectedWebsiteData.name}</CardTitle>
                   {selectedWebsiteData.url && (
                     <a
                       href={selectedWebsiteData.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                      className="mt-1 inline-flex items-center gap-1 text-sm text-accent hover:underline"
                     >
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-4 w-4" strokeWidth={1.5} />
                       Visit website
                     </a>
                   )}
                 </div>
-                <span
-                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                    selectedWebsiteData.status
-                  )}`}
+                <Badge
+                  variant={statusVariant(selectedWebsiteData.status)}
+                  className="gap-1"
                 >
                   {getStatusIcon(selectedWebsiteData.status)}
                   {selectedWebsiteData.status.replace("_", " ")}
-                </span>
-              </div>
+                </Badge>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div>
+                  <div className="mb-2 flex justify-between text-sm text-muted-foreground">
+                    <span>Overall progress</span>
+                    <span className="font-mono-nums text-foreground">
+                      {selectedWebsiteData.progress_percentage}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-accent transition-all duration-500"
+                      style={{
+                        width: `${selectedWebsiteData.progress_percentage}%`,
+                      }}
+                    />
+                  </div>
+                </div>
 
-              <div className="mb-6">
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    Overall Progress
-                  </span>
-                  <span className="text-sm font-medium text-gray-700">
-                    {selectedWebsiteData.progress_percentage}%
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-                  <motion.div
-                    className="bg-[#1A4D2E] h-4 rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${selectedWebsiteData.progress_percentage}%` }}
-                    transition={{ duration: 1, ease: "easeOut" }}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="text-sm font-medium text-gray-500 mb-1">
-                    Status
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                  <div className="rounded-sm border border-border bg-muted/40 p-3">
+                    <p className="text-xs text-muted-foreground">Status</p>
+                    <p className="mt-1 text-sm font-medium capitalize text-foreground">
+                      {selectedWebsiteData.status.replace("_", " ")}
+                    </p>
                   </div>
-                  <div className="text-lg font-semibold capitalize">
-                    {selectedWebsiteData.status.replace("_", " ")}
+                  <div className="rounded-sm border border-border bg-muted/40 p-3">
+                    <p className="text-xs text-muted-foreground">Last updated</p>
+                    <p className="mt-1 text-sm font-medium text-foreground">
+                      {format(new Date(selectedWebsiteData.updated_at), "MMM d, yyyy")}
+                    </p>
+                  </div>
+                  <div className="rounded-sm border border-border bg-muted/40 p-3">
+                    <p className="text-xs text-muted-foreground">Project updates</p>
+                    <p className="mt-1 text-sm font-medium text-foreground font-mono-nums">
+                      {websiteUpdates.length}
+                    </p>
                   </div>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="text-sm font-medium text-gray-500 mb-1">
-                    Last Updated
-                  </div>
-                  <div className="text-lg font-semibold">
-                    {format(new Date(selectedWebsiteData.updated_at), "MMM d, yyyy")}
-                  </div>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="text-sm font-medium text-gray-500 mb-1">
-                    Project Updates
-                  </div>
-                  <div className="text-lg font-semibold">
-                    {websiteUpdates.length}
-                  </div>
-                </div>
-              </div>
+              </CardContent>
             </Card>
 
-            {/* Project Updates Timeline */}
-            <Card className="p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-[#1A4D2E]">
-                  Project Timeline
-                </h2>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Calendar className="h-4 w-4" />
-                  {websiteUpdates.length} update{websiteUpdates.length !== 1 ? "s" : ""}
+            <Card>
+              <CardHeader className="flex-row items-center justify-between space-y-0">
+                <CardTitle>Project timeline</CardTitle>
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4" strokeWidth={1.5} />
+                  {websiteUpdates.length} update
+                  {websiteUpdates.length !== 1 ? "s" : ""}
                 </div>
-              </div>
-
-              {websiteUpdates.length === 0 ? (
-                <div className="text-center py-12">
-                  <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No updates yet for this website.</p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Updates will appear here as your project progresses.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {websiteUpdates.map((update, index) => (
-                    <motion.div
-                      key={update.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex gap-4 pb-6 border-b border-gray-100 last:border-0 last:pb-0"
-                    >
-                      <div className="flex-shrink-0">
-                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                          {getUpdateIcon(update.update_type)}
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <h3 className="font-semibold text-[#1A4D2E]">
-                              {update.title}
-                            </h3>
-                            {update.description && (
-                              <p className="text-sm text-gray-600 mt-1">
-                                {update.description}
+              </CardHeader>
+              <CardContent className="p-0">
+                {websiteUpdates.length === 0 ? (
+                  <EmptyState
+                    icon={MessageSquare}
+                    message="No updates yet for this website."
+                  />
+                ) : (
+                  <div className="divide-y divide-border">
+                    {websiteUpdates.map((update) => (
+                      <div key={update.id} className="flex gap-3 px-4 py-4">
+                        <div className="mt-0.5">{getUpdateIcon(update.update_type)}</div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="text-sm font-medium text-foreground">
+                                {update.title}
                               </p>
-                            )}
+                              {update.description && (
+                                <p className="mt-0.5 text-sm text-muted-foreground">
+                                  {update.description}
+                                </p>
+                              )}
+                            </div>
+                            <Badge variant={statusVariant(update.update_type)}>
+                              {update.update_type}
+                            </Badge>
                           </div>
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                              update.update_type
-                            )}`}
-                          >
-                            {update.update_type}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
+                          <p className="mt-1.5 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                            <Calendar className="h-3 w-3" strokeWidth={1.5} />
                             {format(new Date(update.created_at), "PPp")}
-                          </span>
+                          </p>
                         </div>
                       </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </CardContent>
             </Card>
           </>
         )}
 
-        {/* Quick Actions */}
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <Button
             variant="outline"
-            className="flex items-center gap-2"
+            className="gap-2"
             onClick={() => {
               toast({
-                title: "Schedule Call",
+                title: "Schedule call",
                 description: "A calendar link will be sent to your email shortly.",
               });
             }}
           >
-            <Calendar className="h-4 w-4" />
-            Schedule Progress Call
+            <Calendar className="h-4 w-4" strokeWidth={1.5} />
+            Schedule progress call
           </Button>
-          <Link to="/dashboard">
-            <Button variant="outline" className="w-full sm:w-auto">
-              Back to Dashboard
-            </Button>
-          </Link>
+          <Button variant="outline" asChild>
+            <Link to="/dashboard">Back to Dashboard</Link>
+          </Button>
         </div>
       </div>
     </DashboardLayout>

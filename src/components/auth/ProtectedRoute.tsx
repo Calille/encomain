@@ -1,5 +1,28 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { Skeleton } from "../ui/skeleton";
+
+const VIEW_AS_CLIENT_KEY = "enclosure-view-as-client";
+
+export function isViewingAsClient(): boolean {
+  try {
+    return localStorage.getItem(VIEW_AS_CLIENT_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function setViewAsClient(enabled: boolean) {
+  try {
+    if (enabled) {
+      localStorage.setItem(VIEW_AS_CLIENT_KEY, "1");
+    } else {
+      localStorage.removeItem(VIEW_AS_CLIENT_KEY);
+    }
+  } catch {
+    // Ignore storage failures
+  }
+}
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -7,32 +30,31 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, profileLoading } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  // Wait for session AND profile when signed in — role checks need public.users.
+  if (loading || (user && profileLoading && !profile)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8FAF9]">
-        <div className="text-center">
-          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-[#1A4D2E] border-r-transparent"></div>
-          <p className="mt-4 text-[#1A4D2E] font-medium">Loading...</p>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="w-full max-w-md space-y-3 px-4">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-32 w-full" />
         </div>
       </div>
     );
   }
 
   if (!user) {
-    // Redirect to login page but save the location they were trying to access
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Check if user is inactive or suspended (only if profile has loaded)
   if (profile && profile.status !== "active") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8FAF9]">
-        <div className="max-w-md p-8 bg-white rounded-lg shadow-md text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Account Inactive</h2>
-          <p className="text-gray-600 mb-4">
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="max-w-md rounded-md border border-border bg-surface p-6 text-center">
+          <h2 className="text-lg font-semibold text-foreground">Account inactive</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
             Your account is currently {profile.status}. Please contact support for assistance.
           </p>
         </div>
@@ -40,37 +62,30 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     );
   }
 
-  // Check if user needs to change password
   const mustChangePassword = profile?.requires_password_change || false;
   if (mustChangePassword && location.pathname !== "/change-password") {
     return <Navigate to="/change-password" replace />;
   }
 
-  // Don't allow access to change password page if not required
   if (!mustChangePassword && location.pathname === "/change-password") {
+    return <Navigate to="/app" replace />;
+  }
+
+  if (requireAdmin && profile?.role !== "admin") {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Check admin access
-  if (requireAdmin && profile?.role !== "admin") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8FAF9]">
-        <div className="max-w-md p-8 bg-white rounded-lg shadow-md text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h2>
-          <p className="text-gray-600 mb-4">
-            You do not have permission to access this page.
-          </p>
-          <button
-            onClick={() => window.history.back()}
-            className="px-4 py-2 bg-[#1A4D2E] text-white rounded hover:bg-[#1A4D2E]/90"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
+  // Admins landing on client routes go to the CRM unless "view as client" is active
+  const onClientRoute =
+    location.pathname === "/dashboard" || location.pathname.startsWith("/dashboard/");
+  if (
+    !requireAdmin &&
+    profile?.role === "admin" &&
+    onClientRoute &&
+    !isViewingAsClient()
+  ) {
+    return <Navigate to="/admin/dashboard" replace />;
   }
 
   return <>{children}</>;
 }
-

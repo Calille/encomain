@@ -1,83 +1,99 @@
 import { Container } from "./ui/container";
+import { MarketingHeading } from "./marketing/marketing-heading";
 
 export default function TrustSection() {
   return (
-    <div className="bg-[#F8FAF9] py-24 sm:py-32">
+    <section className="bg-marketing-mint py-24 sm:py-32">
       <Container>
-        {/* Minimalistic Founders Section */}
-        <div className="max-w-[1100px] mx-auto">
-          <div className="text-center mb-16">
-            <p className="uppercase text-[10px] tracking-[2.5px] text-gray-400 font-medium">
-              LEADERSHIP
-            </p>
+        <div className="mx-auto max-w-[1100px]">
+          <div className="mb-16 text-center">
+            <MarketingHeading level="p" variant="eyebrow">
+              Leadership
+            </MarketingHeading>
           </div>
 
-          {/* Founders Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-20 mb-20">
-            {/* Josh Wicks */}
+          <div className="mb-20 grid grid-cols-1 gap-20 md:grid-cols-2">
             <div className="text-center">
-              <div className="w-[140px] h-[140px] mx-auto mb-8 bg-[#1A4D2E] rounded-full flex items-center justify-center">
-                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full fill-[#1A4D2E]">
-                  <circle cx="50" cy="35" r="15"/>
-                  <path d="M 30 50 Q 30 45 35 45 L 65 45 Q 70 45 70 50 L 75 80 Q 75 85 70 85 L 30 85 Q 25 85 25 80 Z"/>
+              <div className="mx-auto mb-8 flex h-[140px] w-[140px] items-center justify-center rounded-full bg-marketing-forest">
+                <svg
+                  viewBox="0 0 100 100"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-full w-full fill-white/90"
+                  aria-hidden="true"
+                >
+                  <circle cx="50" cy="35" r="15" />
+                  <path d="M 30 50 Q 30 45 35 45 L 65 45 Q 70 45 70 50 L 75 80 Q 75 85 70 85 L 30 85 Q 25 85 25 80 Z" />
                 </svg>
               </div>
-              <h3 className="text-[22px] font-semibold text-black mb-1.5 tracking-tight">
+              <h3 className="mb-1.5 font-marketing-display text-marketing-2xl font-medium tracking-tight text-marketing-ink">
                 Josh Wicks
               </h3>
-              <p className="text-[13px] text-gray-600 mb-5 tracking-wide">
+              <p className="mb-5 text-marketing-sm tracking-wide text-marketing-muted">
                 Dev (UI/UX)
               </p>
-              <p className="text-[15px] text-gray-500 leading-relaxed max-w-[420px] mx-auto">
+              <p className="mx-auto max-w-[420px] text-marketing-base leading-relaxed text-marketing-muted">
                 Designs and builds intuitive digital experiences. Focused on creating accessible, high-performing websites.
               </p>
             </div>
 
-            {/* Will Mitchell */}
             <div className="text-center">
-              <div className="w-[140px] h-[140px] mx-auto mb-8 bg-[#1A4D2E] rounded-full flex items-center justify-center">
-                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full fill-[#1A4D2E]">
-                  <circle cx="50" cy="35" r="15"/>
-                  <path d="M 30 50 Q 30 45 35 45 L 65 45 Q 70 45 70 50 L 75 80 Q 75 85 70 85 L 30 85 Q 25 85 25 80 Z"/>
+              <div className="mx-auto mb-8 flex h-[140px] w-[140px] items-center justify-center rounded-full bg-marketing-forest">
+                <svg
+                  viewBox="0 0 100 100"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-full w-full fill-white/90"
+                  aria-hidden="true"
+                >
+                  <circle cx="50" cy="35" r="15" />
+                  <path d="M 30 50 Q 30 45 35 45 L 65 45 Q 70 45 70 50 L 75 80 Q 75 85 70 85 L 30 85 Q 25 85 25 80 Z" />
                 </svg>
               </div>
-              <h3 className="text-[22px] font-semibold text-black mb-1.5 tracking-tight">
+              <h3 className="mb-1.5 font-marketing-display text-marketing-2xl font-medium tracking-tight text-marketing-ink">
                 Will Mitchell
               </h3>
-              <p className="text-[13px] text-gray-600 mb-5 tracking-wide">
+              <p className="mb-5 text-marketing-sm tracking-wide text-marketing-muted">
                 Auto Marketing
               </p>
-              <p className="text-[15px] text-gray-500 leading-relaxed max-w-[420px] mx-auto">
-                Drives growth through intelligent automation. Specializes in AI-powered marketing solutions.
+              <p className="mx-auto max-w-[420px] text-marketing-base leading-relaxed text-marketing-muted">
+                Drives growth through intelligent automation. Specialises in AI-powered marketing solutions.
               </p>
             </div>
           </div>
 
-          {/* Divider */}
-          <div className="w-[60px] h-[1px] bg-gray-300 mx-auto mb-20"></div>
+          <div className="mx-auto mb-20 h-px w-[60px] bg-marketing-border" />
 
-          {/* Mission Text */}
-          <p className="text-center max-w-[780px] mx-auto text-[16px] text-gray-600 leading-relaxed mb-16">
+          <p className="mx-auto mb-16 max-w-[780px] text-center text-marketing-base leading-relaxed text-marketing-muted">
             Founded in 2020 to help small businesses compete online through quality website redesigns.
           </p>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 max-w-3xl mx-auto">
+          <div className="mx-auto grid max-w-3xl grid-cols-1 gap-8 sm:grid-cols-3">
             <div className="flex flex-col items-center">
-              <span className="text-4xl font-bold text-[#7FA99B]">50+</span>
-              <span className="mt-2 text-sm text-gray-600">Websites Launched</span>
+              <span className="font-marketing-display text-marketing-4xl font-semibold text-marketing-sage">
+                50+
+              </span>
+              <span className="mt-2 text-marketing-sm text-marketing-muted">
+                Websites launched
+              </span>
             </div>
             <div className="flex flex-col items-center">
-              <span className="text-4xl font-bold text-[#7FA99B]">100%</span>
-              <span className="mt-2 text-sm text-gray-600">Satisfaction</span>
+              <span className="font-marketing-display text-marketing-4xl font-semibold text-marketing-sage">
+                100%
+              </span>
+              <span className="mt-2 text-marketing-sm text-marketing-muted">
+                Satisfaction
+              </span>
             </div>
             <div className="flex flex-col items-center">
-              <span className="text-4xl font-bold text-[#7FA99B]">85%</span>
-              <span className="mt-2 text-sm text-gray-600">Conversion Increase</span>
+              <span className="font-marketing-display text-marketing-4xl font-semibold text-marketing-sage">
+                85%
+              </span>
+              <span className="mt-2 text-marketing-sm text-marketing-muted">
+                Conversion increase
+              </span>
             </div>
           </div>
         </div>
       </Container>
-    </div>
+    </section>
   );
-} 
+}

@@ -9,7 +9,6 @@ export function CookieConsent() {
     const consent = localStorage.getItem("cookieConsent");
     if (!consent) {
       setShowBanner(true);
-      // Delay to trigger fade-in animation
       setTimeout(() => setIsVisible(true), 100);
     }
   }, []);
@@ -37,40 +36,37 @@ export function CookieConsent() {
 
   return (
     <div
-      className={`fixed bottom-4 left-4 right-4 sm:right-auto sm:left-5 sm:w-[280px] max-w-[calc(100vw-2rem)] sm:max-w-none bg-white rounded-lg border border-gray-300 flex flex-col items-start justify-between p-4 sm:p-5 gap-3 sm:gap-4 shadow-lg z-[9997] transition-all duration-300 ease-in-out ${
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+      className={`fixed bottom-4 left-4 right-4 z-[9997] flex max-w-[calc(100vw-2rem)] flex-col items-start justify-between gap-3 rounded-lg border border-marketing-border bg-white p-4 shadow-lg transition-all duration-300 ease-in-out sm:left-5 sm:right-auto sm:w-[280px] sm:max-w-none sm:gap-4 sm:p-5 ${
+        isVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
       }`}
-      style={{
-        fontFamily: "system-ui, -apple-system, sans-serif",
-      }}
     >
       <button
         onClick={handleClose}
-        className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-transparent border-none cursor-pointer text-gray-500 hover:text-gray-700 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+        className="absolute right-3 top-3 flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center border-none bg-transparent text-marketing-muted transition-colors hover:text-marketing-ink sm:right-4 sm:top-4"
         aria-label="Close cookie banner"
       >
-        <X className="h-4 w-4 sm:w-5 sm:h-5" />
+        <X className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={1.5} />
       </button>
 
-      <h4 className="text-[#1a1f1c] font-bold text-base m-0">
+      <h4 className="m-0 text-marketing-base font-bold text-marketing-ink">
         We use cookies
       </h4>
 
-      <p className="text-xs font-normal text-gray-700 m-0 leading-relaxed">
-        We use cookies to enhance your browsing experience, serve personalized
-        content, and analyze our traffic. You can accept or reject optional
+      <p className="m-0 text-marketing-xs font-normal leading-relaxed text-marketing-muted">
+        We use cookies to enhance your browsing experience, serve personalised
+        content, and analyse our traffic. You can accept or reject optional
         cookies below.
       </p>
 
-      <div className="w-full flex justify-between gap-3">
+      <div className="flex w-full justify-between gap-3">
         <button
-          className="w-1/2 py-3 px-3 border-none rounded-md cursor-pointer bg-gray-200 text-[#1a1f1c] font-medium text-sm transition-colors hover:bg-gray-300 active:bg-gray-400 min-h-[44px] flex items-center justify-center"
+          className="flex w-1/2 min-h-[44px] cursor-pointer items-center justify-center rounded-md border-none bg-marketing-border px-3 py-3 text-marketing-sm font-medium text-marketing-ink transition-colors hover:bg-marketing-muted/20"
           onClick={handleReject}
         >
           Reject
         </button>
         <button
-          className="w-1/2 py-3 px-3 border-none rounded-md cursor-pointer bg-[#1f4d36] text-white font-medium text-sm transition-colors hover:bg-[#2a6248] active:bg-[#0b3b25] min-h-[44px] flex items-center justify-center"
+          className="flex w-1/2 min-h-[44px] cursor-pointer items-center justify-center rounded-md border-none bg-marketing-forest px-3 py-3 text-marketing-sm font-medium text-white transition-colors hover:bg-marketing-forest-dark"
           onClick={handleAccept}
         >
           Accept
@@ -79,4 +75,3 @@ export function CookieConsent() {
     </div>
   );
 }
-

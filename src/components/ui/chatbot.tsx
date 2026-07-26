@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "./button";
 import { Input } from "./input";
 import { MessageCircle, X, Send, Zap } from "lucide-react";
-import { Link } from "react-router-dom";
 
 type Message = {
   id: number;
@@ -14,7 +13,7 @@ type Message = {
 const initialMessages: Message[] = [
   {
     id: 1,
-    text: "👋 Hi there! I'm your AI assistant. How can I help you with your website redesign today?",
+    text: "Hi there. I'm the Enclosure assistant. How can I help with your website or project today?",
     sender: "bot",
     timestamp: new Date(),
   },
@@ -48,12 +47,12 @@ export function Chatbot() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = () => {
-    if (inputValue.trim() === "") return;
+  const sendMessage = (text: string) => {
+    if (text.trim() === "") return;
 
     const newUserMessage: Message = {
-      id: messages.length + 1,
-      text: inputValue,
+      id: Date.now(),
+      text,
       sender: "user",
       timestamp: new Date(),
     };
@@ -62,11 +61,10 @@ export function Chatbot() {
     setInputValue("");
     setIsTyping(true);
 
-    // Simulate bot response after a delay
     setTimeout(() => {
-      const botResponse = generateResponse(inputValue);
+      const botResponse = generateResponse(text);
       const newBotMessage: Message = {
-        id: messages.length + 2,
+        id: Date.now() + 1,
         text: botResponse.text,
         sender: "bot",
         timestamp: new Date(),
@@ -81,6 +79,10 @@ export function Chatbot() {
     }, 1000);
   };
 
+  const handleSendMessage = () => {
+    sendMessage(inputValue);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       handleSendMessage();
@@ -88,16 +90,14 @@ export function Chatbot() {
   };
 
   const handleQuickQuestion = (question: string) => {
-    setInputValue(question);
-    handleSendMessage();
+    sendMessage(question);
   };
 
   const handleSubmitEmail = () => {
     if (email.trim() === "") return;
 
-    // Add user email message
     const newUserMessage: Message = {
-      id: messages.length + 1,
+      id: Date.now(),
       text: `My email is: ${email}`,
       sender: "user",
       timestamp: new Date(),
@@ -106,11 +106,10 @@ export function Chatbot() {
     setMessages((prev) => [...prev, newUserMessage]);
     setIsTyping(true);
 
-    // Simulate bot response
     setTimeout(() => {
       const newBotMessage: Message = {
-        id: messages.length + 2,
-        text: "Thanks for providing your email! One of our experts will reach out to you shortly to schedule your free consultation. In the meantime, feel free to ask me any other questions you might have.",
+        id: Date.now() + 1,
+        text: "Thanks for providing your email. One of our team will reach out shortly to schedule your free intro call. In the meantime, feel free to ask any other questions.",
         sender: "bot",
         timestamp: new Date(),
       };
@@ -122,7 +121,7 @@ export function Chatbot() {
   };
 
   const generateResponse = (
-    message: string,
+    message: string
   ): { text: string; showEmailCapture: boolean } => {
     const lowerMessage = message.toLowerCase();
 
@@ -132,17 +131,18 @@ export function Chatbot() {
       lowerMessage.includes("pricing")
     ) {
       return {
-        text: "Our website redesign packages are: Essential (£1,997) for startups and small businesses, Professional (£2,997) for growing brands - our most popular option, and Signature (£5,499) for premium digital experiences. We only require a 20% deposit to get started, with the remaining balance paid through flexible monthly installments. Would you like to schedule a free consultation to discuss which plan would be best for your business?",
+        text: "We offer fixed packages for standard web work, plus bespoke quotes for custom builds. You can see the full breakdown on our pricing page, or book a free intro call and we'll help you choose the right fit.",
         showEmailCapture: true,
       };
     } else if (
       lowerMessage.includes("payment") ||
       lowerMessage.includes("deposit") ||
       lowerMessage.includes("pay") ||
-      lowerMessage.includes("installment")
+      lowerMessage.includes("installment") ||
+      lowerMessage.includes("instalment")
     ) {
       return {
-        text: "We make our pricing flexible and accessible! You only need to pay a 20% deposit upfront to start your project. The remaining balance can be paid through flexible monthly installments that work with your budget. This way, you can get a premium website without a huge upfront cost.",
+        text: "Projects typically start with a deposit, with the balance billed in agreed stages. Exact terms are confirmed on your intro call and in your proposal.",
         showEmailCapture: true,
       };
     } else if (
@@ -152,7 +152,7 @@ export function Chatbot() {
       lowerMessage.includes("timeline")
     ) {
       return {
-        text: "Our typical website redesign takes 6-8 weeks from start to launch, depending on the complexity and your responsiveness with content. We follow a streamlined process: Discovery (1 week) → Design (2 weeks) → Development (3-4 weeks) → Launch. Our AI-powered workflow allows us to deliver quality results efficiently without rushing.",
+        text: "Most package sites take a few weeks once content is ready. Larger or bespoke work takes longer, and we'll set expectations clearly before we start.",
         showEmailCapture: false,
       };
     } else if (
@@ -163,7 +163,7 @@ export function Chatbot() {
       lowerMessage.includes("meeting")
     ) {
       return {
-        text: "I'd be happy to set up a free consultation with one of our website experts! We'll discuss your business goals, current website challenges, and how we can help. Could you please provide your email address so we can schedule a time that works for you?",
+        text: "You can book a free intro call on our contact page. No pitch, no strings, just a conversation about what you're trying to build. Would you like to leave your email so we can follow up?",
         showEmailCapture: true,
       };
     } else if (
@@ -173,7 +173,7 @@ export function Chatbot() {
       lowerMessage.includes("begin")
     ) {
       return {
-        text: "To get started, we'll need: your current website URL (if applicable), brand assets (logo, colors, fonts), content for your pages, information about your target audience and competitors, and your main business goals. Don't worry if you don't have everything ready - we can help you with content creation too! Would you like to schedule a discovery call?",
+        text: "To get started we'll need your current website URL if you have one, brand assets, content for your pages, and a sense of your audience and goals. If you don't have everything ready, we can help. Would you like to book a free intro call?",
         showEmailCapture: true,
       };
     } else if (
@@ -183,7 +183,7 @@ export function Chatbot() {
       lowerMessage.includes("ongoing")
     ) {
       return {
-        text: "Yes! We offer comprehensive ongoing maintenance packages to keep your website secure, fast, and up-to-date. Our Standard plan includes 1 month of post-launch support, and our Premium plan includes 3 months. We also offer monthly maintenance retainers for regular updates, security monitoring, and technical support.",
+        text: "Yes. We offer ongoing maintenance to keep your website secure, fast, and up to date, including updates, monitoring, and technical support.",
         showEmailCapture: false,
       };
     } else if (
@@ -193,7 +193,7 @@ export function Chatbot() {
       lowerMessage.includes("search")
     ) {
       return {
-        text: "SEO is a core part of every website we build! All our sites include on-page SEO optimization, fast loading speeds, mobile responsiveness, and clean code that search engines love. We also offer advanced SEO packages for businesses that want comprehensive keyword research, content optimization, and ongoing SEO strategy.",
+        text: "SEO is part of every site we build, including on-page setup, fast loading speeds, and mobile responsiveness. We can also discuss deeper SEO strategy on an intro call.",
         showEmailCapture: true,
       };
     } else if (
@@ -203,7 +203,7 @@ export function Chatbot() {
       lowerMessage.includes("previous")
     ) {
       return {
-        text: "We've successfully launched 50+ websites across various industries, with a 100% client satisfaction rate. Our clients typically see an 85% increase in conversions after their redesign. I'd love to show you relevant examples during a free consultation call - would you like to schedule one?",
+        text: "We're happy to walk through relevant examples on a free intro call and talk about what would suit your industry and goals.",
         showEmailCapture: true,
       };
     } else if (
@@ -212,7 +212,7 @@ export function Chatbot() {
       lowerMessage.includes("guarantee")
     ) {
       return {
-        text: "We offer a 30-day satisfaction guarantee. If you're not happy with our work within the first 30 days, we'll either revise it until you're satisfied or provide a full refund. We also have a flexible cancellation policy - you can cancel anytime with 30 days' notice. Your satisfaction is our priority!",
+        text: "Ongoing plans are month-to-month with notice periods set out in your agreement. Project terms, including deposits and revisions, are confirmed before work begins.",
         showEmailCapture: false,
       };
     } else if (
@@ -222,7 +222,7 @@ export function Chatbot() {
       lowerMessage.includes("stack")
     ) {
       return {
-        text: "We build websites using cutting-edge technology including React, Next.js, TypeScript, and Tailwind CSS. Our AI-powered design process helps us create modern, fast, and conversion-optimized websites. All our sites are fully responsive, accessible (WCAG 2.1 AA compliant), and built with best practices for performance and security.",
+        text: "We build with modern tools including React, Next.js, TypeScript, and Tailwind CSS. Sites are responsive, accessible, and built with performance and security in mind.",
         showEmailCapture: false,
       };
     } else if (
@@ -232,58 +232,64 @@ export function Chatbot() {
       lowerMessage.includes("reach")
     ) {
       return {
-        text: "You can reach us at josh@theenclosure.co.uk or call us at 07877 700 777. We're also available through our contact page where you can book a free consultation call directly into our calendar. What's the best way for us to get in touch with you?",
+        text: "You can reach us at josh@theenclosure.co.uk, message us on WhatsApp from the contact page, or book a free intro call there.",
         showEmailCapture: true,
       };
     } else {
       return {
-        text: "Thanks for your message! That's a great question. To provide you with the most accurate and personalized information, it would be best to speak with one of our website experts directly. Would you like to schedule a free 30-minute consultation call?",
+        text: "Thanks for your message. For the most accurate answer, it's often best to speak with us directly. Would you like to book a free intro call?",
         showEmailCapture: true,
       };
     }
   };
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
-      {/* Chat button */}
+    <div className="fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6">
       <button
         onClick={toggleChat}
-        className="flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#1A4D2E] text-white shadow-lg hover:bg-[#1A4D2E]/90 transition-all duration-300 hover:scale-105 min-h-[44px] min-w-[44px]"
+        className="flex h-14 w-14 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-marketing-forest text-white shadow-lg transition-all duration-300 hover:bg-marketing-forest-dark hover:scale-105 sm:h-16 sm:w-16"
         aria-label={isOpen ? "Close chat" : "Open chat"}
       >
-        {isOpen ? <X size={20} className="sm:w-6 sm:h-6" /> : <MessageCircle size={20} className="sm:w-6 sm:h-6" />}
+        {isOpen ? (
+          <X size={20} className="sm:h-6 sm:w-6" strokeWidth={1.5} />
+        ) : (
+          <MessageCircle size={20} className="sm:h-6 sm:w-6" strokeWidth={1.5} />
+        )}
       </button>
 
-      {/* Chat window */}
       {isOpen && (
-        <div className="absolute bottom-16 right-0 sm:bottom-20 w-[calc(100vw-2rem)] max-w-[320px] sm:max-w-[384px] h-[calc(100vh-8rem)] max-h-[500px] bg-white rounded-lg shadow-xl flex flex-col overflow-hidden border border-gray-200">
-          {/* Header */}
-          <div className="bg-[#1A4D2E] text-white p-3 sm:p-4 flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center min-w-0">
-              <Zap className="mr-2 flex-shrink-0 w-4 h-4 sm:w-5 sm:h-5" size={16} />
-              <h3 className="font-semibold text-sm sm:text-base truncate">The Enclosure AI Assistant</h3>
+        <div className="absolute bottom-16 right-0 flex h-[calc(100vh-8rem)] max-h-[500px] w-[calc(100vw-2rem)] max-w-[320px] flex-col overflow-hidden rounded-lg border border-marketing-border bg-white shadow-xl sm:bottom-20 sm:max-w-[384px]">
+          <div className="flex flex-shrink-0 items-center justify-between bg-marketing-forest p-3 text-white sm:p-4">
+            <div className="flex min-w-0 items-center">
+              <Zap className="mr-2 h-4 w-4 flex-shrink-0 sm:h-5 sm:w-5" size={16} strokeWidth={1.5} />
+              <h3 className="truncate text-marketing-sm font-semibold sm:text-marketing-base">
+                The Enclosure assistant
+              </h3>
             </div>
             <button
               onClick={toggleChat}
-              className="text-white hover:text-gray-200 flex-shrink-0 ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="ml-2 flex min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center text-white hover:text-white/80"
               aria-label="Close chat"
             >
-              <X size={18} className="sm:w-5 sm:h-5" />
+              <X size={18} className="sm:h-5 sm:w-5" strokeWidth={1.5} />
             </button>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
+          <div className="flex-1 overflow-y-auto bg-marketing-mint p-4">
             {messages.map((message) => (
               <div
                 key={message.id}
                 className={`mb-4 ${message.sender === "user" ? "flex justify-end" : "flex justify-start"}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-lg p-3 ${message.sender === "user" ? "bg-[#1A4D2E] text-white" : "bg-white text-gray-800 border border-gray-200"}`}
+                  className={`max-w-[80%] rounded-lg p-3 ${
+                    message.sender === "user"
+                      ? "bg-marketing-forest text-white"
+                      : "border border-marketing-border bg-white text-marketing-ink"
+                  }`}
                 >
-                  <p className="text-sm">{message.text}</p>
-                  <p className="text-xs mt-1 opacity-70">
+                  <p className="text-marketing-sm">{message.text}</p>
+                  <p className="mt-1 text-marketing-xs opacity-70">
                     {message.timestamp.toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
@@ -293,21 +299,21 @@ export function Chatbot() {
               </div>
             ))}
             {isTyping && (
-              <div className="flex justify-start mb-4">
-                <div className="bg-white text-gray-800 rounded-lg p-3 border border-gray-200">
+              <div className="mb-4 flex justify-start">
+                <div className="rounded-lg border border-marketing-border bg-white p-3 text-marketing-ink">
                   <div className="flex space-x-1">
                     <div
-                      className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
+                      className="h-2 w-2 animate-bounce rounded-full bg-marketing-muted"
                       style={{ animationDelay: "0ms" }}
-                    ></div>
+                    />
                     <div
-                      className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
+                      className="h-2 w-2 animate-bounce rounded-full bg-marketing-muted"
                       style={{ animationDelay: "150ms" }}
-                    ></div>
+                    />
                     <div
-                      className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
+                      className="h-2 w-2 animate-bounce rounded-full bg-marketing-muted"
                       style={{ animationDelay: "300ms" }}
-                    ></div>
+                    />
                   </div>
                 </div>
               </div>
@@ -315,11 +321,10 @@ export function Chatbot() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Email capture */}
           {showEmailCapture && (
-            <div className="p-4 bg-[#1A4D2E]/5 border-t border-gray-200">
-              <p className="text-sm text-gray-700 mb-2">
-                Enter your email to schedule a free consultation:
+            <div className="border-t border-marketing-border bg-marketing-forest/5 p-4">
+              <p className="mb-2 text-marketing-sm text-marketing-muted">
+                Enter your email to schedule a free intro call:
               </p>
               <div className="flex gap-2">
                 <Input
@@ -331,7 +336,7 @@ export function Chatbot() {
                 />
                 <Button
                   onClick={handleSubmitEmail}
-                  className="bg-[#2D5F3F] hover:bg-[#2D5F3F]/90 text-white min-h-[44px] px-4"
+                  className="min-h-[44px] bg-marketing-forest px-4 text-white hover:bg-marketing-forest-dark"
                 >
                   Submit
                 </Button>
@@ -339,14 +344,13 @@ export function Chatbot() {
             </div>
           )}
 
-          {/* Quick questions */}
-          <div className="p-2 bg-gray-50 border-t border-gray-200 overflow-x-auto whitespace-nowrap">
+          <div className="overflow-x-auto whitespace-nowrap border-t border-marketing-border bg-marketing-mint p-2">
             <div className="flex gap-2">
-              {commonQuestions.map((question, index) => (
+              {commonQuestions.map((question) => (
                 <button
-                  key={index}
+                  key={question}
                   onClick={() => handleQuickQuestion(question)}
-                  className="px-3 py-1 text-xs bg-white border border-gray-200 rounded-full hover:bg-gray-100 text-gray-700 whitespace-nowrap"
+                  className="whitespace-nowrap rounded-full border border-marketing-border bg-white px-3 py-1 text-marketing-xs text-marketing-ink hover:bg-white/80"
                 >
                   {question}
                 </button>
@@ -354,8 +358,7 @@ export function Chatbot() {
             </div>
           </div>
 
-          {/* Input */}
-          <div className="p-4 border-t border-gray-200 bg-white">
+          <div className="border-t border-marketing-border bg-white p-4">
             <div className="flex items-center gap-2">
               <Input
                 type="text"
@@ -367,10 +370,10 @@ export function Chatbot() {
               />
               <Button
                 onClick={handleSendMessage}
-                className="bg-[#1A4D2E] hover:bg-[#1A4D2E]/90 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="flex min-h-[44px] min-w-[44px] items-center justify-center bg-marketing-forest hover:bg-marketing-forest-dark"
                 aria-label="Send message"
               >
-                <Send size={18} />
+                <Send size={18} strokeWidth={1.5} />
               </Button>
             </div>
           </div>

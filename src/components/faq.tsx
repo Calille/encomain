@@ -1,7 +1,8 @@
 import { Container } from "./ui/container";
-import { motion } from "framer-motion";
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { Link } from "react-router-dom";
+import { MarketingHeading } from "./marketing/marketing-heading";
 
 interface FaqItem {
   question: string;
@@ -14,36 +15,44 @@ export default function FAQ() {
   const faqs: FaqItem[] = [
     {
       question: "How much do I need to pay upfront to get started?",
-      answer: "We only require a 20% deposit to begin your project. The remaining balance can be paid through flexible monthly installments based on your package. This makes it easier to spread out costs while we bring your website to life."
+      answer:
+        "We typically require a deposit to begin your project. The remaining balance can be paid through flexible instalments based on your package. Exact terms are confirmed on your intro call.",
     },
     {
       question: "How long does it take to complete a website?",
-      answer: "Timelines vary by package: Essential takes 3–4 weeks, Professional takes 5–7 weeks, and Signature takes 8–12 weeks. These estimates begin once your content and assets are approved."
+      answer:
+        "Timelines vary by package and content readiness. Most standard sites take a few weeks once assets are approved. We'll set clear expectations before work begins.",
     },
     {
       question: "Do you offer ongoing maintenance after launch?",
-      answer: "Yes — all our packages include ongoing maintenance. We handle security updates, performance checks, and content changes so your site stays fast, secure, and up to date year-round."
+      answer:
+        "Yes. We can handle security updates, performance checks, and content changes so your site stays fast, secure, and up to date.",
     },
     {
       question: "Can I make changes to my website after it's launched?",
-      answer: "Absolutely. You'll have full access to your site, and we also include monthly content updates in every plan. Larger edits or new pages can be added anytime as part of our ongoing care."
+      answer:
+        "Yes. You'll have full access to your site, and packages can include monthly content updates. Larger edits or new pages can be added as ongoing care.",
     },
     {
       question: "What happens if I need more than the included pages?",
-      answer: "No problem! Additional pages can be added for £199 per page after the initial build. Each new page is fully designed, mobile-optimized, and integrated into your existing site seamlessly."
+      answer:
+        "Additional pages can be added after the initial build. Each new page is designed, made mobile-friendly, and integrated into your existing site.",
     },
     {
       question: "Do you provide domain registration or hosting?",
-      answer: "While domain registration isn't included, we'll guide you through purchasing the right one. We assist with hosting setup and SSL certification to ensure your website is secure and live-ready."
+      answer:
+        "Domain registration isn't included, but we'll guide you through purchasing the right one. We assist with hosting setup and SSL so your site is secure and live-ready.",
     },
     {
       question: "Can I cancel my maintenance plan at any time?",
-      answer: "Yes — all ongoing plans are month-to-month with no long-term contracts. You can cancel anytime with 30 days' notice, and your website remains fully yours."
+      answer:
+        "Ongoing plans are month-to-month with no long-term contracts. You can cancel with 30 days' notice, and your website remains fully yours.",
     },
     {
       question: "What if I don't have content or branding ready yet?",
-      answer: "No worries. We can help you develop brand identity, content strategy, and copywriting before the build begins. This ensures your site launches with strong visuals and messaging that convert visitors into clients."
-    }
+      answer:
+        "We can help you develop brand identity, content strategy, and copywriting before the build begins so your site launches with strong visuals and messaging.",
+    },
   ];
 
   const toggleQuestion = (index: number) => {
@@ -51,80 +60,62 @@ export default function FAQ() {
   };
 
   return (
-    <section className="py-24 bg-[#F8FAF9]">
+    <section className="bg-marketing-mint py-24">
       <Container>
-        <div className="text-center mb-16">
-          <motion.h2 
-            className="text-base font-semibold leading-7 text-[#7FA99B]"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            Frequently Asked Questions
-          </motion.h2>
-          <motion.p 
-            className="mt-2 text-3xl font-bold tracking-tight text-[#1A1A1A] sm:text-4xl"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            Common Questions Answered
-          </motion.p>
-          <motion.p 
-            className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            Get answers to the most common questions about our website redesign process.
-          </motion.p>
+        <div className="mb-16 text-center">
+          <MarketingHeading level="p" variant="eyebrow">
+            Frequently asked questions
+          </MarketingHeading>
+          <MarketingHeading level="h2" variant="section" className="mt-2">
+            Common questions answered
+          </MarketingHeading>
+          <p className="mx-auto mt-6 max-w-2xl text-marketing-lg leading-8 text-marketing-muted">
+            Answers to the questions we hear most about our process and packages.
+          </p>
         </div>
 
-        <div className="max-w-3xl mx-auto">
+        <div className="mx-auto max-w-3xl">
           {faqs.map((faq, index) => (
-            <motion.div 
-              key={index}
-              className="mb-4 bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+            <div
+              key={faq.question}
+              className="mb-4 overflow-hidden rounded-lg border border-marketing-border bg-white"
             >
               <button
-                className="flex justify-between items-center w-full px-6 py-4 text-left"
+                className="flex w-full items-center justify-between px-6 py-4 text-left min-h-[44px]"
                 onClick={() => toggleQuestion(index)}
+                aria-expanded={openIndex === index}
               >
-                <span className="font-semibold text-[#1A1A1A]">{faq.question}</span>
+                <span className="pr-4 font-semibold text-marketing-ink text-marketing-base">
+                  {faq.question}
+                </span>
                 {openIndex === index ? (
-                  <ChevronUp className="h-5 w-5 text-[#1A4D2E]" />
+                  <ChevronUp className="h-5 w-5 shrink-0 text-marketing-forest" strokeWidth={1.5} />
                 ) : (
-                  <ChevronDown className="h-5 w-5 text-[#1A4D2E]" />
+                  <ChevronDown className="h-5 w-5 shrink-0 text-marketing-forest" strokeWidth={1.5} />
                 )}
               </button>
-              <motion.div
-                initial={{ height: 0 }}
-                animate={{ height: openIndex === index ? "auto" : 0 }}
-                transition={{ duration: 0.3 }}
-                className="overflow-hidden"
-              >
-                <div className="px-6 pb-4 text-gray-600">
+              {openIndex === index && (
+                <div className="px-6 pb-4 text-marketing-base text-marketing-muted leading-relaxed">
                   {faq.answer}
                 </div>
-              </motion.div>
-            </motion.div>
+              )}
+            </div>
           ))}
         </div>
 
-        <motion.div 
-          className="mt-12 text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.8 }}
-        >
-          <p className="text-gray-600">
-            Don't see your question? <a href="/contact" className="text-[#1A4D2E] font-semibold hover:underline">Contact us</a> and we'll be happy to help.
+        <div className="mt-12 text-center">
+          <p className="text-marketing-muted text-marketing-base">
+            Don't see your question?{" "}
+            <Link
+              to="/contact#book"
+              className="font-semibold text-marketing-forest hover:underline"
+            >
+              Book a free intro call
+            </Link>{" "}
+            and we'll help.
           </p>
-        </motion.div>
+        </div>
       </Container>
     </section>
   );
-} 
+}

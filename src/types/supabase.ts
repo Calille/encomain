@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -11,6 +11,31 @@ export type Database = {
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -105,7 +130,9 @@ export type Database = {
           issue_date: string
           notes: string | null
           paid_date: string | null
+          payment_method: string | null
           pdf_url: string | null
+          sent_at: string | null
           status: string
           user_id: string
         }
@@ -120,7 +147,9 @@ export type Database = {
           issue_date: string
           notes?: string | null
           paid_date?: string | null
+          payment_method?: string | null
           pdf_url?: string | null
+          sent_at?: string | null
           status?: string
           user_id: string
         }
@@ -135,7 +164,9 @@ export type Database = {
           issue_date?: string
           notes?: string | null
           paid_date?: string | null
+          payment_method?: string | null
           pdf_url?: string | null
+          sent_at?: string | null
           status?: string
           user_id?: string
         }
@@ -150,6 +181,217 @@ export type Database = {
           {
             foreignKeyName: "invoices_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_events: {
+        Row: {
+          body: string | null
+          bounced_at: string | null
+          created_at: string
+          direction: string
+          error_message: string | null
+          id: string
+          lead_id: string
+          opened_at: string | null
+          replied_at: string | null
+          resend_message_id: string | null
+          sent_at: string | null
+          sent_by: string | null
+          subject: string | null
+          unsubscribe_token: string | null
+        }
+        Insert: {
+          body?: string | null
+          bounced_at?: string | null
+          created_at?: string
+          direction: string
+          error_message?: string | null
+          id?: string
+          lead_id: string
+          opened_at?: string | null
+          replied_at?: string | null
+          resend_message_id?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          subject?: string | null
+          unsubscribe_token?: string | null
+        }
+        Update: {
+          body?: string | null
+          bounced_at?: string | null
+          created_at?: string
+          direction?: string
+          error_message?: string | null
+          id?: string
+          lead_id?: string
+          opened_at?: string | null
+          replied_at?: string | null
+          resend_message_id?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          subject?: string | null
+          unsubscribe_token?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_events_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_suppression: {
+        Row: {
+          email: string
+          id: string
+          reason: string | null
+          suppressed_at: string
+          unsubscribe_token: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          reason?: string | null
+          suppressed_at?: string
+          unsubscribe_token?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          reason?: string | null
+          suppressed_at?: string
+          unsubscribe_token?: string | null
+        }
+        Relationships: []
+      }
+      import_batches: {
+        Row: {
+          filename: string
+          id: string
+          imported_at: string
+          imported_by: string
+          new_leads: number
+          notes: string | null
+          schema_version: string
+          skipped_invalid: number
+          skipped_unsubscribed: number
+          total_records: number
+          updated_leads: number
+        }
+        Insert: {
+          filename: string
+          id?: string
+          imported_at?: string
+          imported_by: string
+          new_leads?: number
+          notes?: string | null
+          schema_version: string
+          skipped_invalid?: number
+          skipped_unsubscribed?: number
+          total_records?: number
+          updated_leads?: number
+        }
+        Update: {
+          filename?: string
+          id?: string
+          imported_at?: string
+          imported_by?: string
+          new_leads?: number
+          notes?: string | null
+          schema_version?: string
+          skipped_invalid?: number
+          skipped_unsubscribed?: number
+          total_records?: number
+          updated_leads?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_batches_imported_by_fkey"
+            columns: ["imported_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          address: string | null
+          assigned_to: string | null
+          audit_data: Json
+          audit_findings_summary: string | null
+          business_name: string
+          contact_email: string | null
+          contact_name: string | null
+          created_at: string
+          domain: string
+          google_place_id: string | null
+          id: string
+          last_audited_at: string | null
+          personalised_email_draft: string | null
+          phone: string | null
+          source: string
+          status: string
+          unsubscribed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          assigned_to?: string | null
+          audit_data?: Json
+          audit_findings_summary?: string | null
+          business_name: string
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          domain: string
+          google_place_id?: string | null
+          id?: string
+          last_audited_at?: string | null
+          personalised_email_draft?: string | null
+          phone?: string | null
+          source?: string
+          status?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          assigned_to?: string | null
+          audit_data?: Json
+          audit_findings_summary?: string | null
+          business_name?: string
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          domain?: string
+          google_place_id?: string | null
+          id?: string
+          last_audited_at?: string | null
+          personalised_email_draft?: string | null
+          phone?: string | null
+          source?: string
+          status?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_assigned_to_fkey"
+            columns: ["assigned_to"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -261,6 +503,41 @@ export type Database = {
           },
         ]
       }
+      suppression_removals: {
+        Row: {
+          email: string
+          id: string
+          notes: string | null
+          previous_reason: string | null
+          removed_at: string
+          removed_by: string
+        }
+        Insert: {
+          email: string
+          id?: string
+          notes?: string | null
+          previous_reason?: string | null
+          removed_at?: string
+          removed_by: string
+        }
+        Update: {
+          email?: string
+          id?: string
+          notes?: string | null
+          previous_reason?: string | null
+          removed_at?: string
+          removed_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suppression_removals_removed_by_fkey"
+            columns: ["removed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
           category: string | null
@@ -321,66 +598,99 @@ export type Database = {
           },
         ]
       }
+      support_ticket_messages: {
+        Row: {
+          id: string
+          ticket_id: string
+          author_id: string
+          author_role: string
+          message: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          ticket_id: string
+          author_id: string
+          author_role: string
+          message: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          ticket_id?: string
+          author_id?: string
+          author_role?: string
+          message?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_ticket_messages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
-          address: string | null
-          city: string | null
-          country: string | null
           created_at: string
           current_plan: string | null
           email: string
           full_name: string | null
           id: string
           last_login: string | null
-          name: string | null
+          must_change_password: boolean | null
           password_changed_at: string | null
-          phone: string | null
+          password_set_by_admin: boolean | null
           plan_started_at: string | null
-          postcode: string | null
           requires_password_change: boolean | null
           role: string
           status: string
           updated_at: string
+          welcome_email_sent_at: string | null
         }
         Insert: {
-          address?: string | null
-          city?: string | null
-          country?: string | null
           created_at?: string
           current_plan?: string | null
           email: string
           full_name?: string | null
           id: string
           last_login?: string | null
-          name?: string | null
+          must_change_password?: boolean | null
           password_changed_at?: string | null
-          phone?: string | null
+          password_set_by_admin?: boolean | null
           plan_started_at?: string | null
-          postcode?: string | null
           requires_password_change?: boolean | null
           role?: string
           status?: string
           updated_at?: string
+          welcome_email_sent_at?: string | null
         }
         Update: {
-          address?: string | null
-          city?: string | null
-          country?: string | null
           created_at?: string
           current_plan?: string | null
           email?: string
           full_name?: string | null
           id?: string
           last_login?: string | null
-          name?: string | null
+          must_change_password?: boolean | null
           password_changed_at?: string | null
-          phone?: string | null
+          password_set_by_admin?: boolean | null
           plan_started_at?: string | null
-          postcode?: string | null
           requires_password_change?: boolean | null
           role?: string
           status?: string
           updated_at?: string
+          welcome_email_sent_at?: string | null
         }
         Relationships: []
       }
@@ -430,6 +740,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_create_user: {
+        Args: {
+          p_email: string
+          p_full_name?: string
+          p_password: string
+          p_role?: string
+          p_status?: string
+        }
+        Returns: string
+      }
       generate_invoice_number: { Args: never; Returns: string }
       get_user_role: { Args: never; Returns: string }
       is_admin: { Args: never; Returns: boolean }
@@ -561,6 +881,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

@@ -2,62 +2,125 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  The Enclosure app design tokens
+  Accent sampled from logo blue: #468EFD → hsl(216 98% 63%)
+*/
+
 @layer base {
   :root {
-    /* Pure White (#FFFFFF) */
-    --background: 0 0% 100%;
-    /* Dark Green (#1A4D2E) */
-    --foreground: 150 45% 15%;
+    color-scheme: light;
 
-    /* Pure White for cards */
+    --background: 220 20% 97%;
+    --surface: 0 0% 100%;
+    --foreground: 222 25% 8%;
+    --muted: 220 14% 94%;
+    --muted-foreground: 220 10% 42%;
+
     --card: 0 0% 100%;
-    --card-foreground: 150 45% 15%;
-
-    /* Pure White for popovers */
+    --card-foreground: 222 25% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 150 45% 15%;
+    --popover-foreground: 222 25% 8%;
 
-    /* Dark Green (#1A4D2E) */
-    --primary: 150 45% 15%;
-    /* White text on primary */
+    --border: 220 14% 88%;
+    --input: 220 14% 88%;
+    --ring: 216 98% 63%;
+
+    --primary: 216 98% 63%;
     --primary-foreground: 0 0% 100%;
 
-    /* Off-White / Pale Sage */
-    --secondary: 150 25% 90%;
-    --secondary-foreground: 150 45% 15%;
+    --secondary: 220 14% 94%;
+    --secondary-foreground: 222 25% 12%;
 
-    /* Cool Gray / Pale Sage */
-    --muted: 150 20% 95%;
-    /* Graphite / Medium Green */
-    --muted-foreground: 150 20% 35%;
-
-    /* Sage Green (#7FA99B) */
-    --accent: 150 30% 45%;
+    --accent: 216 98% 63%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
+    --accent-50: 216 100% 97%;
+    --accent-100: 216 96% 94%;
+    --accent-200: 216 95% 88%;
+    --accent-300: 216 94% 78%;
+    --accent-400: 216 96% 70%;
+    --accent-500: 216 98% 63%;
+    --accent-600: 216 90% 54%;
+    --accent-700: 216 85% 45%;
+    --accent-800: 216 80% 36%;
+    --accent-900: 216 75% 28%;
+    --accent-950: 216 70% 18%;
+
+    --success: 152 45% 38%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 70% 46%;
+    --warning-foreground: 0 0% 100%;
+    --destructive: 0 62% 48%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Cool Gray (#D9E0DC) for borders */
-    --border: 150 10% 85%;
-    --border-color: 150 10% 85%;
-    --input: 150 10% 85%;
-    /* Dark Green for focus rings */
-    --ring: 150 45% 15%;
+    --sidebar: 220 18% 96%;
+    --sidebar-foreground: 222 20% 20%;
+    --sidebar-border: 220 14% 90%;
+    --sidebar-active: 216 98% 63% / 0.08;
 
     --radius: 0.5rem;
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.625rem;
   }
-}
 
-@layer base {
+  .dark {
+    color-scheme: dark;
+
+    --background: 222 18% 6%;
+    --surface: 222 16% 9%;
+    --foreground: 210 20% 96%;
+    --muted: 222 14% 14%;
+    --muted-foreground: 215 12% 62%;
+
+    --card: 222 16% 9%;
+    --card-foreground: 210 20% 96%;
+    --popover: 222 16% 10%;
+    --popover-foreground: 210 20% 96%;
+
+    --border: 220 12% 18%;
+    --input: 220 12% 18%;
+    --ring: 216 80% 62%;
+
+    --primary: 216 80% 62%;
+    --primary-foreground: 222 25% 8%;
+
+    --secondary: 222 14% 14%;
+    --secondary-foreground: 210 20% 94%;
+
+    --accent: 216 80% 62%;
+    --accent-foreground: 222 25% 8%;
+
+    --accent-50: 216 40% 14%;
+    --accent-100: 216 45% 18%;
+    --accent-200: 216 50% 24%;
+    --accent-300: 216 55% 34%;
+    --accent-400: 216 70% 48%;
+    --accent-500: 216 80% 62%;
+    --accent-600: 216 82% 68%;
+    --accent-700: 216 85% 74%;
+    --accent-800: 216 90% 82%;
+    --accent-900: 216 95% 90%;
+    --accent-950: 216 100% 96%;
+
+    --success: 152 40% 42%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 60% 50%;
+    --warning-foreground: 222 25% 8%;
+    --destructive: 0 55% 52%;
+    --destructive-foreground: 0 0% 100%;
+
+    --sidebar: 222 18% 7%;
+    --sidebar-foreground: 215 14% 78%;
+    --sidebar-border: 220 12% 14%;
+    --sidebar-active: 216 80% 62% / 0.12;
+  }
+
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground;
-    font-family: "Poppins", sans-serif;
-    position: relative;
-  }
+
   html {
     scroll-behavior: smooth;
     font-synthesis: none;
@@ -65,96 +128,50 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  
-  /* Ensure main content doesn't overlap with navigation */
-  main {
-    position: relative;
-    z-index: 1;
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-foreground font-semibold tracking-tight;
+  }
+
+  .font-mono-nums {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-variant-numeric: tabular-nums;
   }
 }
 
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(0, 0, 0, 0.87);
-  background-color: #ffffff;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* React Vertical Timeline Custom Styles */
-.vertical-timeline::before {
-  background: #7FA99B !important;
-  width: 3px !important;
-}
-
-.vertical-timeline-element-content {
-  border-radius: 12px !important;
-  padding: 2rem !important;
-}
-
-.vertical-timeline-element-content-arrow {
-  border-right-color: #FFFFFF !important;
-}
-
-.vertical-timeline-element-icon {
-  box-shadow: 0 0 0 4px #F8FAF9, inset 0 2px 0 rgba(0,0,0,.08), 0 3px 0 4px rgba(0,0,0,.05) !important;
-}
-
-.vertical-timeline-element-content h3 {
-  margin-top: 0;
-}
-
-/* Hover effect for timeline cards */
-.vertical-timeline-element-content:hover {
-  box-shadow: 0 10px 25px rgba(26, 77, 46, 0.15) !important;
-  transform: translateY(-2px);
-  transition: all 0.3s ease;
-}
-
-/* Timeline element animation */
-.vertical-timeline-element {
-  margin: 3rem 0;
-}
-
-/* ========================================
-   PERFORMANCE-OPTIMIZED ANIMATIONS
-   ======================================== */
-
-/* GPU-accelerated fade in animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 20px, 0);
+@layer utilities {
+  .app-dot-canvas {
+    background-color: hsl(var(--background));
+    background-image: radial-gradient(
+      hsl(var(--foreground) / 0.035) 0.7px,
+      transparent 0.7px
+    );
+    background-size: 14px 14px;
   }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
+
+  .dark .app-dot-canvas {
+    background-image: radial-gradient(
+      hsl(var(--foreground) / 0.04) 0.7px,
+      transparent 0.7px
+    );
+  }
+
+  .transition-colors-fast {
+    transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.6s ease-out forwards;
-  opacity: 0;
-}
-
-.animate-fade-in-delayed {
-  animation: fadeIn 0.6s ease-out 0.2s forwards;
-  opacity: 0;
-}
-
-.animate-fade-in-delayed-2 {
-  animation: fadeIn 0.6s ease-out 0.4s forwards;
-  opacity: 0;
-}
-
-/* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -164,81 +181,4 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  
-  .animate-fade-in,
-  .animate-fade-in-delayed,
-  .animate-fade-in-delayed-2 {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
-}
-
-/* Hardware acceleration utilities */
-@layer utilities {
-  .gpu-accelerated {
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    perspective: 1000px;
-  }
-  
-  .will-change-transform {
-    will-change: transform;
-  }
-  
-  .will-change-opacity {
-    will-change: opacity;
-  }
-}
-
-/* Optimize hover transitions with GPU */
-.transition-transform {
-  transition: transform 0.2s ease-out;
-}
-
-.hover\:scale-105:hover {
-  transform: scale(1.05) translateZ(0);
-}
-
-/* Smooth scroll with performance optimization */
-@supports (scroll-behavior: smooth) {
-  html {
-    scroll-behavior: smooth;
-  }
-}
-
-/* Intersection Observer animation classes */
-.fade-in-on-scroll {
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-}
-
-.fade-in-on-scroll.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Stagger animations without JS */
-.stagger-animation > * {
-  opacity: 0;
-  animation: fadeIn 0.5s ease-out forwards;
-}
-
-.stagger-animation > *:nth-child(1) { animation-delay: 0.1s; }
-.stagger-animation > *:nth-child(2) { animation-delay: 0.2s; }
-.stagger-animation > *:nth-child(3) { animation-delay: 0.3s; }
-.stagger-animation > *:nth-child(4) { animation-delay: 0.4s; }
-.stagger-animation > *:nth-child(5) { animation-delay: 0.5s; }
-.stagger-animation > *:nth-child(6) { animation-delay: 0.6s; }
-
-/* Loading spinner */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
 }

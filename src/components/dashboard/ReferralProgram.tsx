@@ -6,20 +6,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Badge } from "../ui/badge";
+import { MetricCard } from "../ui/metric-card";
+import { EmptyState } from "../ui/empty-state";
+import { Skeleton } from "../ui/skeleton";
 import { useToast } from "../../hooks/use-toast";
-import { Loader2, Gift, Send, Users, Sparkles, CheckCircle2, Clock } from "lucide-react";
-import { motion } from "framer-motion";
+import { Gift, Send, Users, CheckCircle2, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { Tables } from "../../types/supabase";
 
 type Referral = Tables<"referrals">;
 
-const statusConfig = {
-  pending: { label: "Pending", color: "bg-gray-100 text-gray-800", icon: Clock },
-  contacted: { label: "Contacted", color: "bg-blue-100 text-blue-800", icon: Users },
-  converted: { label: "Converted", color: "bg-green-100 text-green-800", icon: CheckCircle2 },
-  credited: { label: "Credited", color: "bg-purple-100 text-purple-800", icon: Gift },
-  expired: { label: "Expired", color: "bg-red-100 text-red-800", icon: Clock },
+const statusConfig: Record<
+  string,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "success" | "warning" | "outline";
+    icon: typeof Clock;
+  }
+> = {
+  pending: { label: "Pending", variant: "secondary", icon: Clock },
+  contacted: { label: "Contacted", variant: "default", icon: Users },
+  converted: { label: "Converted", variant: "success", icon: CheckCircle2 },
+  credited: { label: "Credited", variant: "success", icon: Gift },
+  expired: { label: "Expired", variant: "destructive", icon: Clock },
 };
 
 export default function ReferralProgram() {
@@ -82,11 +91,10 @@ export default function ReferralProgram() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(referredEmail)) {
       toast({
-        title: "Invalid Email",
+        title: "Invalid email",
         description: "Please enter a valid email address.",
         variant: "destructive",
       });
@@ -110,8 +118,9 @@ export default function ReferralProgram() {
       }
 
       toast({
-        title: "Referral Sent! 🎉",
-        description: "We'll notify you when your friend becomes a client and you earn £250 credit.",
+        title: "Referral sent",
+        description:
+          "We'll notify you when your friend becomes a client and you earn £250 credit.",
       });
 
       setReferredEmail("");
@@ -136,173 +145,130 @@ export default function ReferralProgram() {
 
   if (loading) {
     return (
-      <Card className="p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-center min-h-[200px]">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#1A4D2E] border-r-transparent"></div>
-            <p className="mt-4 text-sm text-gray-600">Loading referral program...</p>
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-56" />
+          <Skeleton className="h-4 w-full" />
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-3 gap-3">
+            <Skeleton className="h-20" />
+            <Skeleton className="h-20" />
+            <Skeleton className="h-20" />
           </div>
-        </div>
+          <Skeleton className="h-40 w-full" />
+        </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="p-6 shadow-sm border border-gray-200">
+    <Card>
       <CardHeader>
-        <div className="flex items-center gap-2 mb-2">
-          <Gift className="h-6 w-6 text-[#1A4D2E]" />
-          <CardTitle className="text-xl font-bold text-[#1A4D2E]">
-            Refer a Friend – Earn £250 Credit
-          </CardTitle>
+        <div className="flex items-center gap-2">
+          <Gift className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+          <CardTitle>Refer a friend, earn £250 credit</CardTitle>
         </div>
         <CardDescription>
-          Invite friends who need a website. When they sign up and pay their deposit, you'll
-          receive £250 credit toward your next project or monthly plan.
+          Invite friends who need a website. When they sign up and pay their deposit,
+          you'll receive £250 credit toward your next project or monthly plan.
         </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-gray-50 p-4 rounded-lg"
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <Users className="h-5 w-5 text-gray-600" />
-              <p className="text-sm font-medium text-gray-500">Total Referrals</p>
-            </div>
-            <p className="text-2xl font-bold text-[#1A4D2E]">{referrals.length}</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-yellow-50 p-4 rounded-lg"
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <Clock className="h-5 w-5 text-yellow-600" />
-              <p className="text-sm font-medium text-yellow-700">Pending Rewards</p>
-            </div>
-            <p className="text-2xl font-bold text-yellow-700">£{pendingRewards}</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-green-50 p-4 rounded-lg"
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <Gift className="h-5 w-5 text-green-600" />
-              <p className="text-sm font-medium text-green-700">Total Earned</p>
-            </div>
-            <p className="text-2xl font-bold text-green-700">£{totalEarned}</p>
-          </motion.div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <MetricCard label="Total referrals" value={referrals.length} icon={Users} />
+          <MetricCard
+            label="Pending rewards"
+            value={pendingRewards}
+            prefix="£"
+            icon={Clock}
+          />
+          <MetricCard label="Total earned" value={totalEarned} prefix="£" icon={Gift} />
         </div>
 
-        {/* Referral Form */}
-        <Card className="bg-gradient-to-r from-[#1A4D2E] to-[#2D5F3F] text-white">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-white">
-              <Send className="h-5 w-5" />
-              Send an Invitation
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="referred_name" className="text-white">
-                  Friend's Name (Optional)
-                </Label>
-                <Input
-                  id="referred_name"
-                  placeholder="John Smith"
-                  value={referredName}
-                  onChange={(e) => setReferredName(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:bg-white/20"
-                />
-              </div>
+        <div className="rounded-sm border border-border bg-muted/40 p-4">
+          <div className="mb-4 flex items-center gap-2">
+            <Send className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+            <h3 className="text-sm font-semibold text-foreground">Send an invitation</h3>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="referred_name">Friend's name (optional)</Label>
+              <Input
+                id="referred_name"
+                placeholder="John Smith"
+                value={referredName}
+                onChange={(e) => setReferredName(e.target.value)}
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="referred_email" className="text-white">
-                  Friend's Email *
-                </Label>
-                <Input
-                  id="referred_email"
-                  type="email"
-                  placeholder="friend@example.com"
-                  value={referredEmail}
-                  onChange={(e) => setReferredEmail(e.target.value)}
-                  required
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:bg-white/20"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="referred_email">Friend's email *</Label>
+              <Input
+                id="referred_email"
+                type="email"
+                placeholder="friend@example.com"
+                value={referredEmail}
+                onChange={(e) => setReferredEmail(e.target.value)}
+                required
+              />
+            </div>
 
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-white text-[#1A4D2E] hover:bg-white/90"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-2" />
-                    Send Invitation
-                  </>
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+            <Button type="submit" disabled={isSubmitting} className="w-full gap-1.5">
+              <Send className="h-4 w-4" strokeWidth={1.5} />
+              {isSubmitting ? "Sending..." : "Send invitation"}
+            </Button>
+          </form>
+        </div>
 
-        {/* Referral List */}
-        {referrals.length > 0 && (
-          <div>
-            <h3 className="font-semibold text-[#1A4D2E] mb-4">Your Referrals</h3>
-            <div className="space-y-3">
+        <div>
+          <h3 className="mb-3 text-sm font-semibold text-foreground">Your referrals</h3>
+          {referrals.length === 0 ? (
+            <EmptyState
+              icon={Users}
+              message="No referrals yet. Invite a friend to get started."
+              className="py-10"
+            />
+          ) : (
+            <div className="space-y-2">
               {referrals.map((referral) => {
-                const StatusIcon = statusConfig[referral.status as keyof typeof statusConfig]?.icon || Clock;
+                const config =
+                  statusConfig[referral.status as keyof typeof statusConfig] || {
+                    label: referral.status,
+                    variant: "secondary" as const,
+                    icon: Clock,
+                  };
+                const StatusIcon = config.icon;
                 return (
-                  <motion.div
+                  <div
                     key={referral.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
+                    className="flex items-center justify-between gap-3 rounded-sm border border-border px-3 py-3"
                   >
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">
                         {referral.referred_name || referral.referred_email}
                       </p>
                       {referral.referred_name && (
-                        <p className="text-sm text-gray-600">{referral.referred_email}</p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {referral.referred_email}
+                        </p>
                       )}
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="mt-0.5 text-xs text-muted-foreground">
                         Sent {format(new Date(referral.created_at), "MMM d, yyyy")}
                       </p>
                     </div>
-                    <Badge
-                      className={`${statusConfig[referral.status as keyof typeof statusConfig]?.color || "bg-gray-100 text-gray-800"}`}
-                    >
-                      <StatusIcon className="h-3 w-3 mr-1" />
-                      {statusConfig[referral.status as keyof typeof statusConfig]?.label || referral.status}
+                    <Badge variant={config.variant} className="gap-1 shrink-0">
+                      <StatusIcon className="h-3 w-3" strokeWidth={1.5} />
+                      {config.label}
                     </Badge>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </CardContent>
     </Card>
   );
 }
-

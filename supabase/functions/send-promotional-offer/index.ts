@@ -43,7 +43,8 @@ serve(async (req) => {
       to: body.email,
       subject: `${body.offerTitle} - Limited Time Offer`,
       html: emailHtml,
-      from: 'The Enclosure <hello@theenclosure.co.uk>',
+      from: 'The Enclosure <noreply@theenclosure.co.uk>',
+      replyTo: 'hello@theenclosure.co.uk',
     });
 
     if (!result.success) {

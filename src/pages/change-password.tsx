@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { Card, CardContent, CardHeader } from "../components/ui/card";
 import { Eye, EyeOff, Lock, AlertCircle } from "lucide-react";
 import { Logo } from "../components/ui/logo";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "../hooks/use-toast";
 import { supabase } from "../lib/supabase";
+import { ThemeToggle } from "../components/theme-toggle";
 
 export default function ChangePassword() {
   const [newPassword, setNewPassword] = useState("");
@@ -19,7 +21,6 @@ export default function ChangePassword() {
   const navigate = useNavigate();
   const { updatePassword, profile, user } = useAuth();
 
-  // Check if user must change password
   useEffect(() => {
     const checkPasswordChangeRequired = async () => {
       if (!user) return;
@@ -35,9 +36,8 @@ export default function ChangePassword() {
         return;
       }
 
-      // If password change not required, redirect to dashboard
       if (!data?.requires_password_change && !profile?.requires_password_change) {
-        navigate("/dashboard");
+        navigate("/app");
       }
     };
 
@@ -68,14 +68,12 @@ export default function ChangePassword() {
     setIsLoading(true);
     setError("");
 
-    // Validate passwords match
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match");
       setIsLoading(false);
       return;
     }
 
-    // Validate password strength
     const validationError = validatePassword(newPassword);
     if (validationError) {
       setError(validationError);
@@ -86,7 +84,6 @@ export default function ChangePassword() {
     try {
       await updatePassword(newPassword);
 
-      // Update user record - clear requires_password_change flag and set password_changed_at
       if (user) {
         const { error: updateError } = await supabase
           .from("users")
@@ -100,15 +97,14 @@ export default function ChangePassword() {
           console.error("Error updating user record:", updateError);
         }
       }
-      
+
       toast({
-        title: "Password changed successfully! 🎉",
+        title: "Password changed successfully",
         description: "You can now access your dashboard.",
       });
 
-      // Redirect to dashboard after a short delay
       setTimeout(() => {
-        navigate("/dashboard", { replace: true });
+        navigate("/app", { replace: true });
       }, 1000);
     } catch (err) {
       setError("Failed to change password. Please try again.");
@@ -119,115 +115,126 @@ export default function ChangePassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F8FAF9] py-12 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8 border border-gray-200">
-        <div className="flex justify-center mb-6">
-          <Logo />
-        </div>
-
-        {profile?.requires_password_change && (
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start">
-            <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
-            <div>
-              <h3 className="text-sm font-medium text-yellow-800">
-                Password Change Required
-              </h3>
-              <p className="text-sm text-yellow-700 mt-1">
-                For security reasons, you must change the temporary password provided by your administrator.
+    <div className="relative flex min-h-screen items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
+      <div className="relative w-full max-w-md">
+        <Card className="border-border bg-surface">
+          <CardHeader className="items-center space-y-4 pb-2 pt-6">
+            <Logo className="[&_img]:h-12" />
+            <div className="text-center">
+              <h1 className="text-lg font-semibold tracking-tight text-foreground">
+                Change password
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Set a new password for your account
               </p>
             </div>
-          </div>
-        )}
-
-        <h2 className="text-2xl font-bold text-center text-[#1A4D2E] mb-6">
-          Change Password
-        </h2>
-
-        {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4 text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="newPassword">New Password</Label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <Lock className="h-5 w-5 text-gray-400" />
+          </CardHeader>
+          <CardContent className="pb-6">
+            {profile?.requires_password_change && (
+              <div className="mb-4 flex items-start gap-2 rounded-sm border border-warning/30 bg-warning/10 p-3">
+                <AlertCircle
+                  className="mt-0.5 h-4 w-4 shrink-0 text-warning"
+                  strokeWidth={1.5}
+                />
+                <div>
+                  <p className="text-sm font-medium text-warning">
+                    Password change required
+                  </p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    For security reasons, you must change the temporary password provided
+                    by your administrator.
+                  </p>
+                </div>
               </div>
-              <Input
-                id="newPassword"
-                type={showNewPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="pl-10"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-3"
-              >
-                {showNewPassword ? (
-                  <EyeOff className="h-5 w-5 text-gray-400" />
-                ) : (
-                  <Eye className="h-5 w-5 text-gray-400" />
-                )}
-              </button>
-            </div>
-          </div>
+            )}
 
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <Lock className="h-5 w-5 text-gray-400" />
+            {error && (
+              <div className="mb-4 rounded-sm border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
               </div>
-              <Input
-                id="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="pl-10"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-3"
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-5 w-5 text-gray-400" />
-                ) : (
-                  <Eye className="h-5 w-5 text-gray-400" />
-                )}
-              </button>
-            </div>
-          </div>
+            )}
 
-          <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-600">
-            <p className="font-medium mb-2">Password requirements:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>At least 8 characters long</li>
-              <li>Contains uppercase and lowercase letters</li>
-              <li>Contains at least one number</li>
-              <li>Contains at least one special character</li>
-            </ul>
-          </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="newPassword">New password</Label>
+                <div className="relative">
+                  <Lock
+                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                    strokeWidth={1.5}
+                  />
+                  <Input
+                    id="newPassword"
+                    type={showNewPassword ? "text" : "password"}
+                    placeholder="Your new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="pl-9 pr-9"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                  >
+                    {showNewPassword ? (
+                      <EyeOff className="h-4 w-4" strokeWidth={1.5} />
+                    ) : (
+                      <Eye className="h-4 w-4" strokeWidth={1.5} />
+                    )}
+                  </button>
+                </div>
+              </div>
 
-          <Button
-            type="submit"
-            className="w-full bg-[#1A4D2E] hover:bg-[#1A4D2E]/90 text-white py-6"
-            disabled={isLoading}
-          >
-            {isLoading ? "Changing password..." : "Change Password"}
-          </Button>
-        </form>
+              <div className="space-y-1.5">
+                <Label htmlFor="confirmPassword">Confirm password</Label>
+                <div className="relative">
+                  <Lock
+                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                    strokeWidth={1.5}
+                  />
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm your password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pl-9 pr-9"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" strokeWidth={1.5} />
+                    ) : (
+                      <Eye className="h-4 w-4" strokeWidth={1.5} />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-sm border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+                <p className="mb-2 font-medium text-foreground">Password requirements</p>
+                <ul className="list-inside list-disc space-y-1">
+                  <li>At least 8 characters long</li>
+                  <li>Contains uppercase and lowercase letters</li>
+                  <li>Contains at least one number</li>
+                  <li>Contains at least one special character</li>
+                </ul>
+              </div>
+
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Changing password..." : "Change password"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
 }
-
