@@ -24,7 +24,8 @@ interface RequestBody {
   ticketUrl?: string;
 }
 
-const ADMIN_INBOX = "hello@theenclosure.co.uk";
+const ADMIN_INBOX = "josh@theenclosure.co.uk";
+const FROM_ADDRESS = "The Enclosure <noreply@theenclosure.co.uk>";
 
 function previewKey(preview: string | undefined): string {
   const raw = (preview || "reply").trim().toLowerCase().replace(/\s+/g, "-").slice(0, 40);
@@ -85,7 +86,7 @@ serve(async (req) => {
         to: ADMIN_INBOX,
         subject: `New support ticket: ${subject}`,
         html: emailHtml,
-        from: "The Enclosure <notifications@theenclosure.co.uk>",
+        from: FROM_ADDRESS,
         idempotencyKey: `ticket-new-${ticketId}`,
       });
 
@@ -130,7 +131,7 @@ serve(async (req) => {
         to: clientEmail,
         subject: `Update on your support request: ${subject}`,
         html: emailHtml,
-        from: "The Enclosure <hello@theenclosure.co.uk>",
+        from: FROM_ADDRESS,
         idempotencyKey: `ticket-resp-${ticketId}-${previewKey(body.responsePreview)}`,
       });
 
