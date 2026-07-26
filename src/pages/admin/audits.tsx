@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AdminLayout } from "../../components/admin/admin-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Skeleton } from "../../components/ui/skeleton";
 import { EmptyState } from "../../components/ui/empty-state";
+import { LoadError } from "../../components/ui/load-error";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "../../hooks/use-toast";
+import { useCancellableLoad } from "../../hooks/useCancellableLoad";
 import { FileUp, Upload } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -118,25 +120,23 @@ export default function AdminAuditsPage() {
   const [preview, setPreview] = useState<PreviewRow[]>([]);
   const [committing, setCommitting] = useState(false);
   const [batches, setBatches] = useState<ImportBatch[]>([]);
-  const [loadingBatches, setLoadingBatches] = useState(true);
 
-  const loadBatches = useCallback(async () => {
-    setLoadingBatches(true);
+  const loadBatches = useCallback(async (ctl: { isCancelled: () => boolean }) => {
     const { data, error } = await supabase
       .from("import_batches")
       .select("*")
       .order("imported_at", { ascending: false })
       .limit(20);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    }
+    if (ctl.isCancelled()) return;
+    if (error) throw error;
     setBatches((data as ImportBatch[]) || []);
-    setLoadingBatches(false);
   }, []);
 
-  useEffect(() => {
-    loadBatches();
-  }, [loadBatches]);
+  const {
+    loading: loadingBatches,
+    error: batchesError,
+    retry: retryBatches,
+  } = useCancellableLoad(loadBatches);
 
   const counts = useMemo(() => {
     return {
@@ -289,7 +289,7 @@ export default function AdminAuditsPage() {
       setPreview([]);
       setFilename(null);
       setSchemaVersion(null);
-      loadBatches();
+      retryBatches();
     } catch (err) {
       toast({
         title: "Import failed",
@@ -419,6 +419,8 @@ export default function AdminAuditsPage() {
         <CardContent>
           {loadingBatches ? (
             <Skeleton className="h-24 w-full" />
+          ) : batchesError ? (
+            <LoadError message={batchesError} onRetry={retryBatches} />
           ) : batches.length === 0 ? (
             <EmptyState icon={FileUp} message="No imports yet." />
           ) : (

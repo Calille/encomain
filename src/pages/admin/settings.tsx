@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { EmptyState } from "../../components/ui/empty-state";
 import { Settings } from "lucide-react";
 
+/** Placeholder — no remote data fetch; mounts immediately once auth is ready. */
 export default function AdminSettingsPage() {
   return (
     <AdminLayout title="Settings">

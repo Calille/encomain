@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AdminLayout } from "../../components/admin/admin-layout";
 import { MetricCard } from "../../components/ui/metric-card";
 import { Card } from "../../components/ui/card";
@@ -7,6 +7,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Skeleton } from "../../components/ui/skeleton";
 import { EmptyState } from "../../components/ui/empty-state";
+import { LoadError } from "../../components/ui/load-error";
 import { supabase } from "../../lib/supabase";
 import { FileText } from "lucide-react";
 import { format, isSameMonth, parseISO, startOfDay } from "date-fns";
@@ -16,6 +17,7 @@ import {
   SortIcon,
   useTableSort,
 } from "../../hooks/useTableSort";
+import { useCancellableLoad } from "../../hooks/useCancellableLoad";
 
 interface InvoiceRow {
   id: string;
@@ -47,7 +49,6 @@ function clientLabel(row: InvoiceRow): string {
 
 export default function AdminPaymentsPage() {
   const [rows, setRows] = useState<InvoiceRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("all");
   const [query, setQuery] = useState("");
   const [unpaidOnly, setUnpaidOnly] = useState(false);
@@ -56,22 +57,17 @@ export default function AdminPaymentsPage() {
   const [dateTo, setDateTo] = useState("");
   const { sort, cycleSort } = useTableSort<PaymentSortKey>();
 
-  const load = async () => {
-    setLoading(true);
+  const load = useCallback(async (ctl: { isCancelled: () => boolean }) => {
     const { data, error } = await supabase
       .from("invoices")
       .select("*, users!invoices_user_id_fkey(full_name, email)")
       .order("issue_date", { ascending: false });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    }
+    if (ctl.isCancelled()) return;
+    if (error) throw error;
     setRows((data as InvoiceRow[]) || []);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    load();
   }, []);
+
+  const { loading, error, retry } = useCancellableLoad(load);
 
   const clientOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -187,7 +183,7 @@ export default function AdminPaymentsPage() {
       return;
     }
     toast({ title: "Invoice updated", description: "Marked as paid." });
-    load();
+    retry();
   };
 
   const headerButton = (key: PaymentSortKey, label: string) => (
@@ -293,6 +289,8 @@ export default function AdminPaymentsPage() {
 
       {loading ? (
         <Skeleton className="h-64 w-full" />
+      ) : error ? (
+        <LoadError message={error} onRetry={retry} />
       ) : filtered.length === 0 ? (
         <Card>
           <EmptyState icon={FileText} message="No invoices match your filters." />

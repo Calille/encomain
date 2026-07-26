@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { AdminLayout } from "../../components/admin/admin-layout";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Skeleton } from "../../components/ui/skeleton";
 import { EmptyState } from "../../components/ui/empty-state";
+import { LoadError } from "../../components/ui/load-error";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +18,7 @@ import {
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "../../hooks/use-toast";
+import { useCancellableLoad } from "../../hooks/useCancellableLoad";
 import { Ban } from "lucide-react";
 import { format } from "date-fns";
 
@@ -30,25 +32,19 @@ interface SuppressionRow {
 export default function AdminSuppressionsPage() {
   const { user } = useAuth();
   const [rows, setRows] = useState<SuppressionRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState<SuppressionRow | null>(null);
 
-  const load = async () => {
-    setLoading(true);
+  const load = useCallback(async (ctl: { isCancelled: () => boolean }) => {
     const { data, error } = await supabase
       .from("email_suppression")
       .select("id, email, suppressed_at, reason")
       .order("suppressed_at", { ascending: false });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    }
+    if (ctl.isCancelled()) return;
+    if (error) throw error;
     setRows((data as SuppressionRow[]) || []);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    load();
   }, []);
+
+  const { loading, error, retry } = useCancellableLoad(load);
 
   const removeSuppression = async () => {
     if (!pending || !user) return;
@@ -73,7 +69,7 @@ export default function AdminSuppressionsPage() {
 
     toast({ title: "Suppression removed", description: pending.email });
     setPending(null);
-    load();
+    retry();
   };
 
   return (
@@ -84,6 +80,8 @@ export default function AdminSuppressionsPage() {
 
       {loading ? (
         <Skeleton className="h-64 w-full" />
+      ) : error ? (
+        <LoadError message={error} onRetry={retry} />
       ) : rows.length === 0 ? (
         <Card>
           <EmptyState icon={Ban} message="No suppressed emails." />

@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import { AdminLayout } from "../../components/admin/admin-layout";
 import { MetricCard } from "../../components/ui/metric-card";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Skeleton } from "../../components/ui/skeleton";
 import { EmptyState } from "../../components/ui/empty-state";
+import { LoadError } from "../../components/ui/load-error";
 import { supabase } from "../../lib/supabase";
+import { useCancellableLoad } from "../../hooks/useCancellableLoad";
 import { Users, Globe, FileText, AlertTriangle, MessageSquare, Activity } from "lucide-react";
 import { format } from "date-fns";
 
@@ -17,7 +19,6 @@ interface ActivityRow {
 }
 
 export default function AdminOverviewPage() {
-  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     clients: 0,
     activeClients: 0,
@@ -30,83 +31,87 @@ export default function AdminOverviewPage() {
   });
   const [activity, setActivity] = useState<ActivityRow[]>([]);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const [
-          usersRes,
-          websitesRes,
-          invoicesRes,
-          ticketsRes,
-          updatesRes,
-        ] = await Promise.all([
-          supabase.from("users").select("id, role, status"),
-          supabase.from("websites").select("id, status"),
-          supabase.from("invoices").select("id, amount, status, due_date"),
-          supabase.from("support_tickets").select("id, status"),
-          supabase
-            .from("project_updates")
-            .select("id, title, created_at, users!project_updates_user_id_fkey(full_name, email)")
-            .order("created_at", { ascending: false })
-            .limit(10),
-        ]);
+  const load = useCallback(async (ctl: { isCancelled: () => boolean }) => {
+    const [
+      usersRes,
+      websitesRes,
+      invoicesRes,
+      ticketsRes,
+      updatesRes,
+    ] = await Promise.all([
+      supabase.from("users").select("id, role, status"),
+      supabase.from("websites").select("id, status"),
+      supabase.from("invoices").select("id, amount, status, due_date"),
+      supabase.from("support_tickets").select("id, status"),
+      supabase
+        .from("project_updates")
+        .select("id, title, created_at, users!project_updates_user_id_fkey(full_name, email)")
+        .order("created_at", { ascending: false })
+        .limit(10),
+    ]);
 
-        const users = (usersRes.data || []).filter((u) => u.role === "user");
-        const websites = websitesRes.data || [];
-        const invoices = invoicesRes.data || [];
-        const tickets = ticketsRes.data || [];
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+    if (ctl.isCancelled()) return;
 
-        // Outstanding = sum of issued unpaid invoices (sent or overdue). Drafts excluded.
-        const outstanding = invoices
-          .filter((i) => i.status === "sent" || i.status === "overdue")
-          .reduce((s, i) => s + Number(i.amount), 0);
+    const firstError =
+      usersRes.error ||
+      websitesRes.error ||
+      invoicesRes.error ||
+      ticketsRes.error ||
+      updatesRes.error;
+    if (firstError) throw firstError;
 
-        // Overdue = status overdue, or sent with due_date before today.
-        const overdueCount = invoices.filter((i) => {
-          if (i.status === "overdue") return true;
-          if (i.status !== "sent" || !i.due_date) return false;
-          const due = new Date(i.due_date);
-          due.setHours(0, 0, 0, 0);
-          return due < today;
-        }).length;
+    const users = (usersRes.data || []).filter((u) => u.role === "user");
+    const websites = websitesRes.data || [];
+    const invoices = invoicesRes.data || [];
+    const tickets = ticketsRes.data || [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-        setStats({
-          clients: users.length,
-          activeClients: users.filter((u) => u.status === "active").length,
-          suspendedClients: users.filter((u) => u.status === "suspended").length,
-          websitesInProgress: websites.filter((w) => w.status === "in_progress").length,
-          websitesComplete: websites.filter(
-            (w) => w.status === "completed" || w.status === "active"
-          ).length,
-          outstanding,
-          overdueCount,
-          openTickets: tickets.filter((t) => t.status === "open" || t.status === "pending").length,
-        });
-        const rawUpdates = updatesRes.data || [];
-        setActivity(
-          rawUpdates.map((row) => {
-            const usersField = row.users as
-              | { full_name: string | null; email: string }
-              | { full_name: string | null; email: string }[]
-              | null;
-            const users = Array.isArray(usersField) ? usersField[0] || null : usersField;
-            return {
-              id: row.id,
-              title: row.title,
-              created_at: row.created_at,
-              users,
-            };
-          })
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+    // Outstanding = sum of issued unpaid invoices (sent or overdue). Drafts excluded.
+    const outstanding = invoices
+      .filter((i) => i.status === "sent" || i.status === "overdue")
+      .reduce((s, i) => s + Number(i.amount), 0);
+
+    // Overdue = status overdue, or sent with due_date before today.
+    const overdueCount = invoices.filter((i) => {
+      if (i.status === "overdue") return true;
+      if (i.status !== "sent" || !i.due_date) return false;
+      const due = new Date(i.due_date);
+      due.setHours(0, 0, 0, 0);
+      return due < today;
+    }).length;
+
+    setStats({
+      clients: users.length,
+      activeClients: users.filter((u) => u.status === "active").length,
+      suspendedClients: users.filter((u) => u.status === "suspended").length,
+      websitesInProgress: websites.filter((w) => w.status === "in_progress").length,
+      websitesComplete: websites.filter(
+        (w) => w.status === "completed" || w.status === "active"
+      ).length,
+      outstanding,
+      overdueCount,
+      openTickets: tickets.filter((t) => t.status === "open" || t.status === "pending").length,
+    });
+    const rawUpdates = updatesRes.data || [];
+    setActivity(
+      rawUpdates.map((row) => {
+        const usersField = row.users as
+          | { full_name: string | null; email: string }
+          | { full_name: string | null; email: string }[]
+          | null;
+        const users = Array.isArray(usersField) ? usersField[0] || null : usersField;
+        return {
+          id: row.id,
+          title: row.title,
+          created_at: row.created_at,
+          users,
+        };
+      })
+    );
   }, []);
+
+  const { loading, error, retry } = useCancellableLoad(load);
 
   return (
     <AdminLayout title="Overview">
@@ -116,6 +121,8 @@ export default function AdminOverviewPage() {
             <Skeleton key={i} className="h-24" />
           ))}
         </div>
+      ) : error ? (
+        <LoadError message={error} onRetry={retry} />
       ) : (
         <>
           <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

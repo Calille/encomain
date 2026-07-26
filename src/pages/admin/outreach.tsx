@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AdminLayout } from "../../components/admin/admin-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
@@ -7,6 +7,7 @@ import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { Skeleton } from "../../components/ui/skeleton";
 import { EmptyState } from "../../components/ui/empty-state";
+import { LoadError } from "../../components/ui/load-error";
 import {
   Sheet,
   SheetContent,
@@ -20,6 +21,7 @@ import {
 } from "../../components/ui/collapsible";
 import { supabase } from "../../lib/supabase";
 import { toast } from "../../hooks/use-toast";
+import { useCancellableLoad } from "../../hooks/useCancellableLoad";
 import { ChevronDown, Mail, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import {
@@ -72,7 +74,6 @@ type LeadSortKey =
 export default function AdminOutreachPage() {
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [admins, setAdmins] = useState<AdminUser[]>([]);
-  const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("all");
   const [contacted, setContacted] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
@@ -86,8 +87,7 @@ export default function AdminOutreachPage() {
   const [savingDraft, setSavingDraft] = useState(false);
   const { sort, cycleSort } = useTableSort<LeadSortKey>();
 
-  const load = async () => {
-    setLoading(true);
+  const load = useCallback(async (ctl: { isCancelled: () => boolean }) => {
     const [leadsRes, adminsRes] = await Promise.all([
       supabase
         .from("leads")
@@ -100,21 +100,14 @@ export default function AdminOutreachPage() {
         .eq("role", "admin")
         .order("full_name", { ascending: true }),
     ]);
-    if (leadsRes.error) {
-      toast({
-        title: "Error",
-        description: leadsRes.error.message,
-        variant: "destructive",
-      });
-    }
+    if (ctl.isCancelled()) return;
+    if (leadsRes.error) throw leadsRes.error;
+    if (adminsRes.error) throw adminsRes.error;
     setLeads((leadsRes.data as LeadRow[]) || []);
     setAdmins((adminsRes.data as AdminUser[]) || []);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    load();
   }, []);
+
+  const { loading, error, retry } = useCancellableLoad(load);
 
   const adminNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -251,7 +244,7 @@ export default function AdminOutreachPage() {
       return;
     }
     toast({ title: "Draft saved" });
-    load();
+    retry();
   };
 
   const sendEmail = async () => {
@@ -290,7 +283,7 @@ export default function AdminOutreachPage() {
 
     toast({ title: "Email sent", description: "Recorded in email history." });
     openLead(selected);
-    load();
+    retry();
   };
 
   const headerButton = (key: LeadSortKey, label: string) => (
@@ -365,6 +358,8 @@ export default function AdminOutreachPage() {
 
       {loading ? (
         <Skeleton className="h-64 w-full" />
+      ) : error ? (
+        <LoadError message={error} onRetry={retry} />
       ) : filtered.length === 0 ? (
         <Card>
           <EmptyState icon={MessageSquare} message="No leads match your filters." />

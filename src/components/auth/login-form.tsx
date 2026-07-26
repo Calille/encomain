@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -19,10 +19,7 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const location = useLocation();
   const { signIn } = useAuth();
-
-  const from = (location.state as { from?: { pathname?: string } })?.from?.pathname;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,10 +47,8 @@ export function LoginForm() {
 
       if (requiresPasswordChange) {
         navigate("/change-password", { replace: true });
-      } else if (from) {
-        navigate(from, { replace: true });
       } else {
-        // Role-aware landing chooses admin CRM vs client portal
+        // Role-aware landing waits for profile, then routes admin vs client
         navigate("/app", { replace: true });
       }
     } catch (err) {

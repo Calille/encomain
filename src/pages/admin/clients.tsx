@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AdminLayout } from "../../components/admin/admin-layout";
 import { Input } from "../../components/ui/input";
@@ -7,6 +7,7 @@ import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { Skeleton } from "../../components/ui/skeleton";
 import { EmptyState } from "../../components/ui/empty-state";
+import { LoadError } from "../../components/ui/load-error";
 import { supabase } from "../../lib/supabase";
 import { Tables } from "../../types/supabase";
 import { Users, Plus } from "lucide-react";
@@ -16,6 +17,7 @@ import {
   SortIcon,
   useTableSort,
 } from "../../hooks/useTableSort";
+import { useCancellableLoad } from "../../hooks/useCancellableLoad";
 
 type UserRow = Tables<"users">;
 
@@ -67,27 +69,26 @@ export default function AdminClientsPage() {
   const [invoices, setInvoices] = useState<
     { user_id: string; amount: number; status: string }[]
   >([]);
-  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [planFilter, setPlanFilter] = useState("all");
   const { sort, cycleSort } = useTableSort<ClientSortKey>();
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      const [u, w, i] = await Promise.all([
-        supabase.from("users").select("*").order("created_at", { ascending: false }),
-        supabase.from("websites").select("id, user_id, status"),
-        supabase.from("invoices").select("user_id, amount, status"),
-      ]);
-      setUsers(u.data || []);
-      setWebsites(w.data || []);
-      setInvoices(i.data || []);
-      setLoading(false);
-    };
-    load();
+  const load = useCallback(async (ctl: { isCancelled: () => boolean }) => {
+    const [u, w, i] = await Promise.all([
+      supabase.from("users").select("*").order("created_at", { ascending: false }),
+      supabase.from("websites").select("id, user_id, status"),
+      supabase.from("invoices").select("user_id, amount, status"),
+    ]);
+    if (ctl.isCancelled()) return;
+    const firstError = u.error || w.error || i.error;
+    if (firstError) throw firstError;
+    setUsers(u.data || []);
+    setWebsites(w.data || []);
+    setInvoices(i.data || []);
   }, []);
+
+  const { loading, error, retry } = useCancellableLoad(load);
 
   const rows = useMemo(() => {
     // Outstanding = sum of issued unpaid invoices (sent or overdue). Drafts are excluded.
@@ -201,6 +202,8 @@ export default function AdminClientsPage() {
 
       {loading ? (
         <Skeleton className="h-64 w-full" />
+      ) : error ? (
+        <LoadError message={error} onRetry={retry} />
       ) : rows.length === 0 ? (
         <Card>
           <EmptyState icon={Users} message="No clients match your filters." />

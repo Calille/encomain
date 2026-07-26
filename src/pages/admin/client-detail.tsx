@@ -1,28 +1,28 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { AdminLayout } from "../../components/admin/admin-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Skeleton } from "../../components/ui/skeleton";
 import { EmptyState } from "../../components/ui/empty-state";
+import { LoadError } from "../../components/ui/load-error";
 import { supabase } from "../../lib/supabase";
 import { Tables } from "../../types/supabase";
+import { useCancellableLoad } from "../../hooks/useCancellableLoad";
 import { ArrowLeft, Globe, FileText, MessageSquare, Activity } from "lucide-react";
 import { format } from "date-fns";
 
 export default function AdminClientDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<Tables<"users"> | null>(null);
   const [websites, setWebsites] = useState<Tables<"websites">[]>([]);
   const [invoices, setInvoices] = useState<Tables<"invoices">[]>([]);
   const [tickets, setTickets] = useState<Tables<"support_tickets">[]>([]);
   const [updates, setUpdates] = useState<Tables<"project_updates">[]>([]);
 
-  useEffect(() => {
-    if (!id) return;
-    const load = async () => {
-      setLoading(true);
+  const load = useCallback(
+    async (ctl: { isCancelled: () => boolean }) => {
+      if (!id) return;
       const [u, w, i, t, p] = await Promise.all([
         supabase.from("users").select("*").eq("id", id).maybeSingle(),
         supabase.from("websites").select("*").eq("user_id", id),
@@ -35,20 +35,32 @@ export default function AdminClientDetailPage() {
           .order("created_at", { ascending: false })
           .limit(20),
       ]);
+      if (ctl.isCancelled()) return;
+      const firstError = u.error || w.error || i.error || t.error || p.error;
+      if (firstError) throw firstError;
       setUser(u.data);
       setWebsites(w.data || []);
       setInvoices(i.data || []);
       setTickets(t.data || []);
       setUpdates(p.data || []);
-      setLoading(false);
-    };
-    load();
-  }, [id]);
+    },
+    [id]
+  );
+
+  const { loading, error, retry } = useCancellableLoad(load, [id]);
 
   if (loading) {
     return (
       <AdminLayout title="Client">
         <Skeleton className="h-64 w-full" />
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout title="Client">
+        <LoadError message={error} onRetry={retry} />
       </AdminLayout>
     );
   }

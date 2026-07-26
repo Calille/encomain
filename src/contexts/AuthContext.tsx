@@ -12,6 +12,8 @@ interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
+  /** True while a profile fetch is in flight for the current user */
+  profileLoading: boolean;
   signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error: Error | null; requiresPasswordChange: boolean }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
@@ -23,11 +25,34 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+async function fetchProfile(userId: string): Promise<UserProfile | null> {
+  try {
+    console.log("[AUTH] Fetching profile for user:", userId);
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (error) {
+      console.error("[AUTH] Error fetching profile:", error);
+      throw error;
+    }
+
+    console.log("[AUTH] Profile fetched successfully:", data?.email);
+    return data;
+  } catch (error) {
+    console.error("[AUTH] Failed to fetch profile:", error);
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
   const [initError, setInitError] = useState<Error | null>(null);
 
   const isAdmin = profile?.role === "admin" && profile?.status === "active";
@@ -51,98 +76,88 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Fetch user profile from the users table
-  const fetchProfile = async (userId: string) => {
-    try {
-      console.log('[AUTH] Fetching profile for user:', userId);
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", userId)
-        .single();
-
-      if (error) {
-        console.error("[AUTH] Error fetching profile:", error);
-        throw error;
-      }
-      
-      console.log('[AUTH] Profile fetched successfully:', data?.email);
-      setProfile(data);
-      return data;
-    } catch (error) {
-      console.error("[AUTH] Failed to fetch profile:", error);
-      setProfile(null);
-      return null;
-    }
-  };
-
-  // Initialise auth state (welcome emails are NOT triggered here; see admin-create-user flow)
+  // Initialise session + subscribe to auth changes.
+  // CRITICAL: never await supabase.from() / other client APIs inside onAuthStateChange —
+  // that deadlocks the auth lock and hangs every subsequent query (login + admin data).
   useEffect(() => {
-    let subscription: { unsubscribe: () => void } | undefined;
-    
+    let mounted = true;
+
     const initAuth = async () => {
       try {
-        console.log('[AUTH] Initializing authentication...');
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
+        console.log("[AUTH] Initializing authentication...");
+        const {
+          data: { session: initialSession },
+          error,
+        } = await supabase.auth.getSession();
+
         if (error) {
           console.error("[AUTH] Error getting session:", error);
           throw error;
         }
-        
-        console.log('[AUTH] Session retrieved:', session?.user?.email || 'no user');
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          console.log('[AUTH] User found, fetching profile...');
-          await fetchProfile(session.user.id);
-        } else {
-          console.log('[AUTH] No user session found');
-        }
-        
-        console.log('[AUTH] Setting loading to false');
+
+        if (!mounted) return;
+
+        console.log("[AUTH] Session retrieved:", initialSession?.user?.email || "no user");
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+        // Profile is loaded in a separate effect keyed on user.id (outside the auth lock).
+
+        console.log("[AUTH] Setting loading to false");
         setLoading(false);
-        
-        console.log('[AUTH] Setting up onAuthStateChange listener');
-        const { data: { subscription: sub } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-          console.log(`[AUTH] Auth state change: ${_event}`, session?.user?.email || 'no user');
-          
-          setSession(session);
-          setUser(session?.user ?? null);
-          
-          if (session?.user) {
-            try {
-              console.log('[AUTH] Fetching profile for auth state change...');
-              const userProfile = await fetchProfile(session.user.id);
-              
-              if (!userProfile) {
-                console.error('[AUTH] Failed to fetch profile during auth state change');
-              }
-            } catch (error) {
-              console.error('[AUTH] Error fetching profile during auth state change:', error);
-            }
-          } else {
-            setProfile(null);
-          }
-        });
-        
-        subscription = sub;
       } catch (error) {
         console.error("AuthProvider initialization failed:", error);
+        if (!mounted) return;
         setInitError(error instanceof Error ? error : new Error("Unknown error"));
         setLoading(false);
+        setProfileLoading(false);
       }
     };
-    
+
     initAuth();
 
-    return () => {
-      if (subscription) {
-        subscription.unsubscribe();
+    console.log("[AUTH] Setting up onAuthStateChange listener");
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      console.log(`[AUTH] Auth state change: ${event}`, nextSession?.user?.email || "no user");
+
+      // Synchronous React updates only — profile fetch happens in a separate effect.
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+
+      if (!nextSession?.user) {
+        setProfile(null);
+        setProfileLoading(false);
       }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
     };
   }, []);
+
+  // Load profile outside the auth lock whenever the signed-in user changes.
+  useEffect(() => {
+    const userId = user?.id;
+    if (!userId) {
+      return;
+    }
+
+    let cancelled = false;
+    setProfileLoading(true);
+
+    (async () => {
+      const userProfile = await fetchProfile(userId);
+      if (cancelled) return;
+      setProfile(userProfile);
+      setProfileLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const signIn = async (email: string, password: string, _rememberMe = false) => {
     try {
@@ -154,15 +169,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        return { 
-          error: error, 
-          requiresPasswordChange: false 
+        return {
+          error: error,
+          requiresPasswordChange: false,
         };
       }
 
       if (data.user) {
+        // Propagate session immediately so route guards / role-landing see auth
+        // without waiting on the listener (and without deadlocking it).
+        setSession(data.session);
+        setUser(data.user);
+
+        setProfileLoading(true);
         const userProfile = await fetchProfile(data.user.id);
-        
+        setProfile(userProfile);
+        setProfileLoading(false);
+
         try {
           await supabase
             .from("users")
@@ -180,9 +203,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: new Error("Sign in failed"), requiresPasswordChange: false };
     } catch (error) {
       console.error("Sign in exception:", error);
-      return { 
-        error: error instanceof Error ? error : new Error("Sign in failed"), 
-        requiresPasswordChange: false 
+      setProfileLoading(false);
+      return {
+        error: error instanceof Error ? error : new Error("Sign in failed"),
+        requiresPasswordChange: false,
       };
     }
   };
@@ -191,11 +215,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      
+
       setSession(null);
       setUser(null);
       setProfile(null);
-      
+      setProfileLoading(false);
+
       toast({
         title: "Signed out",
         description: "You have been successfully signed out.",
@@ -218,10 +243,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const oldProfile = profile;
 
       if (updates.full_name !== undefined && updates.full_name !== oldProfile?.full_name) {
-        updatedFields.push('full_name');
+        updatedFields.push("full_name");
       }
       if (updates.email !== undefined && updates.email !== oldProfile?.email) {
-        updatedFields.push('email');
+        updatedFields.push("email");
       }
 
       const { error } = await supabase
@@ -232,7 +257,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
 
       await refreshProfile();
-      
+
       toast({
         title: "Profile updated",
         description: "Your profile has been successfully updated.",
@@ -241,13 +266,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (updatedFields.length > 0 && user.email) {
         try {
           sendAccountUpdateNotification(user.email, updatedFields, {
-            userName: updates.full_name || profile?.full_name || user.email.split('@')[0],
-            accountSettingsUrl: 'https://theenclosure.co.uk/settings',
+            userName: updates.full_name || profile?.full_name || user.email.split("@")[0],
+            accountSettingsUrl: "https://theenclosure.co.uk/settings",
           }).catch((error) => {
-            console.error('Failed to send account update notification:', error);
+            console.error("Failed to send account update notification:", error);
           });
         } catch (error) {
-          console.error('Error triggering account update notification:', error);
+          console.error("Error triggering account update notification:", error);
         }
       }
     } catch (error) {
@@ -272,13 +297,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (user) {
         await supabase
           .from("users")
-          .update({ 
+          .update({
             requires_password_change: false,
             must_change_password: false,
             password_changed_at: new Date().toISOString(),
           })
           .eq("id", user.id);
-        
+
         await refreshProfile();
       }
 
@@ -321,9 +346,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshProfile = async () => {
-    if (user) {
-      await fetchProfile(user.id);
-    }
+    if (!user) return;
+    setProfileLoading(true);
+    const userProfile = await fetchProfile(user.id);
+    setProfile(userProfile);
+    setProfileLoading(false);
   };
 
   const value = {
@@ -331,6 +358,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     profile,
     loading,
+    profileLoading,
     signIn,
     signOut,
     updateProfile,
