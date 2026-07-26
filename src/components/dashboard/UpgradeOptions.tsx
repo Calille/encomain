@@ -1,193 +1,368 @@
 import { useState } from "react";
+import { Check, Code2, Boxes, Zap, Database } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../contexts/AuthContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { EmptyState } from "../ui/empty-state";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
 import { useToast } from "../../hooks/use-toast";
-import { ArrowUpCircle, Check, Sparkles, Zap } from "lucide-react";
+import { formatPlanLabel } from "../../lib/plans";
+import { sendTicketNotification } from "../../utils/emailHelpers";
 
-interface PricingTier {
-  id: "essential" | "growth" | "ultimate";
-  name: string;
-  upfrontCost: number;
-  monthlyCost: number;
-  features: string[];
-  popular?: boolean;
-}
-
-const pricingTiers: PricingTier[] = [
+// Copied from src/components/pricing.tsx to keep portal and marketing in sync
+const packages = [
   {
-    id: "essential",
+    id: "essential" as const,
     name: "Essential",
-    upfrontCost: 1997,
-    monthlyCost: 79,
+    oneOff: "£1,749.99",
+    year1: "£50/month for year 1",
+    year2: "£37.50/month from year 2",
+    description: "For small businesses that need a professional presence online.",
     features: [
-      "5-page professional website",
-      "Mobile-responsive design",
-      "Basic SEO setup",
-      "Contact form integration",
-      "Monthly maintenance & updates",
-      "24/7 technical support",
+      "Up to 5 pages",
+      "Mobile-optimised responsive design",
+      "Contact form with email delivery",
+      "Basic on-page SEO setup",
+      "Hosting included",
+      "Basic database for form submissions and simple content",
+      "2 rounds of revisions during build",
     ],
+    featured: false,
   },
   {
-    id: "growth",
-    name: "Growth",
-    upfrontCost: 2997,
-    monthlyCost: 129,
-    popular: true,
+    id: "professional" as const,
+    name: "Professional",
+    oneOff: "£2,499.99",
+    year1: "£50/month for year 1",
+    year2: "£37.50/month from year 2",
+    description: "For businesses that need more than a brochure site.",
     features: [
-      "Everything in Essential",
       "Up to 10 pages",
-      "Advanced SEO optimization",
-      "Blog setup with CMS",
-      "Analytics & reporting",
-      "Social media integration",
-      "Priority support",
+      "Everything in Essential",
+      "Fully custom design, no templates",
+      "Blog or news section with content management",
+      "Lead capture forms with CRM integration",
+      "Google Business Profile setup and optimisation",
+      "Intermediate database for content, users, and custom data",
+      "3 rounds of revisions during build",
     ],
+    featured: true,
   },
   {
-    id: "ultimate",
-    name: "Ultimate",
-    upfrontCost: 4997,
-    monthlyCost: 199,
+    id: "signature" as const,
+    name: "Signature",
+    oneOff: "£3,999.99",
+    year1: "£100/month for year 1",
+    year2: "£75/month from year 2",
+    description: "For businesses that want a full digital operation.",
     features: [
-      "Everything in Growth",
       "Unlimited pages",
-      "E-commerce functionality",
-      "Custom integrations",
-      "Advanced animations",
-      "Dedicated account manager",
-      "White-glove service",
+      "Everything in Professional",
+      "Custom web application features (booking, calculators, member areas)",
+      "Third-party integrations (Stripe, Mailchimp, HubSpot, and similar)",
+      "Custom automation and workflows",
+      "Enterprise database for high-traffic and complex data",
+      "Priority support in the monthly retainer",
+      "4 rounds of revisions during build",
     ],
+    featured: false,
   },
 ];
+
+const bespokeOfferings = [
+  {
+    icon: Code2,
+    title: "Custom web applications",
+    description: "Purpose-built tools and experiences beyond a standard marketing site.",
+  },
+  {
+    icon: Boxes,
+    title: "SaaS products",
+    description: "Product interfaces, dashboards, and platforms shaped around your users.",
+  },
+  {
+    icon: Zap,
+    title: "Integrations and automation",
+    description: "Stripe, CRM, and third-party API wiring that removes manual work.",
+  },
+  {
+    icon: Database,
+    title: "Internal tools and CRM",
+    description: "Admin panels, client portals, and systems tailored to how you work.",
+  },
+];
+
+type EnquiryState = {
+  subject: string;
+  category: "upgrade" | "bespoke";
+} | null;
 
 export default function UpgradeOptions() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
-  const [isUpgrading, setIsUpgrading] = useState(false);
+  const [enquiry, setEnquiry] = useState<EnquiryState>(null);
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const currentPlan =
-    (profile?.current_plan as "essential" | "growth" | "ultimate") || "essential";
+  const currentPlan = profile?.current_plan ?? null;
 
-  const handleUpgrade = async (planId: "essential" | "growth" | "ultimate") => {
-    setIsUpgrading(true);
+  const openEnquiry = (subject: string, category: "upgrade" | "bespoke") => {
+    setEnquiry({ subject, category });
+    setMessage("");
+  };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !enquiry) return;
+
+    if (message.trim().length < 10) {
+      toast({
+        title: "Message too short",
+        description: "Please add a little more context (at least 10 characters).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from("users")
-        .update({
-          current_plan: planId,
-          plan_started_at: new Date().toISOString(),
+      const { data, error } = await supabase
+        .from("support_tickets")
+        .insert({
+          user_id: user.id,
+          subject: enquiry.subject,
+          message: message.trim(),
+          category: enquiry.category,
+          priority: "normal",
         })
-        .eq("id", user?.id);
+        .select("id")
+        .single();
 
       if (error) throw error;
 
+      if (data?.id) {
+        void sendTicketNotification({
+          type: "new_ticket",
+          ticketId: data.id,
+          subject: enquiry.subject,
+          category: enquiry.category,
+          clientEmail: user.email || profile?.email || "",
+          clientName: profile?.full_name || undefined,
+        });
+      }
+
       toast({
-        title: "Upgrade request received",
-        description:
-          "Our team will contact you within 24 hours to finalise your upgrade and discuss next steps.",
+        title: "Message sent",
+        description: "Message sent, we'll be in touch shortly.",
       });
-    } catch (error: any) {
+      setEnquiry(null);
+      setMessage("");
+    } catch (error: unknown) {
+      const description =
+        error instanceof Error
+          ? error.message
+          : "Failed to send your message. Please try again.";
       toast({
         title: "Error",
-        description:
-          error.message || "Failed to submit upgrade request. Please try again.",
+        description,
         variant: "destructive",
       });
     } finally {
-      setIsUpgrading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const tierIndex = pricingTiers.findIndex((tier) => tier.id === currentPlan);
-  const availableUpgrades = pricingTiers.slice(tierIndex + 1);
-
-  if (availableUpgrades.length === 0) {
-    return (
-      <Card>
-        <EmptyState
-          icon={Zap}
-          message="You're on the Ultimate plan. You have access to all premium features."
-        />
-      </Card>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {availableUpgrades.map((tier) => (
-          <Card
-            key={tier.id}
-            className={tier.popular ? "border-accent" : undefined}
-          >
-            <CardHeader>
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <CardTitle className="text-xl">{tier.name}</CardTitle>
-                  <div className="mt-3">
-                    <span className="font-mono text-2xl font-semibold tracking-tight text-foreground font-mono-nums">
-                      £{tier.upfrontCost.toLocaleString("en-GB")}
-                    </span>
-                    <span className="ml-2 text-sm text-muted-foreground">upfront</span>
-                  </div>
-                  <CardDescription className="mt-1">
-                    then £{tier.monthlyCost}/month
-                  </CardDescription>
-                </div>
-                {tier.popular && (
-                  <Badge className="gap-1">
-                    <Sparkles className="h-3 w-3" strokeWidth={1.5} />
-                    Popular
-                  </Badge>
-                )}
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-              <ul className="space-y-2">
-                {tier.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-2">
-                    <Check
-                      className="mt-0.5 h-4 w-4 shrink-0 text-success"
-                      strokeWidth={1.5}
-                    />
-                    <span className="text-sm text-foreground">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Button
-                onClick={() => handleUpgrade(tier.id)}
-                disabled={isUpgrading}
-                variant={tier.popular ? "default" : "outline"}
-                className="w-full gap-1.5"
-              >
-                <ArrowUpCircle className="h-4 w-4" strokeWidth={1.5} />
-                {isUpgrading ? "Processing..." : `Upgrade to ${tier.name}`}
-              </Button>
-
-              <p className="text-center text-xs text-muted-foreground">
-                Includes full redesign if required. Immediate access to all features.
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="flex items-start gap-2 rounded-sm border border-accent/20 bg-accent/5 p-4">
-        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-accent" strokeWidth={1.5} />
+    <div className="space-y-10">
+      <div className="rounded-sm border border-border bg-surface px-4 py-3">
         <p className="text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">Note:</span> All upgrades
-          include a comprehensive review of your current site and implementation of new
-          features within 2 weeks.
+          You&apos;re currently on:{" "}
+          <span className="font-medium text-foreground">
+            {currentPlan ? formatPlanLabel(currentPlan).toLowerCase() : "no active plan"}
+          </span>
         </p>
       </div>
+
+      <section className="space-y-6">
+        <div>
+          <h3 className="text-lg font-semibold tracking-tight text-foreground">
+            Standard packages
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Everything you need to go live and stay live. One-off build fee plus a small
+            monthly retainer that covers ongoing maintenance and support.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {packages.map((pkg) => {
+            const isCurrent = currentPlan === pkg.id;
+            return (
+              <article
+                key={pkg.id}
+                className={`relative flex flex-col rounded-sm border p-5 ${
+                  isCurrent
+                    ? "border-accent bg-accent/5"
+                    : pkg.featured
+                      ? "border-border bg-muted/30"
+                      : "border-border bg-surface"
+                }`}
+              >
+                {isCurrent && (
+                  <Badge className="absolute -top-2.5 left-4" variant="default">
+                    Your current plan
+                  </Badge>
+                )}
+                {!isCurrent && pkg.featured && (
+                  <Badge className="absolute -top-2.5 left-4" variant="secondary">
+                    Most popular
+                  </Badge>
+                )}
+                <h4 className="text-base font-semibold text-foreground">{pkg.name}</h4>
+                <div className="mt-3">
+                  <p className="font-mono text-2xl font-semibold tracking-tight text-foreground font-mono-nums">
+                    {pkg.oneOff}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">one-off</p>
+                  <p className="mt-2 text-sm text-foreground">{pkg.year1}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{pkg.year2}</p>
+                </div>
+                <p className="mt-3 text-sm text-muted-foreground">{pkg.description}</p>
+                <ul className="mt-4 flex-1 space-y-2">
+                  {pkg.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2 text-sm text-foreground">
+                      <Check
+                        className="mt-0.5 h-4 w-4 shrink-0 text-success"
+                        strokeWidth={1.5}
+                        aria-hidden="true"
+                      />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  className="mt-5 w-full"
+                  variant={isCurrent ? "outline" : "default"}
+                  onClick={() =>
+                    openEnquiry(`Upgrade request: ${pkg.name}`, "upgrade")
+                  }
+                >
+                  Talk to us about upgrading
+                </Button>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="space-y-6">
+        <div>
+          <h3 className="text-lg font-semibold tracking-tight text-foreground">
+            Something more ambitious?
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            We also build custom software, SaaS applications, integrations, and internal
+            tools for businesses that have outgrown a standard website. Every bespoke
+            project is quoted individually based on scope.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {bespokeOfferings.map((item) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={item.title}
+                className="rounded-sm border border-border bg-surface p-5"
+              >
+                <Icon
+                  className="mb-3 h-5 w-5 text-accent"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                />
+                <h4 className="text-sm font-semibold text-foreground">{item.title}</h4>
+                <p className="mt-2 text-sm text-muted-foreground">{item.description}</p>
+              </div>
+            );
+          })}
+        </div>
+
+        <Button
+          onClick={() => openEnquiry("Bespoke project enquiry", "bespoke")}
+        >
+          Talk to us about a bespoke project
+        </Button>
+      </section>
+
+      <p className="text-sm text-muted-foreground">
+        Changes take effect at your next billing cycle. Get in touch and we&apos;ll walk
+        you through it.
+      </p>
+
+      <Dialog
+        open={Boolean(enquiry)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEnquiry(null);
+            setMessage("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle>Talk to us</DialogTitle>
+            <DialogDescription>
+              Send a short note and we&apos;ll follow up to walk through what&apos;s
+              included before any changes are made.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="upgrade-subject">Subject</Label>
+              <p
+                id="upgrade-subject"
+                className="rounded-sm border border-border bg-muted/40 px-3 py-2 text-sm text-foreground"
+              >
+                {enquiry?.subject}
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="upgrade-message">Message</Label>
+              <Textarea
+                id="upgrade-message"
+                placeholder="Tell us what you're looking for..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={5}
+                maxLength={5000}
+                required
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEnquiry(null)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Sending…" : "Send message"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

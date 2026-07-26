@@ -288,6 +288,52 @@ export async function sendAccountDeletionConfirmation(
   }
 }
 
+export type TicketNotificationType = 'new_ticket' | 'admin_response';
+
+/**
+ * Notify client or admin about support ticket activity
+ */
+export async function sendTicketNotification(options: {
+  type: TicketNotificationType;
+  ticketId: string;
+  subject: string;
+  category?: string;
+  clientEmail: string;
+  clientName?: string;
+  responsePreview?: string;
+}): Promise<EmailResponse> {
+  try {
+    const { data, error } = await supabase.functions.invoke('send-ticket-notification', {
+      body: {
+        type: options.type,
+        ticketId: options.ticketId,
+        subject: options.subject,
+        category: options.category,
+        clientEmail: options.clientEmail,
+        clientName: options.clientName,
+        responsePreview: options.responsePreview,
+        ticketUrl:
+          options.type === 'admin_response'
+            ? `https://theenclosure.co.uk/dashboard/support`
+            : `https://theenclosure.co.uk/admin/support-tickets`,
+      },
+    });
+
+    if (error) {
+      console.error('Error sending ticket notification:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, messageId: data?.messageId, skipped: Boolean(data?.skipped) };
+  } catch (error) {
+    console.error('Error sending ticket notification:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+    };
+  }
+}
+
 /**
  * Notify admin of new order
  */

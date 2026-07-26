@@ -18,6 +18,7 @@ import {
   useTableSort,
 } from "../../hooks/useTableSort";
 import { useCancellableLoad } from "../../hooks/useCancellableLoad";
+import { formatPlanLabel, PLAN_OPTIONS } from "../../lib/plans";
 
 type UserRow = Tables<"users">;
 
@@ -187,10 +188,11 @@ export default function AdminClientsPage() {
           onChange={(e) => setPlanFilter(e.target.value)}
         >
           <option value="all">All plans</option>
-          <option value="none">No plan</option>
-          <option value="basic">Basic</option>
-          <option value="standard">Standard</option>
-          <option value="premium">Premium</option>
+          {PLAN_OPTIONS.map((opt) => (
+            <option key={opt.label} value={opt.value || "none"}>
+              {opt.label}
+            </option>
+          ))}
         </select>
         <Button asChild size="sm" className="ml-auto gap-1.5">
           <Link to="/admin/users">
@@ -238,8 +240,8 @@ export default function AdminClientsPage() {
                       {user.full_name || "Not set"}
                     </td>
                     <td className="px-3 py-2.5 text-muted-foreground">{user.email}</td>
-                    <td className="px-3 py-2.5 capitalize">
-                      {user.current_plan || "none"}
+                    <td className="px-3 py-2.5">
+                      {formatPlanLabel(user.current_plan)}
                     </td>
                     <td className="px-3 py-2.5 font-mono-nums text-xs">
                       {sites.label}

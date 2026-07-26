@@ -40,8 +40,10 @@ import {
 import { toast } from "../../hooks/use-toast";
 import { format } from "date-fns";
 import { sendWelcomeEmail } from "../../utils/emailHelpers";
+import { formatPlanLabel, PLAN_OPTIONS, type PlanId } from "../../lib/plans";
 
 type User = Tables<"users">;
+type PlanFormValue = PlanId | "";
 
 function statusVariant(
   status: string
@@ -65,6 +67,7 @@ export default function UsersManagement() {
     full_name: "",
     role: "user" as "admin" | "user",
     status: "active" as "active" | "inactive" | "suspended",
+    current_plan: "" as PlanFormValue,
     password: "",
     requires_password_change: true,
   });
@@ -171,6 +174,7 @@ export default function UsersManagement() {
       full_name: "",
       role: "user",
       status: "active",
+      current_plan: "",
       password: "",
       requires_password_change: true,
     });
@@ -202,6 +206,7 @@ export default function UsersManagement() {
             full_name: formData.full_name || null,
             role: formData.role,
             status: formData.status,
+            current_plan: formData.current_plan || null,
             requires_password_change: formData.requires_password_change,
           },
         }
@@ -258,13 +263,29 @@ export default function UsersManagement() {
     setIsSubmitting(true);
 
     try {
+      const nextPlan = formData.current_plan || null;
+      const planChanged = (selectedUser.current_plan || null) !== nextPlan;
+
+      const updates: {
+        full_name: string;
+        role: "admin" | "user";
+        status: "active" | "inactive" | "suspended";
+        current_plan: string | null;
+        plan_started_at?: string | null;
+      } = {
+        full_name: formData.full_name,
+        role: formData.role,
+        status: formData.status,
+        current_plan: nextPlan,
+      };
+
+      if (planChanged) {
+        updates.plan_started_at = nextPlan ? new Date().toISOString() : null;
+      }
+
       const { error } = await supabase
         .from("users")
-        .update({
-          full_name: formData.full_name,
-          role: formData.role,
-          status: formData.status,
-        })
+        .update(updates)
         .eq("id", selectedUser.id);
 
       if (error) throw error;
@@ -318,11 +339,13 @@ export default function UsersManagement() {
 
   const openEditDialog = (user: User) => {
     setSelectedUser(user);
+    const plan = (user.current_plan || "") as PlanFormValue;
     setFormData({
       email: user.email,
       full_name: user.full_name || "",
       role: user.role as "admin" | "user",
       status: user.status as "active" | "inactive" | "suspended",
+      current_plan: plan,
       password: "",
       requires_password_change: user.requires_password_change ?? false,
     });
@@ -510,6 +533,29 @@ export default function UsersManagement() {
                 </Select>
               </div>
               <div className="space-y-1.5">
+                <Label htmlFor="plan">Plan</Label>
+                <Select
+                  value={formData.current_plan || "none"}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      current_plan: (value === "none" ? "" : value) as PlanFormValue,
+                    })
+                  }
+                >
+                  <SelectTrigger id="plan">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PLAN_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.label} value={opt.value || "none"}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
                 <Label htmlFor="status">Status</Label>
                 <Select
                   value={formData.status}
@@ -613,6 +659,7 @@ export default function UsersManagement() {
                   <th className="px-3 py-2 font-medium">Name</th>
                   <th className="px-3 py-2 font-medium">Email</th>
                   <th className="px-3 py-2 font-medium">Role</th>
+                  <th className="px-3 py-2 font-medium">Plan</th>
                   <th className="px-3 py-2 font-medium">Status</th>
                   <th className="px-3 py-2 font-medium">Created</th>
                   <th className="px-3 py-2 font-medium text-right">Actions</th>
@@ -632,6 +679,9 @@ export default function UsersManagement() {
                       <Badge variant={user.role === "admin" ? "default" : "secondary"}>
                         {user.role}
                       </Badge>
+                    </td>
+                    <td className="px-3 py-2.5 text-muted-foreground">
+                      {formatPlanLabel(user.current_plan)}
                     </td>
                     <td className="px-3 py-2.5">
                       <Badge variant={statusVariant(user.status)}>{user.status}</Badge>
@@ -709,6 +759,29 @@ export default function UsersManagement() {
                 <SelectContent>
                   <SelectItem value="user">User</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit_plan">Plan</Label>
+              <Select
+                value={formData.current_plan || "none"}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    current_plan: (value === "none" ? "" : value) as PlanFormValue,
+                  })
+                }
+              >
+                <SelectTrigger id="edit_plan">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PLAN_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.label} value={opt.value || "none"}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

@@ -9,6 +9,7 @@ import { LoadError } from "../../components/ui/load-error";
 import { supabase } from "../../lib/supabase";
 import { Tables } from "../../types/supabase";
 import { useCancellableLoad } from "../../hooks/useCancellableLoad";
+import { formatPlanLabel } from "../../lib/plans";
 import { ArrowLeft, Globe, FileText, MessageSquare, Activity } from "lucide-react";
 import { format } from "date-fns";
 
@@ -87,8 +88,8 @@ export default function AdminClientDetailPage() {
 
       <div className="mb-6 flex flex-wrap items-center gap-2">
         <Badge variant={user.status === "active" ? "success" : "secondary"}>{user.status}</Badge>
-        <Badge variant="outline" className="capitalize">
-          {user.current_plan || "no plan"}
+        <Badge variant="outline">
+          {formatPlanLabel(user.current_plan)}
         </Badge>
         <span className="text-sm text-muted-foreground">{user.email}</span>
       </div>

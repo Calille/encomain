@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../contexts/AuthContext";
 import { Button } from "../ui/button";
@@ -26,11 +26,21 @@ import {
   SelectValue,
 } from "../ui/select";
 import { useToast } from "../../hooks/use-toast";
-import { Plus, MessageSquare, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import {
+  Plus,
+  MessageSquare,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Clock,
+  ArrowLeft,
+} from "lucide-react";
 import { format } from "date-fns";
 import { Tables } from "../../types/supabase";
+import { sendTicketNotification } from "../../utils/emailHelpers";
 
 type SupportTicket = Tables<"support_tickets">;
+type TicketMessage = Tables<"support_ticket_messages">;
 
 const statusConfig: Record<
   string,
@@ -41,23 +51,32 @@ const statusConfig: Record<
   }
 > = {
   open: { label: "Open", variant: "destructive", icon: XCircle },
-  in_progress: { label: "In progress", variant: "default", icon: Clock },
-  awaiting_response: {
-    label: "Awaiting response",
-    variant: "warning",
-    icon: MessageSquare,
-  },
+  pending: { label: "Pending", variant: "warning", icon: Clock },
   resolved: { label: "Resolved", variant: "success", icon: CheckCircle2 },
   closed: { label: "Closed", variant: "secondary", icon: CheckCircle2 },
 };
 
+const categoryLabels: Record<string, string> = {
+  general: "General",
+  technical: "Technical",
+  billing: "Billing",
+  upgrade: "Upgrade",
+  bespoke: "Bespoke",
+  feature_request: "Feature request",
+};
+
 export default function SupportTickets() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [messages, setMessages] = useState<TicketMessage[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [followUp, setFollowUp] = useState("");
+  const [isFollowUpSubmitting, setIsFollowUpSubmitting] = useState(false);
 
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
@@ -76,14 +95,40 @@ export default function SupportTickets() {
 
       if (error) throw error;
       setTickets(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const description =
+        error instanceof Error ? error.message : "Failed to load support requests.";
       toast({
         title: "Error",
-        description: error.message,
+        description,
         variant: "destructive",
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMessages = async (ticketId: string) => {
+    setMessagesLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("support_ticket_messages")
+        .select("*")
+        .eq("ticket_id", ticketId)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      setMessages(data || []);
+    } catch (error: unknown) {
+      const description =
+        error instanceof Error ? error.message : "Failed to load ticket thread.";
+      toast({
+        title: "Error",
+        description,
+        variant: "destructive",
+      });
+    } finally {
+      setMessagesLoading(false);
     }
   };
 
@@ -111,6 +156,15 @@ export default function SupportTickets() {
     };
   }, [user]);
 
+  useEffect(() => {
+    if (selectedTicket) {
+      fetchMessages(selectedTicket.id);
+    } else {
+      setMessages([]);
+      setFollowUp("");
+    }
+  }, [selectedTicket?.id]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -135,15 +189,30 @@ export default function SupportTickets() {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from("support_tickets").insert({
-        user_id: user?.id,
-        subject,
-        message,
-        category,
-        priority,
-      });
+      const { data, error } = await supabase
+        .from("support_tickets")
+        .insert({
+          user_id: user?.id,
+          subject,
+          message,
+          category,
+          priority,
+        })
+        .select("id")
+        .single();
 
       if (error) throw error;
+
+      if (data?.id) {
+        void sendTicketNotification({
+          type: "new_ticket",
+          ticketId: data.id,
+          subject,
+          category,
+          clientEmail: user?.email || profile?.email || "",
+          clientName: profile?.full_name || undefined,
+        });
+      }
 
       toast({
         title: "Request submitted",
@@ -156,14 +225,69 @@ export default function SupportTickets() {
       setPriority("normal");
       setIsDialogOpen(false);
       fetchTickets();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const description =
+        error instanceof Error ? error.message : "Failed to submit request.";
       toast({
         title: "Error",
-        description: error.message,
+        description,
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleFollowUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !selectedTicket) return;
+
+    if (followUp.trim().length < 1) {
+      toast({
+        title: "Empty message",
+        description: "Please write a follow-up before sending.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsFollowUpSubmitting(true);
+    try {
+      const { error } = await supabase.from("support_ticket_messages").insert({
+        ticket_id: selectedTicket.id,
+        author_id: user.id,
+        author_role: "client",
+        message: followUp.trim(),
+      });
+
+      if (error) throw error;
+
+      setFollowUp("");
+      await fetchMessages(selectedTicket.id);
+      await fetchTickets();
+      const refreshed = (
+        await supabase
+          .from("support_tickets")
+          .select("*")
+          .eq("id", selectedTicket.id)
+          .single()
+      ).data;
+      if (refreshed) setSelectedTicket(refreshed);
+
+      toast({
+        title: "Follow-up sent",
+        description: "Your message has been added to the ticket.",
+      });
+    } catch (error: unknown) {
+      const description =
+        error instanceof Error ? error.message : "Failed to send follow-up.";
+      toast({
+        title: "Error",
+        description,
+        variant: "destructive",
+      });
+    } finally {
+      setIsFollowUpSubmitting(false);
     }
   };
 
@@ -177,6 +301,106 @@ export default function SupportTickets() {
         <CardContent className="space-y-3">
           <Skeleton className="h-20 w-full" />
           <Skeleton className="h-20 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (selectedTicket) {
+    const config = statusConfig[selectedTicket.status] || {
+      label: selectedTicket.status,
+      variant: "secondary" as const,
+      icon: AlertCircle,
+    };
+    const StatusIcon = config.icon;
+    const canFollowUp =
+      selectedTicket.status === "open" || selectedTicket.status === "pending";
+
+    return (
+      <Card>
+        <CardHeader className="space-y-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-fit gap-1.5 px-0"
+            onClick={() => setSelectedTicket(null)}
+          >
+            <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
+            Back to requests
+          </Button>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <CardTitle>{selectedTicket.subject}</CardTitle>
+              <CardDescription className="mt-1">
+                Created{" "}
+                {format(new Date(selectedTicket.created_at), "d MMM yyyy 'at' HH:mm")}
+                {selectedTicket.category
+                  ? ` · ${categoryLabels[selectedTicket.category] || selectedTicket.category}`
+                  : ""}
+                {` · ${selectedTicket.priority} priority`}
+              </CardDescription>
+            </div>
+            <Badge variant={config.variant} className="gap-1 shrink-0">
+              <StatusIcon className="h-3 w-3" strokeWidth={1.5} />
+              {config.label}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {messagesLoading ? (
+            <Skeleton className="h-24 w-full" />
+          ) : messages.length === 0 ? (
+            <div className="rounded-sm border border-border bg-muted/30 p-4">
+              <p className="text-sm text-foreground whitespace-pre-wrap">
+                {selectedTicket.message}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`rounded-sm border p-3 ${
+                    msg.author_role === "admin"
+                      ? "border-accent/20 bg-accent/5"
+                      : "border-border bg-muted/30"
+                  }`}
+                >
+                  <div className="mb-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">
+                      {msg.author_role === "admin" ? "Enclosure team" : "You"}
+                    </span>
+                    <span>
+                      {format(new Date(msg.created_at), "d MMM yyyy 'at' HH:mm")}
+                    </span>
+                  </div>
+                  <p className="text-sm text-foreground whitespace-pre-wrap">{msg.message}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {canFollowUp ? (
+            <form onSubmit={handleFollowUp} className="space-y-3 border-t border-border pt-4">
+              <Label htmlFor="follow-up">Add a follow-up</Label>
+              <Textarea
+                id="follow-up"
+                value={followUp}
+                onChange={(e) => setFollowUp(e.target.value)}
+                rows={4}
+                maxLength={5000}
+                placeholder="Add more detail or ask a follow-up question..."
+              />
+              <Button type="submit" disabled={isFollowUpSubmitting || !followUp.trim()}>
+                {isFollowUpSubmitting ? "Sending…" : "Send follow-up"}
+              </Button>
+            </form>
+          ) : (
+            <p className="text-sm text-muted-foreground border-t border-border pt-4">
+              This ticket is {config.label.toLowerCase()}. Open a new request if you need
+              further help.
+            </p>
+          )}
         </CardContent>
       </Card>
     );
@@ -202,7 +426,7 @@ export default function SupportTickets() {
             <DialogHeader>
               <DialogTitle>Create support request</DialogTitle>
               <DialogDescription>
-                Describe your issue and we'll get back to you within 24 hours.
+                Describe your issue and we&apos;ll get back to you within 24 hours.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -228,10 +452,11 @@ export default function SupportTickets() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="general">General question</SelectItem>
-                    <SelectItem value="technical">Technical issue</SelectItem>
-                    <SelectItem value="billing">Billing question</SelectItem>
-                    <SelectItem value="feature_request">Feature request</SelectItem>
+                    <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="technical">Technical</SelectItem>
+                    <SelectItem value="billing">Billing</SelectItem>
+                    <SelectItem value="upgrade">Upgrade</SelectItem>
+                    <SelectItem value="bespoke">Bespoke</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -246,7 +471,6 @@ export default function SupportTickets() {
                     <SelectItem value="low">Low</SelectItem>
                     <SelectItem value="normal">Normal</SelectItem>
                     <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -277,7 +501,7 @@ export default function SupportTickets() {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Submitting..." : "Submit request"}
+                  {isSubmitting ? "Submitting…" : "Submit request"}
                 </Button>
               </DialogFooter>
             </form>
@@ -294,15 +518,19 @@ export default function SupportTickets() {
         ) : (
           <div className="divide-y divide-border">
             {tickets.map((ticket) => {
-              const config =
-                statusConfig[ticket.status as keyof typeof statusConfig] || {
-                  label: ticket.status,
-                  variant: "secondary" as const,
-                  icon: AlertCircle,
-                };
+              const config = statusConfig[ticket.status] || {
+                label: ticket.status,
+                variant: "secondary" as const,
+                icon: AlertCircle,
+              };
               const StatusIcon = config.icon;
               return (
-                <div key={ticket.id} className="px-4 py-4">
+                <button
+                  key={ticket.id}
+                  type="button"
+                  className="w-full px-4 py-4 text-left transition-colors-fast hover:bg-muted/40"
+                  onClick={() => setSelectedTicket(ticket)}
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <h3 className="text-sm font-medium text-foreground">
@@ -319,31 +547,17 @@ export default function SupportTickets() {
                   </div>
                   <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                     <span>
-                      Created {format(new Date(ticket.created_at), "MMM d, yyyy")}
+                      Created {format(new Date(ticket.created_at), "d MMM yyyy")}
                     </span>
                     {ticket.category && (
-                      <span>{ticket.category.replace("_", " ")}</span>
+                      <span>
+                        {categoryLabels[ticket.category] ||
+                          ticket.category.replace("_", " ")}
+                      </span>
                     )}
-                    <span>{ticket.priority} priority</span>
+                    <span className="capitalize">{ticket.priority} priority</span>
                   </div>
-                  {ticket.response && (
-                    <div className="mt-3 rounded-sm border border-accent/20 bg-accent/5 p-3">
-                      <p className="text-xs font-medium text-foreground mb-1">
-                        Admin response
-                      </p>
-                      <p className="text-sm text-muted-foreground">{ticket.response}</p>
-                      {ticket.responded_at && (
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          Responded{" "}
-                          {format(
-                            new Date(ticket.responded_at),
-                            "MMM d, yyyy 'at' h:mm a"
-                          )}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
+                </button>
               );
             })}
           </div>

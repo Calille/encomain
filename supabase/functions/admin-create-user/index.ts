@@ -11,11 +11,15 @@ interface CreateUserBody {
   full_name?: string | null;
   role?: string;
   status?: string;
+  /** Plan slug: essential | professional | signature | bespoke, or null/omit for none */
+  current_plan?: string | null;
   /** Preferred flag name used by the admin UI */
   requires_password_change?: boolean;
   /** @deprecated Prefer requires_password_change; still accepted for older clients */
   must_change_password?: boolean;
 }
+
+const ALLOWED_PLANS = ["essential", "professional", "signature", "bespoke"] as const;
 
 Deno.serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
@@ -145,6 +149,18 @@ Deno.serve(async (req) => {
           ? Boolean(body.must_change_password)
           : true;
 
+    let currentPlan: string | null = null;
+    if (body.current_plan !== undefined && body.current_plan !== null && body.current_plan !== "") {
+      const plan = String(body.current_plan).toLowerCase().trim();
+      if (!ALLOWED_PLANS.includes(plan as (typeof ALLOWED_PLANS)[number])) {
+        return new Response(JSON.stringify({ error: "Invalid current_plan value" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      currentPlan = plan;
+    }
+
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -169,19 +185,26 @@ Deno.serve(async (req) => {
       });
     }
 
+    const profileInsert: Record<string, unknown> = {
+      id: authData.user.id,
+      email,
+      full_name: body.full_name || null,
+      role,
+      status,
+      password_set_by_admin: true,
+      // Write both columns until the dual-flag schema is consolidated
+      requires_password_change: requiresPasswordChange,
+      must_change_password: requiresPasswordChange,
+    };
+
+    if (currentPlan) {
+      profileInsert.current_plan = currentPlan;
+      profileInsert.plan_started_at = new Date().toISOString();
+    }
+
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("users")
-      .insert({
-        id: authData.user.id,
-        email,
-        full_name: body.full_name || null,
-        role,
-        status,
-        password_set_by_admin: true,
-        // Write both columns until the dual-flag schema is consolidated
-        requires_password_change: requiresPasswordChange,
-        must_change_password: requiresPasswordChange,
-      })
+      .insert(profileInsert)
       .select()
       .single();
 

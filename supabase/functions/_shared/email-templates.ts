@@ -1048,3 +1048,81 @@ export function renderUserFeedbackSummaryEmail(data: UserFeedbackSummaryEmailDat
   );
 }
 
+export interface NewTicketAdminEmailData {
+  subject: string;
+  category: string;
+  clientEmail: string;
+  clientName?: string;
+  ticketUrl: string;
+  ticketId: string;
+}
+
+export function renderNewTicketAdminEmail(data: NewTicketAdminEmailData): string {
+  const clientLabel = data.clientName
+    ? `${data.clientName} (${data.clientEmail})`
+    : data.clientEmail;
+
+  const content = `
+    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
+      A new support ticket has been submitted.
+    </p>
+    <div style="background-color: ${COLORS_EXTENDED.BACKGROUND_GRAY}; padding: 20px; border-radius: 4px; margin: 20px 0;">
+      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Subject:</strong> ${data.subject}</p>
+      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Category:</strong> ${data.category}</p>
+      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Client:</strong> ${clientLabel}</p>
+      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 0;"><strong>Ticket ID:</strong> ${data.ticketId}</p>
+    </div>
+  `;
+
+  return createEmailLayout(
+    'New support ticket',
+    data.subject,
+    content,
+    'View support tickets',
+    data.ticketUrl
+  );
+}
+
+export interface TicketResponseClientEmailData {
+  clientName?: string;
+  subject: string;
+  responsePreview?: string;
+  ticketUrl: string;
+}
+
+export function renderTicketResponseClientEmail(
+  data: TicketResponseClientEmailData
+): string {
+  const name = data.clientName || 'there';
+  const preview = data.responsePreview
+    ? `
+      <div style="background-color: ${COLORS_EXTENDED.BACKGROUND_GRAY}; padding: 20px; border-radius: 4px; margin: 20px 0;">
+        <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0;">
+          ${data.responsePreview}
+        </p>
+      </div>
+    `
+    : '';
+
+  const content = `
+    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
+      Hi ${name},
+    </p>
+    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
+      We have replied to your support request: <strong>${data.subject}</strong>.
+    </p>
+    ${preview}
+    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
+      You can view the full conversation in your dashboard.
+    </p>
+  `;
+
+  return createEmailLayout(
+    'Support update',
+    data.subject,
+    content,
+    'View your ticket',
+    data.ticketUrl
+  );
+}
+

@@ -40,6 +40,7 @@ const AdminAudits = lazy(() => import("./pages/admin/audits"));
 const AdminOutreach = lazy(() => import("./pages/admin/outreach"));
 const AdminSettings = lazy(() => import("./pages/admin/settings"));
 const AdminSuppressions = lazy(() => import("./pages/admin/suppressions"));
+const AdminSupportTickets = lazy(() => import("./pages/admin/support-tickets"));
 const UsersManagement = lazy(() => import("./pages/admin/users"));
 const WebsitesManagement = lazy(() => import("./pages/admin/websites"));
 const BillingManagement = lazy(() => import("./pages/admin/billing"));
@@ -222,6 +223,14 @@ function App() {
             element={
               <ProtectedRoute requireAdmin>
                 <AdminSuppressions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/support-tickets"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminSupportTickets />
               </ProtectedRoute>
             }
           />
