@@ -141,7 +141,8 @@ serve(async (req) => {
       to: email,
       subject: 'Welcome to The Enclosure!',
       html: emailHtml,
-      from: 'The Enclosure <hello@theenclosure.co.uk>',
+      from: 'The Enclosure <noreply@theenclosure.co.uk>',
+      replyTo: 'hello@theenclosure.co.uk',
       idempotencyKey: `welcome-email-${userRow.id}`,
     });
 

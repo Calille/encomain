@@ -47,10 +47,10 @@ serve(async (req) => {
     };
 
     const result = await sendEmail({
-      to: body.adminEmail,
+      to: 'josh@theenclosure.co.uk',
       subject: `${severityLabels[body.severity] || body.severity} System Error Alert: ${body.errorType}`,
       html: emailHtml,
-      from: 'The Enclosure <admin@theenclosure.co.uk>',
+      from: 'The Enclosure <noreply@theenclosure.co.uk>',
     });
 
     if (!result.success) {

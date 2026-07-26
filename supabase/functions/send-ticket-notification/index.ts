@@ -132,6 +132,7 @@ serve(async (req) => {
         subject: `Update on your support request: ${subject}`,
         html: emailHtml,
         from: FROM_ADDRESS,
+        replyTo: "hello@theenclosure.co.uk",
         idempotencyKey: `ticket-resp-${ticketId}-${previewKey(body.responsePreview)}`,
       });
 

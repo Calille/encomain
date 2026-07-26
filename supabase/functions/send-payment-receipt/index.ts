@@ -40,8 +40,8 @@ serve(async (req) => {
       to: body.email,
       subject: `Payment Receipt - ${body.payment.transactionId}`,
       html: emailHtml,
-      from: 'The Enclosure <notifications@theenclosure.co.uk>',
-      replyTo: 'orders@theenclosure.co.uk',
+      from: 'The Enclosure <noreply@theenclosure.co.uk>',
+      replyTo: 'hello@theenclosure.co.uk',
     });
 
     if (!result.success) {

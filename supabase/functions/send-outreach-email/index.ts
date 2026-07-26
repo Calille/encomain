@@ -156,6 +156,7 @@ Deno.serve(async (req) => {
       to: email,
       subject,
       html: htmlWithFooter,
+      from: "The Enclosure <noreply@theenclosure.co.uk>",
       replyTo: "hello@theenclosure.co.uk",
       idempotencyKey: `outreach-${leadId}-${unsubscribeToken}`,
     });

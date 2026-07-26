@@ -125,9 +125,9 @@ export function renderWelcomeEmail(data: WelcomeEmailData): string {
 // Brand constants
 const BRAND_EXTENDED = {
   ...BRAND,
-  ordersEmail: 'orders@theenclosure.co.uk',
-  adminEmail: 'admin@theenclosure.co.uk',
-  notificationsEmail: 'notifications@theenclosure.co.uk',
+  ordersEmail: 'hello@theenclosure.co.uk',
+  adminEmail: 'hello@theenclosure.co.uk',
+  notificationsEmail: 'hello@theenclosure.co.uk',
 };
 
 const COLORS_EXTENDED = {

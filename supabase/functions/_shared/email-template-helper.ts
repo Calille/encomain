@@ -7,7 +7,7 @@ const BRAND = {
   name: 'The Enclosure',
   website: 'https://theenclosure.co.uk',
   supportEmail: 'hello@theenclosure.co.uk',
-  ordersEmail: 'orders@theenclosure.co.uk',
+  ordersEmail: 'hello@theenclosure.co.uk',
 };
 
 const COLORS = {

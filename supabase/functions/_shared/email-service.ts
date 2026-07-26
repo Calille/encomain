@@ -42,7 +42,7 @@ export async function sendEmail(
       };
     }
 
-    const from = options.from || 'The Enclosure <notifications@theenclosure.co.uk>';
+    const from = options.from || 'The Enclosure <noreply@theenclosure.co.uk>';
 
     const sendPayload = {
       from,

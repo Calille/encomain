@@ -36,10 +36,10 @@ serve(async (req) => {
 
     // Send email
     const result = await sendEmail({
-      to: body.adminEmail,
+      to: 'josh@theenclosure.co.uk',
       subject: `New Order Received - ${body.order.orderNumber}`,
       html: emailHtml,
-      from: 'The Enclosure <admin@theenclosure.co.uk>',
+      from: 'The Enclosure <noreply@theenclosure.co.uk>',
     });
 
     if (!result.success) {
