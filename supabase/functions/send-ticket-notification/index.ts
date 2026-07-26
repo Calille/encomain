@@ -24,9 +24,7 @@ interface RequestBody {
   ticketUrl?: string;
 }
 
-// TODO: revert to josh@theenclosure.co.uk once custom domain
-// inbound email routing is sorted
-const ADMIN_INBOX = "joshwicks2015@gmail.com";
+const ADMIN_INBOX = "josh@theenclosure.co.uk";
 const FROM_ADDRESS = "The Enclosure <noreply@theenclosure.co.uk>";
 
 function previewKey(preview: string | undefined): string {

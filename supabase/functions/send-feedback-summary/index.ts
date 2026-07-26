@@ -35,10 +35,8 @@ serve(async (req) => {
     });
 
     // Send email
-    // TODO: revert to josh@theenclosure.co.uk once custom domain
-    // inbound email routing is sorted
     const result = await sendEmail({
-      to: 'joshwicks2015@gmail.com',
+      to: 'josh@theenclosure.co.uk',
       subject: `Weekly Feedback Summary - ${body.feedbackSummary.period}`,
       html: emailHtml,
       from: 'The Enclosure <noreply@theenclosure.co.uk>',
