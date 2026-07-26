@@ -1,6 +1,7 @@
 /**
  * Shared CORS helpers for Edge Functions.
- * Origins are controlled via ALLOWED_ORIGINS (comma-separated).
+ * Origins are controlled via ALLOWED_ORIGINS (comma-separated),
+ * plus Vercel preview hostnames for this project only.
  */
 
 const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ||
@@ -9,9 +10,27 @@ const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ||
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+/** https://encomain-<hash>-calilles-projects.vercel.app */
+const VERCEL_PREVIEW_HOST =
+  /^encomain-[a-z0-9]+-calilles-projects\.vercel\.app$/i;
+
+function isAllowedVercelPreviewOrigin(origin: string): boolean {
+  try {
+    const url = new URL(origin);
+    if (url.protocol !== 'https:') return false;
+    return VERCEL_PREVIEW_HOST.test(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
 export function getAllowedOrigin(request: Request): string {
   const requestOrigin = request.headers.get('Origin');
-  if (requestOrigin && ALLOWED_ORIGINS.includes(requestOrigin)) {
+  if (
+    requestOrigin &&
+    (ALLOWED_ORIGINS.includes(requestOrigin) ||
+      isAllowedVercelPreviewOrigin(requestOrigin))
+  ) {
     return requestOrigin;
   }
   return ALLOWED_ORIGINS[0] || 'https://theenclosure.co.uk';
