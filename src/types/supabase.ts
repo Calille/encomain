@@ -994,6 +994,12 @@ export type Database = {
           updated_at: string
           vat_number: string | null
           welcome_email_sent_at: string | null
+          deleted_at: string | null
+          deletion_scheduled_for: string | null
+          deleted_by: string | null
+          deletion_reason: string | null
+          recovery_token: string | null
+          anonymised_at: string | null
         }
         Insert: {
           account_manager_id?: string | null
@@ -1019,6 +1025,12 @@ export type Database = {
           updated_at?: string
           vat_number?: string | null
           welcome_email_sent_at?: string | null
+          deleted_at?: string | null
+          deletion_scheduled_for?: string | null
+          deleted_by?: string | null
+          deletion_reason?: string | null
+          recovery_token?: string | null
+          anonymised_at?: string | null
         }
         Update: {
           account_manager_id?: string | null
@@ -1044,6 +1056,12 @@ export type Database = {
           updated_at?: string
           vat_number?: string | null
           welcome_email_sent_at?: string | null
+          deleted_at?: string | null
+          deletion_scheduled_for?: string | null
+          deleted_by?: string | null
+          deletion_reason?: string | null
+          recovery_token?: string | null
+          anonymised_at?: string | null
         }
         Relationships: [
           {

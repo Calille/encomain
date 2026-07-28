@@ -23,6 +23,8 @@ const ForgotPassword = lazy(() => import("./pages/forgot-password"));
 const ChangePassword = lazy(() => import("./pages/change-password"));
 const RoleLanding = lazy(() => import("./pages/role-landing"));
 const UnsubscribePage = lazy(() => import("./pages/unsubscribe"));
+const RecoverAccountPage = lazy(() => import("./pages/recover-account"));
+const AccountDeletedPage = lazy(() => import("./pages/account-deleted"));
 
 const UserDashboard = lazy(() => import("./pages/dashboard/user-dashboard"));
 const WebsiteProgress = lazy(() => import("./pages/dashboard/progress"));
@@ -75,6 +77,8 @@ function App() {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/unsubscribe" element={<UnsubscribePage />} />
+          <Route path="/recover-account" element={<RecoverAccountPage />} />
+          <Route path="/account-deleted" element={<AccountDeletedPage />} />
 
           {/* Auth */}
           <Route path="/login" element={<LoginPage />} />

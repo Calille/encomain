@@ -15,6 +15,8 @@ interface RequestBody {
   userName?: string;
   loginUrl?: string;
   dashboardUrl?: string;
+  temporary_password?: string;
+  requires_password_change?: boolean;
 }
 
 serve(async (req) => {
@@ -130,11 +132,18 @@ serve(async (req) => {
     const userName = body.userName || userRow.full_name || 'there';
     const loginUrl = body.loginUrl || 'https://theenclosure.co.uk/login';
     const dashboardUrl = body.dashboardUrl || 'https://theenclosure.co.uk/dashboard';
+    const temporaryPassword =
+      typeof body.temporary_password === 'string' && body.temporary_password.trim()
+        ? body.temporary_password.trim()
+        : undefined;
 
     const emailHtml = renderWelcomeEmail({
       userName,
+      email,
       loginUrl,
       dashboardUrl,
+      temporaryPassword,
+      requiresPasswordChange: Boolean(body.requires_password_change),
     });
 
     const result = await sendEmail({

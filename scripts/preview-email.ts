@@ -49,8 +49,20 @@ const previews: Preview[] = [
     name: 'welcome',
     html: renderWelcomeEmail({
       userName: 'Alex Morgan',
+      email: 'alex@example.co.uk',
       loginUrl: 'https://theenclosure.co.uk/login',
       dashboardUrl,
+      temporaryPassword: 'Tmp-Ex4mple!',
+      requiresPasswordChange: true,
+    }),
+  },
+  {
+    name: 'account-deletion',
+    html: renderAccountDeletionEmail({
+      userName: 'Alex Morgan',
+      deletionDate: nextMonth,
+      recoveryUrl: 'https://theenclosure.co.uk/recover-account?token=demo-token',
+      recoveryExpiryDate: nextMonth,
     }),
   },
   {
@@ -103,15 +115,6 @@ const previews: Preview[] = [
       updatedFields: ['full_name', 'company_name'],
       updatedAt: now,
       settingsUrl: 'https://theenclosure.co.uk/settings',
-    }),
-  },
-  {
-    name: 'account-deletion',
-    html: renderAccountDeletionEmail({
-      userName: 'Alex Morgan',
-      deletionDate: nextMonth,
-      recoveryUrl: 'https://theenclosure.co.uk/recover?token=demo',
-      recoveryExpiryDate: nextMonth,
     }),
   },
   {

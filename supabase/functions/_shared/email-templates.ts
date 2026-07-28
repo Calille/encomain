@@ -49,12 +49,60 @@ function mailtoLink(email: string = BRAND.supportEmail): string {
 
 export interface WelcomeEmailData {
   userName?: string;
+  email?: string;
   loginUrl: string;
   dashboardUrl: string;
+  temporaryPassword?: string;
+  requiresPasswordChange?: boolean;
 }
 
 export function renderWelcomeEmail(data: WelcomeEmailData): string {
   const userName = data.userName || 'there';
+  const loginUrl = data.loginUrl || 'https://theenclosure.co.uk/login';
+  const hasPassword =
+    typeof data.temporaryPassword === 'string' &&
+    data.temporaryPassword.trim().length > 0;
+
+  if (hasPassword) {
+    const passwordNote = data.requiresPasswordChange
+      ? 'For security, you will be asked to set your own password the first time you sign in.'
+      : 'For your security, we recommend changing this password from your account settings after your first sign in.';
+
+    return renderEmail({
+      preheader: 'Your Enclosure account is ready. Sign-in details inside.',
+      heading: 'Welcome to The Enclosure',
+      subheading: 'Your account is ready to use.',
+      bodyBlocks: [
+        {
+          type: 'text',
+          content: p(
+            `Hi ${userName}, your account has been set up. Here are your sign-in details.`
+          ),
+        },
+        {
+          type: 'card',
+          content: {
+            Email: data.email || '',
+            'Temporary password': data.temporaryPassword!.trim(),
+          },
+        },
+        {
+          type: 'text',
+          content: p(passwordNote),
+        },
+        {
+          type: 'button',
+          content: { text: 'Sign in to your account', href: loginUrl },
+        },
+        {
+          type: 'signoff',
+          content: p('Cheers,') + p('Josh and Will at The Enclosure'),
+        },
+      ],
+      footerNote:
+        'If you did not expect this account, please contact us at <a href="mailto:hello@theenclosure.co.uk" style="color: #1A4D2E; text-decoration: underline;">hello@theenclosure.co.uk</a> so we can look into it.',
+    });
+  }
 
   return renderEmail({
     preheader: 'Your Enclosure account is ready. Here is what to do next.',
@@ -63,7 +111,8 @@ export function renderWelcomeEmail(data: WelcomeEmailData): string {
     bodyBlocks: [
       {
         type: 'text',
-        content: p(`Hi ${userName},`) +
+        content:
+          p(`Hi ${userName},`) +
           p(
             'Thanks for joining us. Your dashboard is set up so you can view projects, manage your account, and get in touch whenever you need a hand.'
           ) +
@@ -77,7 +126,7 @@ export function renderWelcomeEmail(data: WelcomeEmailData): string {
       },
       {
         type: 'signoff',
-        content: p('Cheers,') + p('Josh and Will'),
+        content: p('Cheers,') + p('Josh and Will at The Enclosure'),
       },
     ],
   });
@@ -324,6 +373,9 @@ export interface AccountDeletionEmailData {
 
 export function renderAccountDeletionEmail(data: AccountDeletionEmailData): string {
   const userName = data.userName || 'there';
+  const expiryLabel = data.recoveryExpiryDate
+    ? formatDateTime(data.recoveryExpiryDate)
+    : formatDateTime(data.deletionDate);
 
   const blocks: EmailBodyBlock[] = [
     {
@@ -331,7 +383,7 @@ export function renderAccountDeletionEmail(data: AccountDeletionEmailData): stri
       content:
         p(`Hi ${userName},`) +
         p(
-          `We have received and processed your request to delete your account. Your account will be permanently deleted on <strong>${formatDateTime(data.deletionDate)}</strong>.`
+          `You (or an admin acting on your behalf) requested account deletion. Your account is deactivated and will be permanently deleted on <strong>${expiryLabel}</strong>. If you change your mind, use the link below to restore your account before then.`
         ),
     },
   ];
@@ -341,8 +393,7 @@ export function renderAccountDeletionEmail(data: AccountDeletionEmailData): stri
       {
         type: 'card',
         content: {
-          'Recovery available until': formatDateTime(data.recoveryExpiryDate),
-          Note: 'You can recover your account before this date using the button below.',
+          'Recovery expires': formatDateTime(data.recoveryExpiryDate),
         },
       },
       {
@@ -355,16 +406,18 @@ export function renderAccountDeletionEmail(data: AccountDeletionEmailData): stri
   blocks.push(
     {
       type: 'text',
-      content: p(`If you have any questions, contact us at ${mailtoLink()}.`),
+      content: p(
+        `If you did not request this, contact us straight away at ${mailtoLink()}.`
+      ),
     },
     {
       type: 'signoff',
       content: p('Cheers,') + p('The Enclosure team'),
-    }
+    },
   );
 
   return renderEmail({
-    preheader: 'Your account deletion request has been confirmed',
+    preheader: 'Your account has been deactivated. Recovery details inside.',
     heading: 'Account deletion confirmed',
     bodyBlocks: blocks,
   });

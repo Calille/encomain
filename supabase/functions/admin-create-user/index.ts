@@ -217,12 +217,47 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Send welcome email with temporary password (idempotent via welcome_email_sent_at)
+    let welcomeEmailSent = false;
+    let welcomeEmailError: string | null = null;
+    try {
+      const welcomeRes = await fetch(`${supabaseUrl}/functions/v1/send-welcome-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${serviceRoleKey}`,
+        },
+        body: JSON.stringify({
+          email,
+          userName: body.full_name || email.split("@")[0],
+          loginUrl: "https://theenclosure.co.uk/login",
+          dashboardUrl: "https://theenclosure.co.uk/dashboard",
+          temporary_password: password,
+          requires_password_change: requiresPasswordChange,
+        }),
+      });
+      const welcomeJson = await welcomeRes.json().catch(() => ({}));
+      if (!welcomeRes.ok || welcomeJson?.error) {
+        welcomeEmailError =
+          welcomeJson?.error || `Welcome email failed with status ${welcomeRes.status}`;
+        console.error("Welcome email invoke failed:", welcomeEmailError);
+      } else {
+        welcomeEmailSent = !welcomeJson?.skipped;
+      }
+    } catch (welcomeErr) {
+      welcomeEmailError =
+        welcomeErr instanceof Error ? welcomeErr.message : "Welcome email failed";
+      console.error("Welcome email invoke exception:", welcomeErr);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         userId: authData.user.id,
         email: authData.user.email,
         user: profile,
+        welcomeEmailSent,
+        welcomeEmailError,
       }),
       {
         status: 200,
