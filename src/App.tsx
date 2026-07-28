@@ -36,6 +36,7 @@ const AdminOverview = lazy(() => import("./pages/admin/dashboard"));
 const AdminClients = lazy(() => import("./pages/admin/clients"));
 const AdminClientDetail = lazy(() => import("./pages/admin/client-detail"));
 const AdminPayments = lazy(() => import("./pages/admin/payments"));
+const AdminOverdue = lazy(() => import("./pages/admin/overdue"));
 const AdminAudits = lazy(() => import("./pages/admin/audits"));
 const AdminOutreach = lazy(() => import("./pages/admin/outreach"));
 const AdminSettings = lazy(() => import("./pages/admin/settings"));
@@ -191,6 +192,14 @@ function App() {
             element={
               <ProtectedRoute requireAdmin>
                 <AdminPayments />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/overdue"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminOverdue />
               </ProtectedRoute>
             }
           />

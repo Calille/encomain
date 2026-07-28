@@ -1126,3 +1126,196 @@ export function renderTicketResponseClientEmail(
   );
 }
 
+// Payment reminder (late-payment chase levels 1-4)
+export interface PaymentReminderEmailData {
+  userName?: string;
+  invoiceNumber: string;
+  amount: number;
+  currency: string;
+  dueDate: string;
+  daysOverdue: number;
+  reminderLevel: 1 | 2 | 3 | 4;
+  paymentUrl?: string;
+}
+
+export interface RenderedEmail {
+  subject: string;
+  html: string;
+}
+
+const PAYMENT_REMINDER_COPY: Record<
+  1 | 2 | 3 | 4,
+  { subject: string; intro: string; closing: string }
+> = {
+  1: {
+    subject: 'Just a friendly reminder',
+    intro:
+      'This is a polite reminder that payment for the invoice below is outstanding. If you have already paid, please disregard this message.',
+    closing:
+      'If you have any questions about this invoice, reply to this email or contact us at',
+  },
+  2: {
+    subject: 'Your invoice is now overdue',
+    intro:
+      'Our records show that the invoice below is now overdue. Please arrange payment at your earliest convenience, or let us know when we can expect payment.',
+    closing:
+      'We would appreciate an update so we can keep your account in good order. Contact us at',
+  },
+  3: {
+    subject: 'Final reminder before escalation',
+    intro:
+      'This is a final reminder that the invoice below remains unpaid. Continued non-payment may affect ongoing services. Please settle the balance by the date noted below, or contact us immediately to discuss.',
+    closing:
+      'Please treat this as a clear deadline for payment. Reach us at',
+  },
+  4: {
+    subject: 'Account escalation notice',
+    intro:
+      'This is a formal notice that the invoice below remains unpaid. Services may be paused until the outstanding balance is settled. Please contact us immediately to resolve this matter.',
+    closing:
+      'Immediate contact is required to avoid further action. Write to us at',
+  },
+};
+
+export function renderPaymentReminderEmail(
+  data: PaymentReminderEmailData
+): RenderedEmail {
+  const userName = data.userName || 'there';
+  const level = data.reminderLevel;
+  const copy = PAYMENT_REMINDER_COPY[level];
+  const formattedAmount = formatCurrency(data.amount, data.currency);
+  const formattedDue = formatDate(data.dueDate);
+  const daysLabel =
+    data.daysOverdue === 1
+      ? '1 day overdue'
+      : `${data.daysOverdue} days overdue`;
+
+  const paymentCta =
+    data.paymentUrl
+      ? `
+    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
+      You can pay online using the button below.
+    </p>
+  `
+      : '';
+
+  const deadlineNote =
+    level === 3
+      ? `
+    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
+      Please complete payment within <strong>7 days</strong> of this notice.
+    </p>
+  `
+      : '';
+
+  const content = `
+    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
+      Hi ${userName},
+    </p>
+    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
+      ${copy.intro}
+    </p>
+
+    <div style="background-color: ${COLORS_EXTENDED.BACKGROUND_GRAY}; padding: 20px; border-radius: 4px; margin: 20px 0;">
+      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 0 0 4px 0;">Invoice number</p>
+      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 16px 0; font-weight: bold;">${data.invoiceNumber}</p>
+
+      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 12px 0 4px 0;">Amount due</p>
+      <p style="font-size: 24px; color: ${COLORS.DARK_GREEN}; margin: 0 0 16px 0; font-weight: bold;">${formattedAmount}</p>
+
+      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 12px 0 4px 0;">Original due date</p>
+      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 16px 0;">${formattedDue}</p>
+
+      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 12px 0 4px 0;">Status</p>
+      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0;">${daysLabel}</p>
+    </div>
+
+    ${deadlineNote}
+    ${paymentCta}
+
+    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 20px 0 0 0;">
+      ${copy.closing}
+      <a href="mailto:${BRAND.supportEmail}" style="color: ${COLORS.DARK_GREEN}; text-decoration: underline;">${BRAND.supportEmail}</a>.
+    </p>
+  `;
+
+  const html = createEmailLayout(
+    copy.subject,
+    `Invoice ${data.invoiceNumber}`,
+    content,
+    data.paymentUrl ? 'Pay invoice' : undefined,
+    data.paymentUrl
+  );
+
+  return { subject: copy.subject, html };
+}
+
+// Invoice issued (scheduled or manual send)
+export interface InvoiceIssuedEmailData {
+  userName?: string;
+  invoiceNumber: string;
+  amount: number;
+  currency: string;
+  issueDate: string;
+  dueDate: string;
+  description?: string;
+  invoiceUrl?: string;
+}
+
+export function renderInvoiceIssuedEmail(
+  data: InvoiceIssuedEmailData
+): RenderedEmail {
+  const userName = data.userName || 'there';
+  const formattedAmount = formatCurrency(data.amount, data.currency);
+  const formattedIssue = formatDate(data.issueDate);
+  const formattedDue = formatDate(data.dueDate);
+  const subject = `Invoice ${data.invoiceNumber} from The Enclosure`;
+
+  const descriptionBlock = data.description
+    ? `
+      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 12px 0 4px 0;">Description</p>
+      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 16px 0;">${data.description}</p>
+    `
+    : '';
+
+  const content = `
+    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
+      Hi ${userName},
+    </p>
+    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
+      Please find details of your new invoice below. Payment is due by the date shown.
+    </p>
+
+    <div style="background-color: ${COLORS_EXTENDED.BACKGROUND_GRAY}; padding: 20px; border-radius: 4px; margin: 20px 0;">
+      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 0 0 4px 0;">Invoice number</p>
+      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 16px 0; font-weight: bold;">${data.invoiceNumber}</p>
+
+      ${descriptionBlock}
+
+      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 12px 0 4px 0;">Amount due</p>
+      <p style="font-size: 24px; color: ${COLORS.DARK_GREEN}; margin: 0 0 16px 0; font-weight: bold;">${formattedAmount}</p>
+
+      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 12px 0 4px 0;">Issue date</p>
+      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 16px 0;">${formattedIssue}</p>
+
+      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 12px 0 4px 0;">Due date</p>
+      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0;">${formattedDue}</p>
+    </div>
+
+    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 20px 0 0 0;">
+      If you have already arranged payment, thank you. For questions about this invoice, contact us at
+      <a href="mailto:${BRAND.supportEmail}" style="color: ${COLORS.DARK_GREEN}; text-decoration: underline;">${BRAND.supportEmail}</a>.
+    </p>
+  `;
+
+  const html = createEmailLayout(
+    'Your invoice',
+    `Invoice ${data.invoiceNumber}`,
+    content,
+    data.invoiceUrl ? 'View invoice' : undefined,
+    data.invoiceUrl
+  );
+
+  return { subject, html };
+}
+

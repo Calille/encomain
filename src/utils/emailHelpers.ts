@@ -335,6 +335,36 @@ export async function sendTicketNotification(options: {
 }
 
 /**
+ * Send a payment reminder (chase) email for an invoice at a given level (1-4).
+ */
+export async function sendPaymentReminder(
+  invoiceId: string,
+  reminderLevel: number
+): Promise<EmailResponse> {
+  try {
+    const { data, error } = await supabase.functions.invoke('send-payment-reminder', {
+      body: {
+        invoiceId,
+        reminderLevel,
+      },
+    });
+
+    if (error) {
+      console.error('Error sending payment reminder:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, messageId: data?.messageId, skipped: Boolean(data?.skipped) };
+  } catch (error) {
+    console.error('Error sending payment reminder:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+    };
+  }
+}
+
+/**
  * Notify admin of new order
  */
 export async function notifyAdminNewOrder(
