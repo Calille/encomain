@@ -5,6 +5,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { buildCorsHeaders, handleCors } from "../_shared/cors.ts";
 import { sendEmail } from "../_shared/email-service.ts";
+import { renderEmail } from "../_shared/email-base-template.ts";
 
 interface OutreachBody {
   lead_id?: string;
@@ -145,17 +146,28 @@ Deno.serve(async (req) => {
 
     const unsubscribeToken = randomToken();
     const unsubscribeUrl = `https://theenclosure.co.uk/unsubscribe?token=${unsubscribeToken}`;
-    const htmlWithFooter = `${bodyHtml}
-      <hr style="border:none;border-top:1px solid #ddd;margin:24px 0" />
-      <p style="font-size:12px;color:#666;font-family:sans-serif">
-        You are receiving this because we audited a public business website.
-        <a href="${unsubscribeUrl}">Unsubscribe</a> to stop further emails from The Enclosure.
-      </p>`;
+    const leadName = lead.business_name || lead.contact_name || 'there';
+    const emailHtml = renderEmail({
+      preheader: subject,
+      heading: subject,
+      bodyBlocks: [
+        {
+          type: 'text',
+          content: `<p style="margin: 0 0 12px 0;">Hi ${leadName},</p>${bodyHtml}`,
+        },
+        {
+          type: 'signoff',
+          content:
+            '<p style="margin: 0 0 12px 0;">Cheers,</p><p style="margin: 0 0 12px 0;">The Enclosure team</p>',
+        },
+      ],
+      footerNote: `You are receiving this because we audited a public business website. <a href="${unsubscribeUrl}" style="color: #1A4D2E; text-decoration: underline;">Unsubscribe</a> to stop further emails from The Enclosure.`,
+    });
 
     const sendResult = await sendEmail({
       to: email,
       subject,
-      html: htmlWithFooter,
+      html: emailHtml,
       from: "The Enclosure <noreply@theenclosure.co.uk>",
       replyTo: "hello@theenclosure.co.uk",
       idempotencyKey: `outreach-${leadId}-${unsubscribeToken}`,
