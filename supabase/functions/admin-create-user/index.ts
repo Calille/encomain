@@ -17,9 +17,50 @@ interface CreateUserBody {
   requires_password_change?: boolean;
   /** @deprecated Prefer requires_password_change; still accepted for older clients */
   must_change_password?: boolean;
+  /** Optional primary site URL; inserted into public.websites after profile create */
+  primary_website_url?: string | null;
 }
 
 const ALLOWED_PLANS = ["essential", "professional", "signature", "bespoke"] as const;
+
+function normaliseWebsiteUrl(raw: string): string {
+  let input = raw.trim();
+  if (!input) throw new Error("URL is empty");
+  if (/\s/.test(input)) throw new Error("URL must not contain spaces");
+  if (!/^https?:\/\//i.test(input)) {
+    input = `https://${input}`;
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(input);
+  } catch {
+    throw new Error("URL is not valid");
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error("URL must start with http:// or https://");
+  }
+  parsed.hostname = parsed.hostname.toLowerCase();
+  if (
+    (parsed.protocol === "https:" && parsed.port === "443") ||
+    (parsed.protocol === "http:" && parsed.port === "80")
+  ) {
+    parsed.port = "";
+  }
+  if (!parsed.pathname || parsed.pathname === "/") {
+    return parsed.origin;
+  }
+  if (parsed.pathname.endsWith("/")) {
+    parsed.pathname = parsed.pathname.slice(0, -1);
+  }
+  return parsed.toString();
+}
+
+function websiteDisplayName(url: string): string {
+  const parsed = new URL(url);
+  let host = parsed.hostname.toLowerCase();
+  if (host.startsWith("www.")) host = host.slice(4);
+  return host;
+}
 
 Deno.serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
@@ -250,6 +291,34 @@ Deno.serve(async (req) => {
       console.error("Welcome email invoke exception:", welcomeErr);
     }
 
+    // Optional primary website (do not roll back user if this fails)
+    // Note: public.websites has no plan column; plan stays on public.users only.
+    let websiteCreated = false;
+    let websiteError: string | null = null;
+    const rawWebsiteUrl = body.primary_website_url?.trim();
+    if (rawWebsiteUrl) {
+      try {
+        const normalisedUrl = normaliseWebsiteUrl(rawWebsiteUrl);
+        const siteName = websiteDisplayName(normalisedUrl);
+        const { error: websiteInsertError } = await supabaseAdmin.from("websites").insert({
+          user_id: authData.user.id,
+          url: normalisedUrl,
+          name: siteName,
+          status: "active",
+        });
+        if (websiteInsertError) {
+          websiteError = websiteInsertError.message || "Failed to insert website";
+          console.error("Website insert failed after user create:", websiteInsertError);
+        } else {
+          websiteCreated = true;
+        }
+      } catch (websiteErr) {
+        websiteError =
+          websiteErr instanceof Error ? websiteErr.message : "Invalid primary_website_url";
+        console.error("Website URL normalisation/insert failed:", websiteErr);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -258,6 +327,8 @@ Deno.serve(async (req) => {
         user: profile,
         welcomeEmailSent,
         welcomeEmailError,
+        websiteCreated,
+        websiteError,
       }),
       {
         status: 200,

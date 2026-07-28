@@ -51,6 +51,10 @@ import { toast } from "../../hooks/use-toast";
 import { format } from "date-fns";
 import { formatPlanLabel, PLAN_OPTIONS, type PlanId } from "../../lib/plans";
 import { useAuth } from "../../contexts/AuthContext";
+import {
+  isPlausibleWebsiteInput,
+  normaliseWebsiteUrl,
+} from "../../lib/website-url";
 
 type User = Tables<"users">;
 type PlanFormValue = PlanId | "";
@@ -92,10 +96,12 @@ export default function UsersManagement() {
     current_plan: "" as PlanFormValue,
     password: "",
     requires_password_change: true,
+    primary_website_url: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
+  const [websiteUrlError, setWebsiteUrlError] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     try {
@@ -199,8 +205,10 @@ export default function UsersManagement() {
       current_plan: "",
       password: "",
       requires_password_change: true,
+      primary_website_url: "",
     });
     setPasswordCopied(false);
+    setWebsiteUrlError(null);
   };
 
   const handleCreateUser = async () => {
@@ -219,6 +227,28 @@ export default function UsersManagement() {
         return;
       }
 
+      let primaryWebsiteUrl: string | null = null;
+      const rawWebsite = formData.primary_website_url.trim();
+      if (rawWebsite) {
+        if (!isPlausibleWebsiteInput(rawWebsite)) {
+          setWebsiteUrlError(
+            "Enter a valid URL starting with http:// or https://, or a bare domain."
+          );
+          setIsSubmitting(false);
+          return;
+        }
+        try {
+          primaryWebsiteUrl = normaliseWebsiteUrl(rawWebsite);
+          setWebsiteUrlError(null);
+        } catch (err) {
+          setWebsiteUrlError(
+            err instanceof Error ? err.message : "Enter a valid website URL."
+          );
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       const { data: functionData, error: functionError } = await supabase.functions.invoke(
         "admin-create-user",
         {
@@ -230,6 +260,7 @@ export default function UsersManagement() {
             status: formData.status,
             current_plan: formData.current_plan || null,
             requires_password_change: formData.requires_password_change,
+            primary_website_url: primaryWebsiteUrl,
           },
         }
       );
@@ -247,10 +278,22 @@ export default function UsersManagement() {
         throw new Error("User creation failed - no success response");
       }
 
-      toast({
-        title: "User created",
-        description: `User ${formData.email} has been created. A welcome email with their temporary password has been sent.`,
-      });
+      if (primaryWebsiteUrl && functionData.websiteCreated) {
+        toast({
+          title: "Client created and website added",
+          description: `User ${formData.email} has been created. A welcome email with their temporary password has been sent.`,
+        });
+      } else if (primaryWebsiteUrl && functionData.websiteError) {
+        toast({
+          title: "Client created",
+          description: `Client created, but adding the website failed: ${functionData.websiteError}. Add it from the Websites tab.`,
+        });
+      } else {
+        toast({
+          title: "User created",
+          description: `User ${formData.email} has been created. A welcome email with their temporary password has been sent.`,
+        });
+      }
 
       resetCreateForm();
       setIsCreateDialogOpen(false);
@@ -471,6 +514,7 @@ export default function UsersManagement() {
       current_plan: plan,
       password: "",
       requires_password_change: user.requires_password_change ?? false,
+      primary_website_url: "",
     });
     setIsEditDialogOpen(true);
   };
@@ -677,6 +721,28 @@ export default function UsersManagement() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="primary_website_url">Primary website URL</Label>
+                <Input
+                  id="primary_website_url"
+                  type="url"
+                  placeholder="https://example.com"
+                  value={formData.primary_website_url}
+                  onChange={(e) => {
+                    setFormData({ ...formData, primary_website_url: e.target.value });
+                    setWebsiteUrlError(null);
+                  }}
+                  aria-invalid={!!websiteUrlError}
+                />
+                {websiteUrlError ? (
+                  <p className="text-xs text-destructive">{websiteUrlError}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Optional. Adds their site straight to the client's Websites tab so we can
+                    preview and audit it.
+                  </p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="status">Status</Label>

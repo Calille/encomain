@@ -398,7 +398,12 @@ export default function AdminClientDetailPage() {
         </TabsList>
 
         <TabsContent value="overview">
-          <ClientOverviewTab data={data} onEdit={() => setEditOpen(true)} />
+          <ClientOverviewTab
+            data={data}
+            onEdit={() => setEditOpen(true)}
+            onViewNotes={() => setTab("notes")}
+            onRefresh={retry}
+          />
         </TabsContent>
         <TabsContent value="billing">
           <ClientBillingTab data={data} onRefresh={retry} />

@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AdminLayout } from "../../components/admin/admin-layout";
+import { WebsiteThumbnail } from "../../components/admin/WebsiteThumbnail";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -8,6 +9,12 @@ import { Card } from "../../components/ui/card";
 import { Skeleton } from "../../components/ui/skeleton";
 import { EmptyState } from "../../components/ui/empty-state";
 import { LoadError } from "../../components/ui/load-error";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../../components/ui/tooltip";
 import { supabase } from "../../lib/supabase";
 import { Tables } from "../../types/supabase";
 import { Users, Plus } from "lucide-react";
@@ -39,9 +46,22 @@ interface SiteSummary {
   label: string;
 }
 
-function summariseSites(
-  sites: { status: string }[]
-): SiteSummary {
+interface WebsiteRow {
+  id: string;
+  user_id: string;
+  status: string;
+  url: string | null;
+  created_at: string;
+}
+
+interface NotePreview {
+  user_id: string;
+  note: string;
+  pinned: boolean;
+  created_at: string;
+}
+
+function summariseSites(sites: { status: string }[]): SiteSummary {
   const inProgress = sites.filter((w) => w.status === "in_progress").length;
   const complete = sites.filter(
     (w) => w.status === "completed" || w.status === "active"
@@ -61,35 +81,84 @@ function summariseSites(
   return { count, inProgress, complete, onHold, label };
 }
 
+function pickPrimaryWebsiteUrl(sites: WebsiteRow[]): string | null {
+  if (sites.length === 0) return null;
+  const sorted = [...sites].sort(
+    (a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
+  return sorted[0]?.url?.trim() || null;
+}
+
+/** Prefer latest pinned note; otherwise most recent note. */
+function pickLatestNotePreview(notes: NotePreview[]): string | null {
+  if (notes.length === 0) return null;
+  const pinned = notes
+    .filter((n) => n.pinned)
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+  if (pinned[0]) return pinned[0].note;
+  const chronological = [...notes].sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+  return chronological[0]?.note || null;
+}
+
+function truncateNote(text: string, max = 40): string {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= max) return clean;
+  return `${clean.slice(0, max - 1)}…`;
+}
+
 export default function AdminClientsPage() {
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserRow[]>([]);
-  const [websites, setWebsites] = useState<
-    { id: string; user_id: string; status: string }[]
-  >([]);
+  const [websites, setWebsites] = useState<WebsiteRow[]>([]);
   const [invoices, setInvoices] = useState<
     { user_id: string; amount: number; status: string }[]
   >([]);
+  const [notes, setNotes] = useState<NotePreview[]>([]);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [planFilter, setPlanFilter] = useState("all");
   const { sort, cycleSort } = useTableSort<ClientSortKey>();
 
   const load = useCallback(async (ctl: { isCancelled: () => boolean }) => {
-    const [u, w, i] = await Promise.all([
+    const [u, w, i, n] = await Promise.all([
       supabase.from("users").select("*").order("created_at", { ascending: false }),
-      supabase.from("websites").select("id, user_id, status"),
+      supabase
+        .from("websites")
+        .select("id, user_id, status, url, created_at")
+        .order("created_at", { ascending: true }),
       supabase.from("invoices").select("user_id, amount, status"),
+      supabase
+        .from("client_notes")
+        .select("user_id, note, pinned, created_at")
+        .order("created_at", { ascending: false }),
     ]);
     if (ctl.isCancelled()) return;
-    const firstError = u.error || w.error || i.error;
+    const firstError = u.error || w.error || i.error || n.error;
     if (firstError) throw firstError;
     setUsers(u.data || []);
-    setWebsites(w.data || []);
+    setWebsites((w.data as WebsiteRow[]) || []);
     setInvoices(i.data || []);
+    setNotes((n.data as NotePreview[]) || []);
   }, []);
 
   const { loading, error, retry } = useCancellableLoad(load);
+
+  const notesByUser = useMemo(() => {
+    const map = new Map<string, NotePreview[]>();
+    for (const note of notes) {
+      const list = map.get(note.user_id) || [];
+      list.push(note);
+      map.set(note.user_id, list);
+    }
+    return map;
+  }, [notes]);
 
   const rows = useMemo(() => {
     // Outstanding = sum of issued unpaid invoices (sent or overdue). Drafts are excluded.
@@ -108,6 +177,8 @@ export default function AdminClientsPage() {
       .map((u) => {
         const userSites = websites.filter((w) => w.user_id === u.id);
         const sites = summariseSites(userSites);
+        const primaryWebsiteUrl = pickPrimaryWebsiteUrl(userSites);
+        const latestNote = pickLatestNotePreview(notesByUser.get(u.id) || []);
         const outstanding = invoices
           .filter(
             (inv) =>
@@ -115,7 +186,7 @@ export default function AdminClientsPage() {
               (inv.status === "sent" || inv.status === "overdue")
           )
           .reduce((s, inv) => s + Number(inv.amount), 0);
-        return { user: u, sites, outstanding };
+        return { user: u, sites, outstanding, primaryWebsiteUrl, latestNote };
       });
 
     if (!sort.key || !sort.direction) return mapped;
@@ -150,7 +221,7 @@ export default function AdminClientsPage() {
           return 0;
       }
     });
-  }, [users, websites, invoices, query, statusFilter, planFilter, sort]);
+  }, [users, websites, invoices, notesByUser, query, statusFilter, planFilter, sort]);
 
   const headerButton = (key: ClientSortKey, label: string) => (
     <button
@@ -211,71 +282,127 @@ export default function AdminClientsPage() {
           <EmptyState icon={Users} message="No clients match your filters." />
         </Card>
       ) : (
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-border bg-muted/50 text-xs text-muted-foreground">
-                <tr>
-                  <th className="px-3 py-2">{headerButton("name", "Name")}</th>
-                  <th className="px-3 py-2">{headerButton("email", "Email")}</th>
-                  <th className="px-3 py-2">{headerButton("plan", "Plan")}</th>
-                  <th className="px-3 py-2">{headerButton("websites", "Websites")}</th>
-                  <th className="px-3 py-2">
-                    {headerButton("outstanding", "Outstanding")}
-                  </th>
-                  <th className="px-3 py-2">
-                    {headerButton("last_login", "Last login")}
-                  </th>
-                  <th className="px-3 py-2">{headerButton("status", "Status")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {rows.map(({ user, sites, outstanding }) => (
-                  <tr
-                    key={user.id}
-                    className="cursor-pointer transition-colors-fast hover:bg-muted/40"
-                    onClick={() => navigate(`/admin/clients/${user.id}`)}
-                  >
-                    <td className="px-3 py-2.5 font-medium text-foreground">
-                      {user.full_name || "Not set"}
-                    </td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{user.email}</td>
-                    <td className="px-3 py-2.5">
-                      {formatPlanLabel(user.current_plan)}
-                    </td>
-                    <td className="px-3 py-2.5 font-mono-nums text-xs">
-                      {sites.label}
-                    </td>
-                    <td className="px-3 py-2.5 font-mono-nums">
-                      £
-                      {outstanding.toLocaleString("en-GB", {
-                        minimumFractionDigits: 2,
-                      })}
-                    </td>
-                    <td className="px-3 py-2.5 text-muted-foreground">
-                      {user.last_login
-                        ? format(new Date(user.last_login), "PP")
-                        : "Never"}
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <Badge
-                        variant={
-                          user.status === "active"
-                            ? "success"
-                            : user.status === "suspended"
-                              ? "destructive"
-                              : "secondary"
-                        }
-                      >
-                        {user.status}
-                      </Badge>
-                    </td>
+        <TooltipProvider delayDuration={200}>
+          <Card className="overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-border bg-muted/50 text-xs text-muted-foreground">
+                  <tr>
+                    <th className="px-3 py-2">{headerButton("name", "Name")}</th>
+                    <th className="px-3 py-2">Website</th>
+                    <th className="px-3 py-2">Latest note</th>
+                    <th className="px-3 py-2">{headerButton("email", "Email")}</th>
+                    <th className="px-3 py-2">{headerButton("plan", "Plan")}</th>
+                    <th className="px-3 py-2">{headerButton("websites", "Websites")}</th>
+                    <th className="px-3 py-2">
+                      {headerButton("outstanding", "Outstanding")}
+                    </th>
+                    <th className="px-3 py-2">
+                      {headerButton("last_login", "Last login")}
+                    </th>
+                    <th className="px-3 py-2">{headerButton("status", "Status")}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {rows.map(
+                    ({
+                      user,
+                      sites,
+                      outstanding,
+                      primaryWebsiteUrl,
+                      latestNote,
+                    }) => (
+                      <tr
+                        key={user.id}
+                        className="cursor-pointer transition-colors-fast hover:bg-muted/40"
+                        onClick={() => navigate(`/admin/clients/${user.id}`)}
+                      >
+                        <td className="px-3 py-2.5 font-medium text-foreground">
+                          {user.full_name || "Not set"}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          {primaryWebsiteUrl ? (
+                            <a
+                              href={primaryWebsiteUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-block"
+                              title={primaryWebsiteUrl}
+                            >
+                              <WebsiteThumbnail url={primaryWebsiteUrl} size="sm" />
+                            </a>
+                          ) : (
+                            <WebsiteThumbnail url={null} size="sm" />
+                          )}
+                        </td>
+                        <td className="max-w-[160px] px-3 py-2.5">
+                          {latestNote ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  className="block w-full truncate text-left text-muted-foreground hover:text-foreground"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/admin/clients/${user.id}?tab=notes`);
+                                  }}
+                                >
+                                  {truncateNote(latestNote)}
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="top"
+                                className="max-w-xs whitespace-pre-wrap"
+                              >
+                                {latestNote}
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <span className="text-muted-foreground">None</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2.5 text-muted-foreground">
+                          {user.email}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          {formatPlanLabel(user.current_plan)}
+                        </td>
+                        <td className="px-3 py-2.5 font-mono-nums text-xs">
+                          {sites.label}
+                        </td>
+                        <td className="px-3 py-2.5 font-mono-nums">
+                          £
+                          {outstanding.toLocaleString("en-GB", {
+                            minimumFractionDigits: 2,
+                          })}
+                        </td>
+                        <td className="px-3 py-2.5 text-muted-foreground">
+                          {user.last_login
+                            ? format(new Date(user.last_login), "PP")
+                            : "Never"}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <Badge
+                            variant={
+                              user.status === "active"
+                                ? "success"
+                                : user.status === "suspended"
+                                  ? "destructive"
+                                  : "secondary"
+                            }
+                          >
+                            {user.status}
+                          </Badge>
+                        </td>
+                      </tr>
+                    )
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </TooltipProvider>
       )}
     </AdminLayout>
   );
