@@ -4,6 +4,7 @@ import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
 import { EmptyState } from "../../ui/empty-state";
 import { StickyNote } from "lucide-react";
+import { RecentNotesCard } from "../RecentNotesCard";
 import {
   AdminOption,
   ClientDetailData,
@@ -20,6 +21,8 @@ type ActivityItem = {
 type Props = {
   data: ClientDetailData;
   onEdit: () => void;
+  onViewNotes: () => void;
+  onRefresh: () => void;
 };
 
 function managerLabel(
@@ -31,9 +34,13 @@ function managerLabel(
   return a?.full_name || a?.email || "Not assigned";
 }
 
-export function ClientOverviewTab({ data, onEdit }: Props) {
-  const { user, notes, invoices, payments, tickets, updates, admins } = data;
-  const pinned = notes.filter((n) => n.pinned);
+export function ClientOverviewTab({
+  data,
+  onEdit,
+  onViewNotes,
+  onRefresh,
+}: Props) {
+  const { user, invoices, payments, tickets, notes, updates, admins } = data;
 
   const activity: ActivityItem[] = [
     ...invoices.map((i) => ({
@@ -72,74 +79,60 @@ export function ClientOverviewTab({ data, onEdit }: Props) {
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-base">Company info</CardTitle>
-          <Button size="sm" variant="outline" onClick={onEdit}>
-            Edit
-          </Button>
-        </CardHeader>
-        <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
-          <div>
-            <p className="text-xs text-muted-foreground">Company</p>
-            <p>{user.company_name || "Not set"}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Industry</p>
-            <p>{user.industry || "Not set"}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Billing email</p>
-            <p>{user.billing_email || user.email}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">VAT number</p>
-            <p>{user.vat_number || "Not set"}</p>
-          </div>
-          <div className="sm:col-span-2">
-            <p className="text-xs text-muted-foreground">Billing address</p>
-            <p className="whitespace-pre-wrap">
-              {user.billing_address || "Not set"}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Payment terms</p>
-            <p className="font-mono-nums">{user.payment_terms_days} days</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Account manager</p>
-            <p>{managerLabel(admins, user.account_manager_id)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Reminders</p>
-            <Badge variant={user.reminders_paused ? "warning" : "success"}>
-              {user.reminders_paused ? "Paused" : "Active"}
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
-
-      {pinned.length > 0 && (
+      <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Pinned notes</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-base">Company info</CardTitle>
+            <Button size="sm" variant="outline" onClick={onEdit}>
+              Edit
+            </Button>
           </CardHeader>
-          <CardContent className="space-y-2">
-            {pinned.map((n) => (
-              <div
-                key={n.id}
-                className="rounded-sm border border-border bg-muted/30 px-3 py-2 text-sm"
-              >
-                <p className="whitespace-pre-wrap">{n.note}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {n.author?.full_name || n.author?.email || "Unknown"} ·{" "}
-                  {format(new Date(n.created_at), "PP")}
-                </p>
-              </div>
-            ))}
+          <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
+            <div>
+              <p className="text-xs text-muted-foreground">Company</p>
+              <p>{user.company_name || "Not set"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Industry</p>
+              <p>{user.industry || "Not set"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Billing email</p>
+              <p>{user.billing_email || user.email}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">VAT number</p>
+              <p>{user.vat_number || "Not set"}</p>
+            </div>
+            <div className="sm:col-span-2">
+              <p className="text-xs text-muted-foreground">Billing address</p>
+              <p className="whitespace-pre-wrap">
+                {user.billing_address || "Not set"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Payment terms</p>
+              <p className="font-mono-nums">{user.payment_terms_days} days</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Account manager</p>
+              <p>{managerLabel(admins, user.account_manager_id)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Reminders</p>
+              <Badge variant={user.reminders_paused ? "warning" : "success"}>
+                {user.reminders_paused ? "Paused" : "Active"}
+              </Badge>
+            </div>
           </CardContent>
         </Card>
-      )}
+
+        <RecentNotesCard
+          userId={user.id}
+          onViewAll={onViewNotes}
+          onChanged={onRefresh}
+        />
+      </div>
 
       <Card>
         <CardHeader className="pb-2">
