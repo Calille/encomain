@@ -7,6 +7,7 @@ import {
   Settings,
   Ban,
   LifeBuoy,
+  AlertTriangle,
 } from "lucide-react";
 import { DashboardLayout } from "../dashboard/dashboard-layout";
 
@@ -14,6 +15,7 @@ const adminNav = [
   { name: "Overview", href: "/admin/dashboard", icon: LayoutDashboard },
   { name: "Clients", href: "/admin/clients", icon: Users },
   { name: "Payments", href: "/admin/payments", icon: CreditCard },
+  { name: "Overdue", href: "/admin/overdue", icon: AlertTriangle },
   { name: "Support tickets", href: "/admin/support-tickets", icon: LifeBuoy },
   { name: "Audits and Leads", href: "/admin/audits", icon: TrendingUp },
   { name: "Outreach", href: "/admin/outreach", icon: MessageSquare },

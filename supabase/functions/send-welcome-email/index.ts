@@ -2,7 +2,7 @@
  * Send Welcome Email Edge Function
  * Idempotent: skips if public.users.welcome_email_sent_at is already set.
  *
- * Subject: Welcome to The Enclosure!
+ * Subject: Welcome to The Enclosure
  */
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.6';
@@ -15,6 +15,8 @@ interface RequestBody {
   userName?: string;
   loginUrl?: string;
   dashboardUrl?: string;
+  temporary_password?: string;
+  requires_password_change?: boolean;
 }
 
 serve(async (req) => {
@@ -130,16 +132,23 @@ serve(async (req) => {
     const userName = body.userName || userRow.full_name || 'there';
     const loginUrl = body.loginUrl || 'https://theenclosure.co.uk/login';
     const dashboardUrl = body.dashboardUrl || 'https://theenclosure.co.uk/dashboard';
+    const temporaryPassword =
+      typeof body.temporary_password === 'string' && body.temporary_password.trim()
+        ? body.temporary_password.trim()
+        : undefined;
 
     const emailHtml = renderWelcomeEmail({
       userName,
+      email,
       loginUrl,
       dashboardUrl,
+      temporaryPassword,
+      requiresPasswordChange: Boolean(body.requires_password_change),
     });
 
     const result = await sendEmail({
       to: email,
-      subject: 'Welcome to The Enclosure!',
+      subject: 'Welcome to The Enclosure',
       html: emailHtml,
       from: 'The Enclosure <noreply@theenclosure.co.uk>',
       replyTo: 'hello@theenclosure.co.uk',

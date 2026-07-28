@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "../../components/dashboard/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
@@ -11,12 +12,22 @@ import {
   TabsTrigger,
 } from "../../components/ui/tabs";
 import { Checkbox } from "../../components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "../../hooks/use-toast";
+import { supabase } from "../../lib/supabase";
 import { User, Mail, Lock, Bell, Shield, Eye, EyeOff, Save } from "lucide-react";
 
 export default function Settings() {
-  const { profile, updateProfile, updatePassword } = useAuth();
+  const { profile, user, updateProfile, updatePassword, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
@@ -34,6 +45,11 @@ export default function Settings() {
     marketingEmails: false,
   });
   const [isUpdatingNotifications, setIsUpdatingNotifications] = useState(false);
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteEmailConfirm, setDeleteEmailConfirm] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (profile?.full_name) {
@@ -150,6 +166,68 @@ export default function Settings() {
       });
     } finally {
       setIsUpdatingNotifications(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user?.id || !profile?.email) return;
+
+    if (deleteEmailConfirm.trim().toLowerCase() !== profile.email.toLowerCase()) {
+      toast({
+        title: "Email does not match",
+        description: "Type your email address exactly to confirm deletion.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!deletePassword) {
+      toast({
+        title: "Password required",
+        description: "Re-enter your password to confirm deletion.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email: profile.email,
+        password: deletePassword,
+      });
+      if (reauthError) {
+        toast({
+          title: "Password incorrect",
+          description: "Could not verify your password. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("delete-account", {
+        body: {
+          user_id: user.id,
+          initiated_by: user.id,
+        },
+      });
+
+      if (error || data?.error) {
+        throw new Error(data?.error || error?.message || "Failed to delete account");
+      }
+
+      await signOut();
+      navigate("/account-deleted");
+    } catch (error: unknown) {
+      console.error("Delete account error:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to delete account.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -477,6 +555,76 @@ export default function Settings() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {profile?.role !== "admin" && (
+        <Card className="mt-8 border-destructive/40">
+          <CardHeader>
+            <CardTitle className="text-destructive">Delete account</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Deleting your account will deactivate it immediately. You will have 30 days
+              to recover it before all personal data is permanently removed.
+            </p>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setDeleteEmailConfirm("");
+                setDeletePassword("");
+                setDeleteDialogOpen(true);
+              }}
+            >
+              Delete my account
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>Delete your account</DialogTitle>
+            <DialogDescription>
+              This deactivates your account immediately. Type your email and password to
+              confirm. You can recover within 30 days via the email we send you.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="delete-email-confirm">Type your email to confirm</Label>
+              <Input
+                id="delete-email-confirm"
+                value={deleteEmailConfirm}
+                onChange={(e) => setDeleteEmailConfirm(e.target.value)}
+                placeholder={profile?.email || ""}
+                autoComplete="off"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="delete-password">Re-enter your password</Label>
+              <Input
+                id="delete-password"
+                type="password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                autoComplete="current-password"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={isDeleting}
+              onClick={handleDeleteAccount}
+            >
+              {isDeleting ? "Deleting..." : "Delete my account"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

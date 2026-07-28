@@ -1,150 +1,23 @@
 /**
- * Simple HTML Email Templates for Edge Functions
- * Since React Email doesn't work directly in Deno, we use simple HTML templates
+ * Typed transactional email payloads.
+ * All HTML is produced via the shared branded base in email-base-template.ts.
  */
+import { renderEmail, type EmailBodyBlock } from './email-base-template.ts';
 
-// Brand constants (inline to avoid import issues)
 const BRAND = {
   name: 'The Enclosure',
-  domain: 'theenclosure.co.uk',
   website: 'https://theenclosure.co.uk',
   supportEmail: 'hello@theenclosure.co.uk',
 };
 
-const COLORS = {
-  WHITE: '#FFFFFF',
-  DARK_GREEN: '#006400',
-  GRAY: '#333333',
-  LIGHT_GRAY: '#666666',
-  BORDER_GRAY: '#E5E5E5',
-};
-
-const LOGO_URL = 'https://theenclosure.co.uk/assets/images/logo.png';
-
-export interface WelcomeEmailData {
-  userName?: string;
-  loginUrl: string;
-  dashboardUrl: string;
-}
-
-export function renderWelcomeEmail(data: WelcomeEmailData): string {
-  const userName = data.userName || 'there';
-  
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to The Enclosure!</title>
-</head>
-<body style="font-family: Arial, Helvetica, sans-serif; background-color: #FFFFFF; margin: 0; padding: 0;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #FFFFFF; padding: 40px 20px;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #FFFFFF;">
-          <!-- Logo -->
-          <tr>
-            <td align="center" style="padding-bottom: 30px;">
-              <img src="${LOGO_URL}" alt="${BRAND.name}" width="180" style="display: block;" />
-            </td>
-          </tr>
-          
-          <!-- Header -->
-          <tr>
-            <td style="background-color: ${COLORS.DARK_GREEN}; padding: 40px; border-radius: 4px; margin-bottom: 30px;">
-              <h1 style="color: #FFFFFF; font-size: 24px; font-weight: bold; margin: 0 0 8px 0; text-align: center;">
-                Welcome to The Enclosure!
-              </h1>
-            </td>
-          </tr>
-          
-          <!-- Content -->
-          <tr>
-            <td style="padding-bottom: 30px;">
-              <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-                Hi ${userName},
-              </p>
-              <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-                Thank you for joining The Enclosure! We're thrilled to have you on board and look forward to helping you build something amazing.
-              </p>
-            </td>
-          </tr>
-          
-          <!-- Get Started Section -->
-          <tr>
-            <td style="padding-bottom: 30px;">
-              <h2 style="font-size: 20px; color: ${COLORS.DARK_GREEN}; margin: 0 0 16px 0;">
-                Get Started
-              </h2>
-              <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-                Your account is ready to use. Here's what you can do next:
-              </p>
-              <ul style="padding-left: 20px; margin: 16px 0; color: ${COLORS.GRAY}; font-size: 16px; line-height: 1.5;">
-                <li style="margin-bottom: 8px;">Access your dashboard to view your projects and account details</li>
-                <li style="margin-bottom: 8px;">Complete your profile to personalize your experience</li>
-                <li style="margin-bottom: 8px;">Explore our services and discover what we can build together</li>
-              </ul>
-            </td>
-          </tr>
-          
-          <!-- CTA Button -->
-          <tr>
-            <td align="center" style="padding-bottom: 30px;">
-              <a href="${data.dashboardUrl}" style="display: inline-block; padding: 12px 24px; background-color: ${COLORS.DARK_GREEN}; color: #FFFFFF; text-decoration: none; border-radius: 4px; font-size: 16px; font-weight: 600;">
-                Go to Dashboard
-              </a>
-            </td>
-          </tr>
-          
-          <!-- Footer -->
-          <tr>
-            <td style="border-top: 1px solid ${COLORS.BORDER_GRAY}; padding-top: 30px; text-align: center;">
-              <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 8px 0;">
-                © ${new Date().getFullYear()} ${BRAND.name}. All rights reserved.
-              </p>
-              <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 8px 0;">
-                <a href="${BRAND.website}" style="color: ${COLORS.DARK_GREEN}; text-decoration: underline;">
-                  ${BRAND.website.replace('https://', '')}
-                </a>
-              </p>
-              <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 8px 0;">
-                Questions? Email us at <a href="mailto:${BRAND.supportEmail}" style="color: ${COLORS.DARK_GREEN}; text-decoration: underline;">${BRAND.supportEmail}</a>
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-  `.trim();
-}
-
-// Brand constants
-const BRAND_EXTENDED = {
-  ...BRAND,
-  ordersEmail: 'hello@theenclosure.co.uk',
-  adminEmail: 'hello@theenclosure.co.uk',
-  notificationsEmail: 'hello@theenclosure.co.uk',
-};
-
-const COLORS_EXTENDED = {
-  ...COLORS,
-  BACKGROUND_GRAY: '#F9F9F9',
-};
-
-// Helper function to format currency
-function formatCurrency(amount: number, currency: string = 'GBP'): string {
+export function formatCurrency(amount: number, currency: string = 'GBP'): string {
   return new Intl.NumberFormat('en-GB', {
     style: 'currency',
     currency: currency,
   }).format(amount);
 }
 
-// Helper function to format date
-function formatDate(date: string): string {
+export function formatDate(date: string): string {
   return new Date(date).toLocaleDateString('en-GB', {
     year: 'numeric',
     month: 'long',
@@ -152,8 +25,7 @@ function formatDate(date: string): string {
   });
 }
 
-// Helper function to format date/time
-function formatDateTime(date: string): string {
+export function formatDateTime(date: string): string {
   return new Date(date).toLocaleString('en-GB', {
     year: 'numeric',
     month: 'long',
@@ -163,99 +35,107 @@ function formatDateTime(date: string): string {
   });
 }
 
-// Common email layout wrapper
-function createEmailLayout(
-  title: string,
-  subtitle: string | null,
-  content: string,
-  ctaText?: string,
-  ctaUrl?: string
-): string {
-  const headerHtml = subtitle
-    ? `
-      <tr>
-        <td style="background-color: ${COLORS.DARK_GREEN}; padding: 40px; border-radius: 4px; margin-bottom: 30px;">
-          <h1 style="color: #FFFFFF; font-size: 24px; font-weight: bold; margin: 0 0 8px 0; text-align: center;">
-            ${title}
-          </h1>
-          <p style="color: #FFFFFF; font-size: 16px; margin: 0; text-align: center; opacity: 0.9;">
-            ${subtitle}
-          </p>
-        </td>
-      </tr>
-    `
-    : `
-      <tr>
-        <td style="background-color: ${COLORS.DARK_GREEN}; padding: 40px; border-radius: 4px; margin-bottom: 30px;">
-          <h1 style="color: #FFFFFF; font-size: 24px; font-weight: bold; margin: 0; text-align: center;">
-            ${title}
-          </h1>
-        </td>
-      </tr>
-    `;
-
-  const ctaHtml = ctaText && ctaUrl
-    ? `
-      <tr>
-        <td align="center" style="padding-bottom: 30px;">
-          <a href="${ctaUrl}" style="display: inline-block; padding: 12px 24px; background-color: ${COLORS.DARK_GREEN}; color: #FFFFFF; text-decoration: none; border-radius: 4px; font-size: 16px; font-weight: 600;">
-            ${ctaText}
-          </a>
-        </td>
-      </tr>
-    `
-    : '';
-
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
-</head>
-<body style="font-family: Arial, Helvetica, sans-serif; background-color: #FFFFFF; margin: 0; padding: 0;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #FFFFFF; padding: 40px 20px;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #FFFFFF;">
-          <tr>
-            <td align="center" style="padding-bottom: 30px;">
-              <img src="${LOGO_URL}" alt="${BRAND.name}" width="180" style="display: block;" />
-            </td>
-          </tr>
-          ${headerHtml}
-          <tr>
-            <td style="padding-bottom: 30px;">
-              ${content}
-            </td>
-          </tr>
-          ${ctaHtml}
-          <tr>
-            <td style="border-top: 1px solid ${COLORS.BORDER_GRAY}; padding-top: 30px; text-align: center;">
-              <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 8px 0;">
-                © ${new Date().getFullYear()} ${BRAND.name}. All rights reserved.
-              </p>
-              <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 8px 0;">
-                <a href="${BRAND.website}" style="color: ${COLORS.DARK_GREEN}; text-decoration: underline;">
-                  ${BRAND.website.replace('https://', '')}
-                </a>
-              </p>
-              <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 8px 0;">
-                Questions? Email us at <a href="mailto:${BRAND.supportEmail}" style="color: ${COLORS.DARK_GREEN}; text-decoration: underline;">${BRAND.supportEmail}</a>
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-  `.trim();
+function p(text: string): string {
+  return `<p style="margin: 0 0 12px 0;">${text}</p>`;
 }
 
-// Order Confirmation Email
+function mailtoLink(email: string = BRAND.supportEmail): string {
+  return `<a href="mailto:${email}" style="color: #1A4D2E; text-decoration: underline;">${email}</a>`;
+}
+
+// ---------------------------------------------------------------------------
+// Welcome
+// ---------------------------------------------------------------------------
+
+export interface WelcomeEmailData {
+  userName?: string;
+  email?: string;
+  loginUrl: string;
+  dashboardUrl: string;
+  temporaryPassword?: string;
+  requiresPasswordChange?: boolean;
+}
+
+export function renderWelcomeEmail(data: WelcomeEmailData): string {
+  const userName = data.userName || 'there';
+  const loginUrl = data.loginUrl || 'https://theenclosure.co.uk/login';
+  const hasPassword =
+    typeof data.temporaryPassword === 'string' &&
+    data.temporaryPassword.trim().length > 0;
+
+  if (hasPassword) {
+    const passwordNote = data.requiresPasswordChange
+      ? 'For security, you will be asked to set your own password the first time you sign in.'
+      : 'For your security, we recommend changing this password from your account settings after your first sign in.';
+
+    return renderEmail({
+      preheader: 'Your Enclosure account is ready. Sign-in details inside.',
+      heading: 'Welcome to The Enclosure',
+      subheading: 'Your account is ready to use.',
+      bodyBlocks: [
+        {
+          type: 'text',
+          content: p(
+            `Hi ${userName}, your account has been set up. Here are your sign-in details.`
+          ),
+        },
+        {
+          type: 'card',
+          content: {
+            Email: data.email || '',
+            'Temporary password': data.temporaryPassword!.trim(),
+          },
+        },
+        {
+          type: 'text',
+          content: p(passwordNote),
+        },
+        {
+          type: 'button',
+          content: { text: 'Sign in to your account', href: loginUrl },
+        },
+        {
+          type: 'signoff',
+          content: p('Cheers,') + p('Josh and Will at The Enclosure'),
+        },
+      ],
+      footerNote:
+        'If you did not expect this account, please contact us at <a href="mailto:hello@theenclosure.co.uk" style="color: #1A4D2E; text-decoration: underline;">hello@theenclosure.co.uk</a> so we can look into it.',
+    });
+  }
+
+  return renderEmail({
+    preheader: 'Your Enclosure account is ready. Here is what to do next.',
+    heading: 'Welcome to The Enclosure',
+    subheading: 'Your account is ready to use.',
+    bodyBlocks: [
+      {
+        type: 'text',
+        content:
+          p(`Hi ${userName},`) +
+          p(
+            'Thanks for joining us. Your dashboard is set up so you can view projects, manage your account, and get in touch whenever you need a hand.'
+          ) +
+          p(
+            'When you are ready, open your dashboard to explore your workspace and complete your profile.'
+          ),
+      },
+      {
+        type: 'button',
+        content: { text: 'Go to dashboard', href: data.dashboardUrl },
+      },
+      {
+        type: 'signoff',
+        content: p('Cheers,') + p('Josh and Will at The Enclosure'),
+      },
+    ],
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Order confirmation
+// ---------------------------------------------------------------------------
+
 export interface OrderConfirmationEmailData {
   userName?: string;
   order: {
@@ -286,104 +166,79 @@ export interface OrderConfirmationEmailData {
 }
 
 export function renderOrderConfirmationEmail(data: OrderConfirmationEmailData): string {
-  const userName = data.userName || 'Customer';
+  const userName = data.userName || 'there';
   const currency = data.order.currency || 'GBP';
-  
-  const itemsHtml = data.order.items.map(item => `
-    <tr style="border-bottom: 1px solid ${COLORS.BORDER_GRAY}; padding-bottom: 12px; margin-bottom: 12px;">
-      <td style="padding: 12px 0;">
-        <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0; font-weight: bold;">${item.name}</p>
-        <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 4px 0 0 0;">Quantity: ${item.quantity}</p>
-      </td>
-      <td align="right" style="padding: 12px 0;">
-        <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0; font-weight: bold;">${formatCurrency(item.total, currency)}</p>
-      </td>
-    </tr>
-  `).join('');
 
-  const shippingAddressHtml = data.order.shippingAddress
-    ? `
-      <div style="margin-top: 20px;">
-        <h2 style="font-size: 20px; color: ${COLORS.DARK_GREEN}; margin: 0 0 12px 0;">Shipping Address</h2>
-        <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0;">
-          ${data.order.shippingAddress.name}<br />
-          ${data.order.shippingAddress.street}<br />
-          ${data.order.shippingAddress.city} ${data.order.shippingAddress.postcode}<br />
-          ${data.order.shippingAddress.country}
-        </p>
-      </div>
-    `
-    : '';
+  const itemsText = data.order.items
+    .map(
+      (item) =>
+        `${item.name} (qty ${item.quantity}) - ${formatCurrency(item.total, currency)}`
+    )
+    .join('<br />');
 
-  const content = `
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      Hi ${userName},
-    </p>
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      Thank you for your order! We've received your order and will begin processing it shortly.
-    </p>
-    
-    <div style="background-color: ${COLORS_EXTENDED.BACKGROUND_GRAY}; padding: 20px; border-radius: 4px; margin: 20px 0;">
-      <table width="100%" cellpadding="0" cellspacing="0">
-        <tr>
-          <td style="padding-bottom: 12px;">
-            <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 0 0 4px 0;">Order Number</p>
-            <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0; font-weight: bold;">${data.order.orderNumber}</p>
-          </td>
-          <td align="right" style="padding-bottom: 12px;">
-            <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 0 0 4px 0;">Order Date</p>
-            <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0;">${formatDate(data.order.orderDate)}</p>
-          </td>
-        </tr>
-      </table>
-    </div>
-    
-    <h2 style="font-size: 20px; color: ${COLORS.DARK_GREEN}; margin: 20px 0 12px 0;">Items Ordered:</h2>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
-      ${itemsHtml}
-    </table>
-    
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
-      <tr>
-        <td><p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 8px 0;">Subtotal:</p></td>
-        <td align="right"><p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 8px 0;">${formatCurrency(data.order.subtotal, currency)}</p></td>
-      </tr>
-      ${data.order.tax !== undefined ? `
-      <tr>
-        <td><p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 8px 0;">Tax:</p></td>
-        <td align="right"><p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 8px 0;">${formatCurrency(data.order.tax, currency)}</p></td>
-      </tr>
-      ` : ''}
-      ${data.order.shipping !== undefined ? `
-      <tr>
-        <td><p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 8px 0;">Shipping:</p></td>
-        <td align="right"><p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 8px 0;">${formatCurrency(data.order.shipping, currency)}</p></td>
-      </tr>
-      ` : ''}
-      <tr>
-        <td><p style="font-size: 20px; color: ${COLORS.DARK_GREEN}; font-weight: bold; margin: 8px 0;">Total:</p></td>
-        <td align="right"><p style="font-size: 20px; color: ${COLORS.DARK_GREEN}; font-weight: bold; margin: 8px 0;">${formatCurrency(data.order.total, currency)}</p></td>
-      </tr>
-    </table>
-    
-    ${shippingAddressHtml}
-    
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 20px 0 0 0;">
-      We'll send you another email when your order ships. If you have any questions, please contact us at 
-      <a href="mailto:${BRAND_EXTENDED.ordersEmail}" style="color: ${COLORS.DARK_GREEN}; text-decoration: underline;">${BRAND_EXTENDED.ordersEmail}</a>.
-    </p>
-  `;
+  const card: Record<string, string> = {
+    'Order number': data.order.orderNumber,
+    'Order date': formatDate(data.order.orderDate),
+    Items: itemsText,
+    Subtotal: formatCurrency(data.order.subtotal, currency),
+  };
+  if (data.order.tax !== undefined) {
+    card.Tax = formatCurrency(data.order.tax, currency);
+  }
+  if (data.order.shipping !== undefined) {
+    card.Shipping = formatCurrency(data.order.shipping, currency);
+  }
+  card.Total = formatCurrency(data.order.total, currency);
 
-  return createEmailLayout(
-    'Order Confirmed!',
-    `Order #${data.order.orderNumber}`,
-    content,
-    'View Order Details',
-    data.orderDetailsUrl
+  const blocks: EmailBodyBlock[] = [
+    {
+      type: 'text',
+      content:
+        p(`Hi ${userName},`) +
+        p('Thank you for your order. We have received it and will begin processing shortly.'),
+    },
+    { type: 'card', content: card },
+  ];
+
+  if (data.order.shippingAddress) {
+    const a = data.order.shippingAddress;
+    blocks.push({
+      type: 'card',
+      content: {
+        'Shipping address': `${a.name}<br />${a.street}<br />${a.city} ${a.postcode}<br />${a.country}`,
+      },
+    });
+  }
+
+  blocks.push(
+    {
+      type: 'text',
+      content: p(
+        `We will send another email when your order ships. If you have any questions, contact us at ${mailtoLink()}.`
+      ),
+    },
+    {
+      type: 'button',
+      content: { text: 'View order details', href: data.orderDetailsUrl },
+    },
+    {
+      type: 'signoff',
+      content: p('Cheers,') + p('The Enclosure team'),
+    }
   );
+
+  return renderEmail({
+    preheader: `Order ${data.order.orderNumber} confirmed`,
+    heading: 'Order confirmed',
+    subheading: `Order ${data.order.orderNumber}`,
+    bodyBlocks: blocks,
+  });
 }
 
-// Payment Receipt Email
+// ---------------------------------------------------------------------------
+// Payment receipt
+// ---------------------------------------------------------------------------
+
 export interface PaymentReceiptEmailData {
   userName?: string;
   payment: {
@@ -401,56 +256,62 @@ export interface PaymentReceiptEmailData {
 }
 
 export function renderPaymentReceiptEmail(data: PaymentReceiptEmailData): string {
-  const userName = data.userName || 'Customer';
-  
-  const content = `
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      Hi ${userName},
-    </p>
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      We've successfully received your payment. This email serves as your receipt.
-    </p>
-    
-    <h2 style="font-size: 20px; color: ${COLORS.DARK_GREEN}; margin: 20px 0 16px 0;">Payment Details</h2>
-    
-    <div style="background-color: ${COLORS_EXTENDED.BACKGROUND_GRAY}; padding: 20px; border-radius: 4px; margin: 20px 0;">
-      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 0 0 4px 0;">Transaction ID</p>
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 16px 0; font-weight: bold;">${data.payment.transactionId}</p>
-      
-      ${data.payment.invoiceNumber ? `
-      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 12px 0 4px 0;">Invoice Number</p>
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 16px 0;">${data.payment.invoiceNumber}</p>
-      ` : ''}
-      
-      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 12px 0 4px 0;">Payment Date</p>
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 16px 0;">${formatDateTime(data.payment.paymentDate)}</p>
-      
-      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 12px 0 4px 0;">Payment Method</p>
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 16px 0;">${data.payment.paymentMethod}</p>
-      
-      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 12px 0 4px 0;">Amount Paid</p>
-      <p style="font-size: 24px; color: ${COLORS.DARK_GREEN}; margin: 0; font-weight: bold;">${formatCurrency(data.payment.amount, data.payment.currency)}</p>
-    </div>
-    
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 20px 0 0 0;">
-      If you have any questions about this payment, please contact us at 
-      <a href="mailto:${BRAND.supportEmail}" style="color: ${COLORS.DARK_GREEN}; text-decoration: underline;">${BRAND.supportEmail}</a>.
-    </p>
-  `;
+  const userName = data.userName || 'there';
 
-  const ctaUrl = data.receiptUrl || data.invoiceUrl || '#';
-  const ctaText = data.receiptUrl ? 'Download Receipt' : data.invoiceUrl ? 'View Invoice' : undefined;
+  const card: Record<string, string> = {
+    'Transaction ID': data.payment.transactionId,
+  };
+  if (data.payment.invoiceNumber) {
+    card['Invoice number'] = data.payment.invoiceNumber;
+  }
+  card['Payment date'] = formatDateTime(data.payment.paymentDate);
+  card['Payment method'] = data.payment.paymentMethod;
+  card['Amount paid'] = formatCurrency(data.payment.amount, data.payment.currency);
 
-  return createEmailLayout(
-    'Payment Received',
-    'Thank you for your payment',
-    content,
-    ctaText,
-    ctaUrl !== '#' ? ctaUrl : undefined
-  );
+  const ctaUrl = data.receiptUrl || data.invoiceUrl;
+  const ctaText = data.receiptUrl
+    ? 'Download receipt'
+    : data.invoiceUrl
+      ? 'View invoice'
+      : undefined;
+
+  const blocks: EmailBodyBlock[] = [
+    {
+      type: 'text',
+      content:
+        p(`Hi ${userName},`) +
+        p('We have successfully received your payment. This email is your receipt.'),
+    },
+    { type: 'card', content: card },
+    {
+      type: 'text',
+      content: p(
+        `If you have any questions about this payment, contact us at ${mailtoLink()}.`
+      ),
+    },
+  ];
+
+  if (ctaUrl && ctaText) {
+    blocks.push({ type: 'button', content: { text: ctaText, href: ctaUrl } });
+  }
+
+  blocks.push({
+    type: 'signoff',
+    content: p('Cheers,') + p('The Enclosure team'),
+  });
+
+  return renderEmail({
+    preheader: 'Payment received. Your receipt is inside.',
+    heading: 'Payment received',
+    subheading: 'Thank you for your payment',
+    bodyBlocks: blocks,
+  });
 }
 
-// Account Update Notification
+// ---------------------------------------------------------------------------
+// Account update
+// ---------------------------------------------------------------------------
+
 export interface AccountUpdateEmailData {
   userName?: string;
   updatedFields: string[];
@@ -460,47 +321,49 @@ export interface AccountUpdateEmailData {
 
 export function renderAccountUpdateEmail(data: AccountUpdateEmailData): string {
   const userName = data.userName || 'there';
-  
-  const fieldsList = data.updatedFields.map(field => 
-    `<li style="margin-bottom: 8px; line-height: 1.5;">${field.replace(/_/g, ' ')}</li>`
-  ).join('');
+  const fieldsList = data.updatedFields
+    .map((field) => field.replace(/_/g, ' '))
+    .join(', ');
 
-  const content = `
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      Hi ${userName},
-    </p>
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      We're confirming that your account information has been successfully updated.
-    </p>
-    
-    <h2 style="font-size: 20px; color: ${COLORS.DARK_GREEN}; margin: 20px 0 16px 0;">Updated Information</h2>
-    
-    <div style="background-color: ${COLORS_EXTENDED.BACKGROUND_GRAY}; padding: 20px; border-radius: 4px; margin: 20px 0;">
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0; font-weight: bold;">The following fields were updated:</p>
-      <ul style="padding-left: 20px; margin: 12px 0; color: ${COLORS.GRAY}; font-size: 16px; line-height: 1.5;">
-        ${fieldsList}
-      </ul>
-      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 12px 0 0 0;">
-        Updated on: ${formatDateTime(data.updatedAt)}
-      </p>
-    </div>
-    
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 20px 0 0 0;">
-      If you didn't make these changes, please contact us immediately at 
-      <a href="mailto:${BRAND.supportEmail}" style="color: ${COLORS.DARK_GREEN}; text-decoration: underline;">${BRAND.supportEmail}</a>.
-    </p>
-  `;
-
-  return createEmailLayout(
-    'Account Updated',
-    null,
-    content,
-    'View Account Settings',
-    data.settingsUrl
-  );
+  return renderEmail({
+    preheader: 'Your account details were updated',
+    heading: 'Account updated',
+    bodyBlocks: [
+      {
+        type: 'text',
+        content:
+          p(`Hi ${userName},`) +
+          p('We are confirming that your account information has been successfully updated.'),
+      },
+      {
+        type: 'card',
+        content: {
+          'Updated fields': fieldsList,
+          'Updated on': formatDateTime(data.updatedAt),
+        },
+      },
+      {
+        type: 'text',
+        content: p(
+          `If you did not make these changes, contact us straight away at ${mailtoLink()}.`
+        ),
+      },
+      {
+        type: 'button',
+        content: { text: 'View account settings', href: data.settingsUrl },
+      },
+      {
+        type: 'signoff',
+        content: p('Cheers,') + p('The Enclosure team'),
+      },
+    ],
+  });
 }
 
-// Account Deletion Confirmation
+// ---------------------------------------------------------------------------
+// Account deletion
+// ---------------------------------------------------------------------------
+
 export interface AccountDeletionEmailData {
   userName?: string;
   deletionDate: string;
@@ -510,48 +373,60 @@ export interface AccountDeletionEmailData {
 
 export function renderAccountDeletionEmail(data: AccountDeletionEmailData): string {
   const userName = data.userName || 'there';
-  
-  const recoverySection = data.recoveryUrl && data.recoveryExpiryDate
-    ? `
-      <div style="background-color: #FFF9E6; border: 2px solid #FFE066; padding: 20px; border-radius: 4px; margin: 20px 0;">
-        <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 12px 0; font-weight: bold;">
-          Changed Your Mind?
-        </p>
-        <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-          You can recover your account before ${formatDateTime(data.recoveryExpiryDate)} by clicking the link below.
-        </p>
-        <a href="${data.recoveryUrl}" style="display: inline-block; padding: 12px 24px; background-color: ${COLORS.DARK_GREEN}; color: #FFFFFF; text-decoration: none; border-radius: 4px; font-size: 16px; font-weight: 600;">
-          Recover Account
-        </a>
-      </div>
-    `
-    : '';
+  const expiryLabel = data.recoveryExpiryDate
+    ? formatDateTime(data.recoveryExpiryDate)
+    : formatDateTime(data.deletionDate);
 
-  const content = `
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      Hi ${userName},
-    </p>
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      We've received and processed your request to delete your account. Your account will be permanently deleted on 
-      <strong>${formatDateTime(data.deletionDate)}</strong>.
-    </p>
-    
-    ${recoverySection}
-    
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 20px 0 0 0;">
-      If you have any questions, please contact us at 
-      <a href="mailto:${BRAND.supportEmail}" style="color: ${COLORS.DARK_GREEN}; text-decoration: underline;">${BRAND.supportEmail}</a>.
-    </p>
-  `;
+  const blocks: EmailBodyBlock[] = [
+    {
+      type: 'text',
+      content:
+        p(`Hi ${userName},`) +
+        p(
+          `You (or an admin acting on your behalf) requested account deletion. Your account is deactivated and will be permanently deleted on <strong>${expiryLabel}</strong>. If you change your mind, use the link below to restore your account before then.`
+        ),
+    },
+  ];
 
-  return createEmailLayout(
-    'Account Deletion Confirmed',
-    null,
-    content
+  if (data.recoveryUrl && data.recoveryExpiryDate) {
+    blocks.push(
+      {
+        type: 'card',
+        content: {
+          'Recovery expires': formatDateTime(data.recoveryExpiryDate),
+        },
+      },
+      {
+        type: 'button',
+        content: { text: 'Recover account', href: data.recoveryUrl },
+      }
+    );
+  }
+
+  blocks.push(
+    {
+      type: 'text',
+      content: p(
+        `If you did not request this, contact us straight away at ${mailtoLink()}.`
+      ),
+    },
+    {
+      type: 'signoff',
+      content: p('Cheers,') + p('The Enclosure team'),
+    },
   );
+
+  return renderEmail({
+    preheader: 'Your account has been deactivated. Recovery details inside.',
+    heading: 'Account deletion confirmed',
+    bodyBlocks: blocks,
+  });
 }
 
-// Subscription Renewal Reminder
+// ---------------------------------------------------------------------------
+// Subscription renewal
+// ---------------------------------------------------------------------------
+
 export interface SubscriptionRenewalEmailData {
   userName?: string;
   subscription: {
@@ -566,48 +441,62 @@ export interface SubscriptionRenewalEmailData {
 }
 
 export function renderSubscriptionRenewalEmail(data: SubscriptionRenewalEmailData): string {
-  const userName = data.userName || 'Customer';
+  const userName = data.userName || 'there';
   const daysUntilRenewal = Math.ceil(
-    (new Date(data.subscription.renewalDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+    (new Date(data.subscription.renewalDate).getTime() - new Date().getTime()) /
+      (1000 * 60 * 60 * 24)
   );
+  const dayWord = daysUntilRenewal === 1 ? 'day' : 'days';
 
-  const content = `
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      Hi ${userName},
-    </p>
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      This is a friendly reminder that your subscription will automatically renew in <strong>${daysUntilRenewal} day${daysUntilRenewal !== 1 ? 's' : ''}</strong>.
-    </p>
-    
-    <h2 style="font-size: 20px; color: ${COLORS.DARK_GREEN}; margin: 20px 0 16px 0;">Renewal Details</h2>
-    
-    <div style="background-color: ${COLORS_EXTENDED.BACKGROUND_GRAY}; padding: 20px; border-radius: 4px; margin: 20px 0;">
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Plan:</strong> ${data.subscription.planName}</p>
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Billing Cycle:</strong> ${data.subscription.billingCycle === 'monthly' ? 'Monthly' : 'Yearly'}</p>
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Renewal Date:</strong> ${formatDate(data.subscription.renewalDate)}</p>
-      <p style="font-size: 20px; color: ${COLORS.DARK_GREEN}; font-weight: bold; margin: 8px 0 0 0;"><strong>Amount:</strong> ${formatCurrency(data.subscription.amount, data.subscription.currency)}</p>
-    </div>
-    
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 20px 0 0 0;">
-      No action is required if you want to continue your subscription. Your payment method on file will be charged automatically.
-    </p>
-    
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 20px 0 0 0;">
-      If you need to make changes to your subscription or payment method, please visit your billing settings or contact us at 
-      <a href="mailto:${BRAND.supportEmail}" style="color: ${COLORS.DARK_GREEN}; text-decoration: underline;">${BRAND.supportEmail}</a>.
-    </p>
-  `;
-
-  return createEmailLayout(
-    'Subscription Renewal Reminder',
-    `Your ${data.subscription.planName} plan renews soon`,
-    content,
-    'View Billing Details',
-    data.billingUrl
-  );
+  return renderEmail({
+    preheader: `Your ${data.subscription.planName} plan renews soon`,
+    heading: 'Subscription renewal reminder',
+    subheading: `Your ${data.subscription.planName} plan renews soon`,
+    bodyBlocks: [
+      {
+        type: 'text',
+        content:
+          p(`Hi ${userName},`) +
+          p(
+            `This is a friendly reminder that your subscription will automatically renew in <strong>${daysUntilRenewal} ${dayWord}</strong>.`
+          ),
+      },
+      {
+        type: 'card',
+        content: {
+          Plan: data.subscription.planName,
+          'Billing cycle':
+            data.subscription.billingCycle === 'monthly' ? 'Monthly' : 'Yearly',
+          'Renewal date': formatDate(data.subscription.renewalDate),
+          Amount: formatCurrency(data.subscription.amount, data.subscription.currency),
+        },
+      },
+      {
+        type: 'text',
+        content:
+          p(
+            'No action is required if you want to continue. Your payment method on file will be charged automatically.'
+          ) +
+          p(
+            `If you need to make changes, visit your billing settings or contact us at ${mailtoLink()}.`
+          ),
+      },
+      {
+        type: 'button',
+        content: { text: 'View billing details', href: data.billingUrl },
+      },
+      {
+        type: 'signoff',
+        content: p('Cheers,') + p('The Enclosure team'),
+      },
+    ],
+  });
 }
 
-// Failed Payment Alert
+// ---------------------------------------------------------------------------
+// Failed payment
+// ---------------------------------------------------------------------------
+
 export interface FailedPaymentEmailData {
   userName?: string;
   payment: {
@@ -623,49 +512,59 @@ export interface FailedPaymentEmailData {
 }
 
 export function renderFailedPaymentEmail(data: FailedPaymentEmailData): string {
-  const userName = data.userName || 'Customer';
-  
-  const content = `
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      Hi ${userName},
-    </p>
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      We were unable to process your payment. This could be due to insufficient funds, an expired card, or a bank decline.
-    </p>
-    
-    <h2 style="font-size: 20px; color: ${COLORS.DARK_GREEN}; margin: 20px 0 16px 0;">Payment Details</h2>
-    
-    <div style="background-color: #FFF5F5; border: 2px solid #FCA5A5; padding: 20px; border-radius: 4px; margin: 20px 0;">
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Amount:</strong> ${formatCurrency(data.payment.amount, data.payment.currency)}</p>
-      ${data.payment.invoiceNumber ? `<p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Invoice:</strong> ${data.payment.invoiceNumber}</p>` : ''}
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Payment Method:</strong> ${data.payment.paymentMethod}</p>
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Transaction ID:</strong> ${data.payment.transactionId}</p>
-      ${data.retryDate ? `<p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 8px 0 0 0;">We will automatically retry this payment on: ${formatDate(data.retryDate)}</p>` : ''}
-    </div>
-    
-    <h2 style="font-size: 20px; color: ${COLORS.DARK_GREEN}; margin: 20px 0 16px 0;">What You Can Do</h2>
-    <ul style="padding-left: 20px; margin: 12px 0; color: ${COLORS.GRAY}; font-size: 16px; line-height: 1.5;">
-      <li style="margin-bottom: 8px;">Update your payment method to ensure we can process future payments</li>
-      <li style="margin-bottom: 8px;">Contact your bank or card issuer to resolve any issues</li>
-      <li style="margin-bottom: 8px;">Ensure sufficient funds are available in your account</li>
-    </ul>
-    
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 20px 0 0 0;">
-      If you continue to experience issues, please contact us at 
-      <a href="mailto:${BRAND.supportEmail}" style="color: ${COLORS.DARK_GREEN}; text-decoration: underline;">${BRAND.supportEmail}</a>.
-    </p>
-  `;
+  const userName = data.userName || 'there';
 
-  return createEmailLayout(
-    'Payment Failed',
-    'Action Required',
-    content,
-    'Update Payment Method',
-    data.updatePaymentMethodUrl
-  );
+  const card: Record<string, string> = {
+    Amount: formatCurrency(data.payment.amount, data.payment.currency),
+  };
+  if (data.payment.invoiceNumber) {
+    card.Invoice = data.payment.invoiceNumber;
+  }
+  card['Payment method'] = data.payment.paymentMethod;
+  card['Transaction ID'] = data.payment.transactionId;
+  if (data.retryDate) {
+    card['Automatic retry'] = formatDate(data.retryDate);
+  }
+
+  return renderEmail({
+    preheader: 'We could not process your payment. Please update your details.',
+    heading: 'Payment failed',
+    subheading: 'Action required',
+    bodyBlocks: [
+      {
+        type: 'text',
+        content:
+          p(`Hi ${userName},`) +
+          p(
+            'We were unable to process your payment. This could be due to insufficient funds, an expired card, or a bank decline.'
+          ),
+      },
+      { type: 'card', content: card },
+      {
+        type: 'text',
+        content:
+          p('What you can do:') +
+          p(
+            'Update your payment method, contact your bank or card issuer if needed, and ensure sufficient funds are available.'
+          ) +
+          p(`If you continue to experience issues, contact us at ${mailtoLink()}.`),
+      },
+      {
+        type: 'button',
+        content: { text: 'Update payment method', href: data.updatePaymentMethodUrl },
+      },
+      {
+        type: 'signoff',
+        content: p('Cheers,') + p('The Enclosure team'),
+      },
+    ],
+  });
 }
 
+// ---------------------------------------------------------------------------
 // Newsletter
+// ---------------------------------------------------------------------------
+
 export interface NewsletterEmailData {
   userName?: string;
   month: string;
@@ -680,43 +579,42 @@ export interface NewsletterEmailData {
 
 export function renderNewsletterEmail(data: NewsletterEmailData): string {
   const userName = data.userName || 'there';
-  
-  const itemsHtml = data.featuredItems.map(item => `
-    <div style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid ${COLORS.BORDER_GRAY};">
-      <h3 style="font-size: 18px; color: ${COLORS.DARK_GREEN}; margin: 0 0 8px 0;">${item.title}</h3>
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 8px 0;">${item.description}</p>
-      ${item.link ? `<a href="${item.link}" style="color: ${COLORS.DARK_GREEN}; text-decoration: underline; font-size: 16px;">Learn more →</a>` : ''}
-    </div>
-  `).join('');
 
-  const content = `
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      Hi ${userName},
-    </p>
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      We hope this email finds you well! Here's what's new at The Enclosure this month.
-    </p>
-    
-    ${itemsHtml}
-  `;
+  const itemBlocks: EmailBodyBlock[] = data.featuredItems.map((item) => ({
+    type: 'text' as const,
+    content:
+      `<p style="margin: 0 0 4px 0; font-weight: 600;">${item.title}</p>` +
+      p(item.description) +
+      (item.link
+        ? `<p style="margin: 0 0 12px 0;"><a href="${item.link}" style="color: #1A4D2E; text-decoration: underline;">Learn more</a></p>`
+        : ''),
+  }));
 
-  const footerHtml = `
-    <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 8px 0;">
-      <a href="${data.unsubscribeUrl}" style="color: ${COLORS.LIGHT_GRAY}; text-decoration: underline;">Unsubscribe</a> | 
-      <a href="${BRAND.website}/settings" style="color: ${COLORS.LIGHT_GRAY}; text-decoration: underline;">Manage Preferences</a>
-    </p>
-  `;
-
-  return createEmailLayout(
-    `${data.month} ${data.year} Newsletter`,
-    'Updates from The Enclosure',
-    content,
-    undefined,
-    undefined
-  ).replace('</html>', footerHtml + '</html>');
+  return renderEmail({
+    preheader: `Updates from The Enclosure for ${data.month} ${data.year}`,
+    heading: `${data.month} ${data.year} newsletter`,
+    subheading: 'Updates from The Enclosure',
+    bodyBlocks: [
+      {
+        type: 'text',
+        content:
+          p(`Hi ${userName},`) +
+          p('Here is what is new at The Enclosure this month.'),
+      },
+      ...itemBlocks,
+      {
+        type: 'signoff',
+        content: p('Cheers,') + p('The Enclosure team'),
+      },
+    ],
+    footerNote: `<a href="${data.unsubscribeUrl}" style="color: #6b7280; text-decoration: underline;">Unsubscribe</a> | <a href="${BRAND.website}/settings" style="color: #6b7280; text-decoration: underline;">Manage preferences</a>`,
+  });
 }
 
-// Promotional Offer
+// ---------------------------------------------------------------------------
+// Promotional offer
+// ---------------------------------------------------------------------------
+
 export interface PromotionalOfferEmailData {
   userName?: string;
   offerTitle: string;
@@ -733,47 +631,56 @@ export interface PromotionalOfferEmailData {
 
 export function renderPromotionalOfferEmail(data: PromotionalOfferEmailData): string {
   const userName = data.userName || 'there';
-  
-  const discountHtml = data.discount
-    ? `
-      <div style="background-color: ${COLORS_EXTENDED.BACKGROUND_GRAY}; padding: 20px; border-radius: 4px; margin: 20px 0; text-align: center;">
-        ${data.discount.percentage ? `<p style="font-size: 32px; color: ${COLORS.DARK_GREEN}; font-weight: bold; margin: 0 0 8px 0;">${data.discount.percentage}% OFF</p>` : ''}
-        ${data.discount.amount ? `<p style="font-size: 24px; color: ${COLORS.DARK_GREEN}; font-weight: bold; margin: 0 0 8px 0;">${formatCurrency(data.discount.amount)} OFF</p>` : ''}
-        ${data.discount.code ? `<p style="font-size: 18px; color: ${COLORS.GRAY}; margin: 8px 0 0 0;">Use code: <strong style="color: ${COLORS.DARK_GREEN}; font-family: monospace;">${data.discount.code}</strong></p>` : ''}
-      </div>
-    `
-    : '';
 
-  const content = `
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      Hi ${userName},
-    </p>
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      ${data.offerDescription}
-    </p>
-    
-    ${discountHtml}
-    
-    ${data.expiryDate ? `<p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 16px 0; text-align: center;"><strong>Offer expires:</strong> ${formatDate(data.expiryDate)}</p>` : ''}
-  `;
+  const discountCard: Record<string, string> = {};
+  if (data.discount?.percentage) {
+    discountCard.Discount = `${data.discount.percentage}% off`;
+  }
+  if (data.discount?.amount) {
+    discountCard.Saving = `${formatCurrency(data.discount.amount)} off`;
+  }
+  if (data.discount?.code) {
+    discountCard['Promo code'] = data.discount.code;
+  }
+  if (data.expiryDate) {
+    discountCard['Offer expires'] = formatDate(data.expiryDate);
+  }
 
-  const footerHtml = `
-    <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 8px 0;">
-      <a href="${data.unsubscribeUrl}" style="color: ${COLORS.LIGHT_GRAY}; text-decoration: underline;">Unsubscribe</a> | 
-      <a href="${BRAND.website}/settings" style="color: ${COLORS.LIGHT_GRAY}; text-decoration: underline;">Manage Preferences</a>
-    </p>
-  `;
+  const blocks: EmailBodyBlock[] = [
+    {
+      type: 'text',
+      content: p(`Hi ${userName},`) + p(data.offerDescription),
+    },
+  ];
 
-  return createEmailLayout(
-    data.offerTitle,
-    'Limited Time Offer',
-    content,
-    'Claim Offer',
-    data.ctaUrl
-  ).replace('</html>', footerHtml + '</html>');
+  if (Object.keys(discountCard).length > 0) {
+    blocks.push({ type: 'card', content: discountCard });
+  }
+
+  blocks.push(
+    {
+      type: 'button',
+      content: { text: 'Claim offer', href: data.ctaUrl },
+    },
+    {
+      type: 'signoff',
+      content: p('Cheers,') + p('The Enclosure team'),
+    }
+  );
+
+  return renderEmail({
+    preheader: data.offerTitle,
+    heading: data.offerTitle,
+    subheading: 'Limited time offer',
+    bodyBlocks: blocks,
+    footerNote: `<a href="${data.unsubscribeUrl}" style="color: #6b7280; text-decoration: underline;">Unsubscribe</a> | <a href="${BRAND.website}/settings" style="color: #6b7280; text-decoration: underline;">Manage preferences</a>`,
+  });
 }
 
+// ---------------------------------------------------------------------------
 // Re-engagement
+// ---------------------------------------------------------------------------
+
 export interface ReengagementEmailData {
   userName?: string;
   lastActivityDate?: string;
@@ -784,44 +691,39 @@ export interface ReengagementEmailData {
 
 export function renderReengagementEmail(data: ReengagementEmailData): string {
   const userName = data.userName || 'there';
-  
-  const content = `
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      Hi ${userName},
-    </p>
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      We noticed you haven't been active lately, and we wanted to reach out and let you know we're still here for you!
-    </p>
-    
-    <h2 style="font-size: 20px; color: ${COLORS.DARK_GREEN}; margin: 20px 0 16px 0;">What You've Been Missing</h2>
-    <ul style="padding-left: 20px; margin: 12px 0; color: ${COLORS.GRAY}; font-size: 16px; line-height: 1.5;">
-      <li style="margin-bottom: 8px;">New features and improvements</li>
-      <li style="margin-bottom: 8px;">Updates to your projects</li>
-      <li style="margin-bottom: 8px;">Special offers and promotions</li>
-    </ul>
-    
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 20px 0 0 0;">
-      We'd love to have you back! Your account is still active and ready for you whenever you return.
-    </p>
-  `;
 
-  const footerHtml = `
-    <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 8px 0;">
-      <a href="${data.unsubscribeUrl}" style="color: ${COLORS.LIGHT_GRAY}; text-decoration: underline;">Unsubscribe</a> | 
-      <a href="${BRAND.website}/settings" style="color: ${COLORS.LIGHT_GRAY}; text-decoration: underline;">Manage Preferences</a>
-    </p>
-  `;
-
-  return createEmailLayout(
-    'We Miss You!',
-    null,
-    content,
-    'Visit Dashboard',
-    data.dashboardUrl
-  ).replace('</html>', footerHtml + '</html>');
+  return renderEmail({
+    preheader: 'We noticed you have been away. Your account is still here.',
+    heading: 'We miss you',
+    bodyBlocks: [
+      {
+        type: 'text',
+        content:
+          p(`Hi ${userName},`) +
+          p(
+            'We noticed you have not been active lately, and wanted to let you know we are still here for you.'
+          ) +
+          p(
+            'Your account remains active. New features, project updates, and offers may be waiting when you return.'
+          ),
+      },
+      {
+        type: 'button',
+        content: { text: 'Visit dashboard', href: data.dashboardUrl },
+      },
+      {
+        type: 'signoff',
+        content: p('Cheers,') + p('The Enclosure team'),
+      },
+    ],
+    footerNote: `<a href="${data.unsubscribeUrl}" style="color: #6b7280; text-decoration: underline;">Unsubscribe</a> | <a href="${BRAND.website}/settings" style="color: #6b7280; text-decoration: underline;">Manage preferences</a>`,
+  });
 }
 
-// New User Signup Alert (Admin)
+// ---------------------------------------------------------------------------
+// New user signup (admin)
+// ---------------------------------------------------------------------------
+
 export interface NewUserSignupEmailData {
   adminName?: string;
   userEmail: string;
@@ -832,36 +734,44 @@ export interface NewUserSignupEmailData {
 }
 
 export function renderNewUserSignupEmail(data: NewUserSignupEmailData): string {
-  const adminName = data.adminName || 'Admin';
-  
-  const content = `
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      Hi ${adminName},
-    </p>
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      A new user has signed up for an account.
-    </p>
-    
-    <h2 style="font-size: 20px; color: ${COLORS.DARK_GREEN}; margin: 20px 0 16px 0;">User Details</h2>
-    
-    <div style="background-color: ${COLORS_EXTENDED.BACKGROUND_GRAY}; padding: 20px; border-radius: 4px; margin: 20px 0;">
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Email:</strong> ${data.userEmail}</p>
-      ${data.userName ? `<p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Name:</strong> ${data.userName}</p>` : ''}
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Role:</strong> ${data.userRole}</p>
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0;"><strong>Signup Date:</strong> ${formatDateTime(data.signupDate)}</p>
-    </div>
-  `;
+  const adminName = data.adminName || 'there';
 
-  return createEmailLayout(
-    'New User Signup',
-    `User: ${data.userEmail}`,
-    content,
-    'View Admin Dashboard',
-    data.adminDashboardUrl
-  );
+  const card: Record<string, string> = {
+    Email: data.userEmail,
+  };
+  if (data.userName) {
+    card.Name = data.userName;
+  }
+  card.Role = data.userRole;
+  card['Signup date'] = formatDateTime(data.signupDate);
+
+  return renderEmail({
+    preheader: `New signup: ${data.userEmail}`,
+    heading: 'New user signup',
+    subheading: `User: ${data.userEmail}`,
+    bodyBlocks: [
+      {
+        type: 'text',
+        content:
+          p(`Hi ${adminName},`) + p('A new user has signed up for an account.'),
+      },
+      { type: 'card', content: card },
+      {
+        type: 'button',
+        content: { text: 'View admin dashboard', href: data.adminDashboardUrl },
+      },
+      {
+        type: 'signoff',
+        content: p('Cheers,') + p('The Enclosure team'),
+      },
+    ],
+  });
 }
 
-// New Order Notification (Admin)
+// ---------------------------------------------------------------------------
+// New order notification (admin)
+// ---------------------------------------------------------------------------
+
 export interface NewOrderNotificationEmailData {
   adminName?: string;
   order: {
@@ -875,45 +785,55 @@ export interface NewOrderNotificationEmailData {
   adminDashboardUrl: string;
 }
 
-export function renderNewOrderNotificationEmail(data: NewOrderNotificationEmailData): string {
-  const adminName = data.adminName || 'Admin';
+export function renderNewOrderNotificationEmail(
+  data: NewOrderNotificationEmailData
+): string {
+  const adminName = data.adminName || 'there';
   const currency = data.order.currency || 'GBP';
-  
-  const itemsList = data.order.items.map(item => 
-    `<li style="margin-bottom: 8px;">${item.name} (Qty: ${item.quantity}) - ${formatCurrency(item.total, currency)}</li>`
-  ).join('');
 
-  const content = `
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      Hi ${adminName},
-    </p>
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      A new order has been placed and requires your attention.
-    </p>
-    
-    <h2 style="font-size: 20px; color: ${COLORS.DARK_GREEN}; margin: 20px 0 16px 0;">Order Details</h2>
-    
-    <div style="background-color: ${COLORS_EXTENDED.BACKGROUND_GRAY}; padding: 20px; border-radius: 4px; margin: 20px 0;">
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Order Number:</strong> ${data.order.orderNumber}</p>
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Order Date:</strong> ${formatDateTime(data.order.orderDate)}</p>
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 12px 0 8px 0;"><strong>Items:</strong></p>
-      <ul style="padding-left: 20px; margin: 8px 0; color: ${COLORS.GRAY}; font-size: 16px;">
-        ${itemsList}
-      </ul>
-      <p style="font-size: 20px; color: ${COLORS.DARK_GREEN}; font-weight: bold; margin: 12px 0 0 0;"><strong>Total:</strong> ${formatCurrency(data.order.total, currency)}</p>
-    </div>
-  `;
+  const itemsText = data.order.items
+    .map(
+      (item) =>
+        `${item.name} (qty ${item.quantity}) - ${formatCurrency(item.total, currency)}`
+    )
+    .join('<br />');
 
-  return createEmailLayout(
-    'New Order Received',
-    `Order #${data.order.orderNumber}`,
-    content,
-    'View Admin Dashboard',
-    data.adminDashboardUrl
-  );
+  return renderEmail({
+    preheader: `New order ${data.order.orderNumber}`,
+    heading: 'New order received',
+    subheading: `Order ${data.order.orderNumber}`,
+    bodyBlocks: [
+      {
+        type: 'text',
+        content:
+          p(`Hi ${adminName},`) +
+          p('A new order has been placed and requires your attention.'),
+      },
+      {
+        type: 'card',
+        content: {
+          'Order number': data.order.orderNumber,
+          'Order date': formatDateTime(data.order.orderDate),
+          Items: itemsText,
+          Total: formatCurrency(data.order.total, currency),
+        },
+      },
+      {
+        type: 'button',
+        content: { text: 'View admin dashboard', href: data.adminDashboardUrl },
+      },
+      {
+        type: 'signoff',
+        content: p('Cheers,') + p('The Enclosure team'),
+      },
+    ],
+  });
 }
 
-// System Error Notification (Admin)
+// ---------------------------------------------------------------------------
+// System error (admin)
+// ---------------------------------------------------------------------------
+
 export interface SystemErrorEmailData {
   adminName?: string;
   errorType: string;
@@ -925,15 +845,8 @@ export interface SystemErrorEmailData {
 }
 
 export function renderSystemErrorEmail(data: SystemErrorEmailData): string {
-  const adminName = data.adminName || 'Admin';
-  
-  const severityColors = {
-    critical: '#DC2626',
-    high: '#F59E0B',
-    medium: '#F97316',
-    low: '#3B82F6',
-  };
-  
+  const adminName = data.adminName || 'there';
+
   const severityLabels = {
     critical: 'Critical',
     high: 'High',
@@ -941,50 +854,45 @@ export function renderSystemErrorEmail(data: SystemErrorEmailData): string {
     low: 'Low',
   };
 
-  const contextHtml = data.context && Object.keys(data.context).length > 0
-    ? `
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 12px 0 8px 0; font-weight: bold;">Additional Context:</p>
-      <pre style="font-size: 14px; color: ${COLORS.GRAY}; background-color: ${COLORS_EXTENDED.BACKGROUND_GRAY}; padding: 16px; border-radius: 4px; margin: 0; white-space: pre-wrap; word-wrap: break-word;">${JSON.stringify(data.context, null, 2)}</pre>
-    `
-    : '';
+  const card: Record<string, string> = {
+    Severity: severityLabels[data.severity],
+    'Error type': data.errorType,
+    Timestamp: formatDateTime(data.timestamp),
+    'Error message': data.errorMessage,
+  };
 
-  const content = `
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      Hi ${adminName},
-    </p>
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      A system error has been detected that requires your attention.
-    </p>
-    
-    <h2 style="font-size: 20px; color: ${COLORS.DARK_GREEN}; margin: 20px 0 16px 0;">Error Details</h2>
-    
-    <div style="background-color: ${COLORS_EXTENDED.BACKGROUND_GRAY}; padding: 20px; border-radius: 4px; margin: 20px 0;">
-      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 0 0 4px 0;">Severity</p>
-      <p style="font-size: 16px; color: ${severityColors[data.severity]}; font-weight: bold; margin: 0 0 12px 0;">${severityLabels[data.severity]}</p>
-      
-      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 12px 0 4px 0;">Error Type</p>
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 12px 0;">${data.errorType}</p>
-      
-      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 12px 0 4px 0;">Timestamp</p>
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 12px 0;">${formatDateTime(data.timestamp)}</p>
-      
-      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 12px 0 4px 0;">Error Message</p>
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0; background-color: ${COLORS_EXTENDED.BACKGROUND_GRAY}; padding: 12px; border-radius: 4px;">${data.errorMessage}</p>
-      
-      ${contextHtml}
-    </div>
-  `;
+  if (data.context && Object.keys(data.context).length > 0) {
+    card.Context = `<pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;font-size:13px;">${JSON.stringify(data.context, null, 2)}</pre>`;
+  }
 
-  return createEmailLayout(
-    'System Error Alert',
-    `${severityLabels[data.severity]} Severity`,
-    content,
-    'View Admin Dashboard',
-    data.adminDashboardUrl
-  );
+  return renderEmail({
+    preheader: `${severityLabels[data.severity]} system error detected`,
+    heading: 'System error alert',
+    subheading: `${severityLabels[data.severity]} severity`,
+    bodyBlocks: [
+      {
+        type: 'text',
+        content:
+          p(`Hi ${adminName},`) +
+          p('A system error has been detected that requires your attention.'),
+      },
+      { type: 'card', content: card },
+      {
+        type: 'button',
+        content: { text: 'View admin dashboard', href: data.adminDashboardUrl },
+      },
+      {
+        type: 'signoff',
+        content: p('Cheers,') + p('The Enclosure team'),
+      },
+    ],
+  });
 }
 
-// User Feedback Summary (Admin)
+// ---------------------------------------------------------------------------
+// Feedback summary (admin)
+// ---------------------------------------------------------------------------
+
 export interface UserFeedbackSummaryEmailData {
   adminName?: string;
   feedbackSummary: {
@@ -998,55 +906,70 @@ export interface UserFeedbackSummaryEmailData {
   adminDashboardUrl: string;
 }
 
-export function renderUserFeedbackSummaryEmail(data: UserFeedbackSummaryEmailData): string {
-  const adminName = data.adminName || 'Admin';
+export function renderUserFeedbackSummaryEmail(
+  data: UserFeedbackSummaryEmailData
+): string {
+  const adminName = data.adminName || 'there';
   const summary = data.feedbackSummary;
-  const positivePercentage = summary.totalFeedback > 0
-    ? Math.round((summary.positiveFeedback / summary.totalFeedback) * 100)
-    : 0;
-  const negativePercentage = summary.totalFeedback > 0
-    ? Math.round((summary.negativeFeedback / summary.totalFeedback) * 100)
-    : 0;
+  const positivePercentage =
+    summary.totalFeedback > 0
+      ? Math.round((summary.positiveFeedback / summary.totalFeedback) * 100)
+      : 0;
+  const negativePercentage =
+    summary.totalFeedback > 0
+      ? Math.round((summary.negativeFeedback / summary.totalFeedback) * 100)
+      : 0;
 
-  const topCommentsHtml = summary.topComments && summary.topComments.length > 0
-    ? `
-      <h3 style="font-size: 18px; color: ${COLORS.DARK_GREEN}; margin: 20px 0 12px 0;">Top Comments:</h3>
-      ${summary.topComments.map(comment => `
-        <div style="background-color: ${COLORS_EXTENDED.BACKGROUND_GRAY}; padding: 16px; border-radius: 4px; margin-bottom: 12px;">
-          <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0;">"${comment}"</p>
-        </div>
-      `).join('')}
-    `
-    : '';
+  const card: Record<string, string> = {
+    'Total feedback': String(summary.totalFeedback),
+    Positive: `${summary.positiveFeedback} (${positivePercentage}%)`,
+    Negative: `${summary.negativeFeedback} (${negativePercentage}%)`,
+  };
+  if (summary.averageRating) {
+    card['Average rating'] = `${summary.averageRating.toFixed(1)} / 5.0`;
+  }
 
-  const content = `
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      Hi ${adminName},
-    </p>
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      Here's a summary of user feedback for the period: ${summary.period}
-    </p>
-    
-    <h2 style="font-size: 20px; color: ${COLORS.DARK_GREEN}; margin: 20px 0 16px 0;">Feedback Overview</h2>
-    
-    <div style="background-color: ${COLORS_EXTENDED.BACKGROUND_GRAY}; padding: 20px; border-radius: 4px; margin: 20px 0;">
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Total Feedback:</strong> ${summary.totalFeedback}</p>
-      <p style="font-size: 16px; color: #059669; margin: 0 0 8px 0;"><strong>Positive:</strong> ${summary.positiveFeedback} (${positivePercentage}%)</p>
-      <p style="font-size: 16px; color: #DC2626; margin: 0 0 8px 0;"><strong>Negative:</strong> ${summary.negativeFeedback} (${negativePercentage}%)</p>
-      ${summary.averageRating ? `<p style="font-size: 18px; color: ${COLORS.DARK_GREEN}; font-weight: bold; margin: 12px 0 0 0;"><strong>Average Rating:</strong> ${summary.averageRating.toFixed(1)} / 5.0</p>` : ''}
-    </div>
-    
-    ${topCommentsHtml}
-  `;
+  const blocks: EmailBodyBlock[] = [
+    {
+      type: 'text',
+      content:
+        p(`Hi ${adminName},`) +
+        p(`Here is a summary of user feedback for the period: ${summary.period}`),
+    },
+    { type: 'card', content: card },
+  ];
 
-  return createEmailLayout(
-    'Weekly Feedback Summary',
-    `Period: ${summary.period}`,
-    content,
-    'View Admin Dashboard',
-    data.adminDashboardUrl
+  if (summary.topComments && summary.topComments.length > 0) {
+    blocks.push({
+      type: 'card',
+      content: {
+        'Top comments': summary.topComments.map((c) => `&ldquo;${c}&rdquo;`).join('<br /><br />'),
+      },
+    });
+  }
+
+  blocks.push(
+    {
+      type: 'button',
+      content: { text: 'View admin dashboard', href: data.adminDashboardUrl },
+    },
+    {
+      type: 'signoff',
+      content: p('Cheers,') + p('The Enclosure team'),
+    }
   );
+
+  return renderEmail({
+    preheader: `Feedback summary for ${summary.period}`,
+    heading: 'Weekly feedback summary',
+    subheading: `Period: ${summary.period}`,
+    bodyBlocks: blocks,
+  });
 }
+
+// ---------------------------------------------------------------------------
+// Support tickets
+// ---------------------------------------------------------------------------
 
 export interface NewTicketAdminEmailData {
   subject: string;
@@ -1062,25 +985,34 @@ export function renderNewTicketAdminEmail(data: NewTicketAdminEmailData): string
     ? `${data.clientName} (${data.clientEmail})`
     : data.clientEmail;
 
-  const content = `
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      A new support ticket has been submitted.
-    </p>
-    <div style="background-color: ${COLORS_EXTENDED.BACKGROUND_GRAY}; padding: 20px; border-radius: 4px; margin: 20px 0;">
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Subject:</strong> ${data.subject}</p>
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Category:</strong> ${data.category}</p>
-      <p style="font-size: 16px; color: ${COLORS.GRAY}; margin: 0 0 8px 0;"><strong>Client:</strong> ${clientLabel}</p>
-      <p style="font-size: 14px; color: ${COLORS.LIGHT_GRAY}; margin: 0;"><strong>Ticket ID:</strong> ${data.ticketId}</p>
-    </div>
-  `;
-
-  return createEmailLayout(
-    'New support ticket',
-    data.subject,
-    content,
-    'View support tickets',
-    data.ticketUrl
-  );
+  return renderEmail({
+    preheader: `New support ticket: ${data.subject}`,
+    heading: 'New support ticket',
+    subheading: data.subject,
+    bodyBlocks: [
+      {
+        type: 'text',
+        content: p('A new support ticket has been submitted.'),
+      },
+      {
+        type: 'card',
+        content: {
+          Subject: data.subject,
+          Category: data.category,
+          Client: clientLabel,
+          'Ticket ID': data.ticketId,
+        },
+      },
+      {
+        type: 'button',
+        content: { text: 'View support tickets', href: data.ticketUrl },
+      },
+      {
+        type: 'signoff',
+        content: p('Cheers,') + p('The Enclosure team'),
+      },
+    ],
+  });
 }
 
 export interface TicketResponseClientEmailData {
@@ -1094,35 +1026,247 @@ export function renderTicketResponseClientEmail(
   data: TicketResponseClientEmailData
 ): string {
   const name = data.clientName || 'there';
-  const preview = data.responsePreview
-    ? `
-      <div style="background-color: ${COLORS_EXTENDED.BACKGROUND_GRAY}; padding: 20px; border-radius: 4px; margin: 20px 0;">
-        <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0;">
-          ${data.responsePreview}
-        </p>
-      </div>
-    `
-    : '';
 
-  const content = `
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      Hi ${name},
-    </p>
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      We have replied to your support request: <strong>${data.subject}</strong>.
-    </p>
-    ${preview}
-    <p style="font-size: 16px; color: ${COLORS.GRAY}; line-height: 1.5; margin: 0 0 16px 0;">
-      You can view the full conversation in your dashboard.
-    </p>
-  `;
+  const blocks: EmailBodyBlock[] = [
+    {
+      type: 'text',
+      content:
+        p(`Hi ${name},`) +
+        p(
+          `We have replied to your support request: <strong>${data.subject}</strong>.`
+        ),
+    },
+  ];
 
-  return createEmailLayout(
-    'Support update',
-    data.subject,
-    content,
-    'View your ticket',
-    data.ticketUrl
+  if (data.responsePreview) {
+    blocks.push({
+      type: 'card',
+      content: { Reply: data.responsePreview },
+    });
+  }
+
+  blocks.push(
+    {
+      type: 'text',
+      content: p('You can view the full conversation in your dashboard.'),
+    },
+    {
+      type: 'button',
+      content: { text: 'View your ticket', href: data.ticketUrl },
+    },
+    {
+      type: 'signoff',
+      content: p('Cheers,') + p('The Enclosure team'),
+    }
   );
+
+  return renderEmail({
+    preheader: `Update on your support request: ${data.subject}`,
+    heading: 'Support update',
+    subheading: data.subject,
+    bodyBlocks: blocks,
+  });
 }
 
+// ---------------------------------------------------------------------------
+// Payment reminder (levels 1-4)
+// ---------------------------------------------------------------------------
+
+export interface PaymentReminderEmailData {
+  userName?: string;
+  invoiceNumber: string;
+  amount: number;
+  currency: string;
+  dueDate: string;
+  daysOverdue: number;
+  reminderLevel: 1 | 2 | 3 | 4;
+  paymentUrl?: string;
+}
+
+export interface RenderedEmail {
+  subject: string;
+  html: string;
+}
+
+const PAYMENT_REMINDER_COPY: Record<
+  1 | 2 | 3 | 4,
+  { subject: string; heading: string; intro: string; closing: string }
+> = {
+  1: {
+    subject: 'Just a friendly reminder',
+    heading: 'A friendly payment reminder',
+    intro:
+      'Just a friendly reminder in case this slipped through. Payment for the invoice below is still outstanding. If you have already paid, please disregard this message.',
+    closing:
+      'If you have any questions about this invoice, reply to this email or contact us at',
+  },
+  2: {
+    subject: 'Your invoice is now overdue',
+    heading: 'Your invoice is now overdue',
+    intro:
+      'Our records show that the invoice below is now overdue. Please arrange payment at your earliest convenience, or let us know when we can expect payment.',
+    closing:
+      'We would appreciate an update so we can keep your account in good order. Contact us at',
+  },
+  3: {
+    subject: 'Final reminder before escalation',
+    heading: 'Final reminder before we escalate',
+    intro:
+      'This is a final reminder before we escalate. The invoice below remains unpaid. Continued non-payment may affect ongoing services. Please settle the balance, or contact us immediately to discuss.',
+    closing: 'Please treat this as a clear deadline for payment. Reach us at',
+  },
+  4: {
+    subject: 'Account escalation notice',
+    heading: 'Account escalation notice',
+    intro:
+      'This is a formal escalation notice. The invoice below remains unpaid. Services may be paused until the outstanding balance is settled. Please contact us immediately to resolve this matter.',
+    closing:
+      'Immediate contact is required to avoid further action. Write to us at',
+  },
+};
+
+export function renderPaymentReminderEmail(
+  data: PaymentReminderEmailData
+): RenderedEmail {
+  const userName = data.userName || 'there';
+  const level = data.reminderLevel;
+  const copy = PAYMENT_REMINDER_COPY[level];
+  const formattedAmount = formatCurrency(data.amount, data.currency);
+  const formattedDue = formatDate(data.dueDate);
+  const daysLabel =
+    data.daysOverdue === 1
+      ? '1 day overdue'
+      : `${data.daysOverdue} days overdue`;
+
+  const blocks: EmailBodyBlock[] = [
+    {
+      type: 'text',
+      content: p(`Hi ${userName},`) + p(copy.intro),
+    },
+    {
+      type: 'card',
+      content: {
+        'Invoice number': data.invoiceNumber,
+        'Amount due': formattedAmount,
+        'Original due date': formattedDue,
+        Status: daysLabel,
+      },
+    },
+  ];
+
+  if (level === 3) {
+    blocks.push({
+      type: 'text',
+      content: p(
+        'Please complete payment within <strong>7 days</strong> of this notice.'
+      ),
+    });
+  }
+
+  if (data.paymentUrl) {
+    blocks.push(
+      {
+        type: 'text',
+        content: p('You can pay online using the button below.'),
+      },
+      {
+        type: 'button',
+        content: { text: 'Pay invoice', href: data.paymentUrl },
+      }
+    );
+  }
+
+  blocks.push(
+    {
+      type: 'text',
+      content: p(`${copy.closing} ${mailtoLink()}.`),
+    },
+    {
+      type: 'signoff',
+      content: p('Cheers,') + p('The Enclosure team'),
+    }
+  );
+
+  const html = renderEmail({
+    preheader: `${copy.subject} for invoice ${data.invoiceNumber}`,
+    heading: copy.heading,
+    subheading: `Invoice ${data.invoiceNumber}`,
+    bodyBlocks: blocks,
+  });
+
+  return { subject: copy.subject, html };
+}
+
+// ---------------------------------------------------------------------------
+// Invoice issued
+// ---------------------------------------------------------------------------
+
+export interface InvoiceIssuedEmailData {
+  userName?: string;
+  invoiceNumber: string;
+  amount: number;
+  currency: string;
+  issueDate: string;
+  dueDate: string;
+  description?: string;
+  invoiceUrl?: string;
+}
+
+export function renderInvoiceIssuedEmail(
+  data: InvoiceIssuedEmailData
+): RenderedEmail {
+  const userName = data.userName || 'there';
+  const formattedAmount = formatCurrency(data.amount, data.currency);
+  const formattedIssue = formatDate(data.issueDate);
+  const formattedDue = formatDate(data.dueDate);
+  const subject = `Invoice ${data.invoiceNumber} from The Enclosure`;
+
+  const card: Record<string, string> = {
+    'Invoice number': data.invoiceNumber,
+  };
+  if (data.description) {
+    card.Description = data.description;
+  }
+  card['Amount due'] = formattedAmount;
+  card['Issue date'] = formattedIssue;
+  card['Due date'] = formattedDue;
+
+  const blocks: EmailBodyBlock[] = [
+    {
+      type: 'text',
+      content:
+        p(`Hi ${userName},`) +
+        p(
+          'Please find details of your new invoice below. Payment is due by the date shown.'
+        ),
+    },
+    { type: 'card', content: card },
+    {
+      type: 'text',
+      content: p(
+        `If you have already arranged payment, thank you. For questions about this invoice, contact us at ${mailtoLink()}.`
+      ),
+    },
+  ];
+
+  if (data.invoiceUrl) {
+    blocks.push({
+      type: 'button',
+      content: { text: 'View invoice', href: data.invoiceUrl },
+    });
+  }
+
+  blocks.push({
+    type: 'signoff',
+    content: p('Cheers,') + p('The Enclosure team'),
+  });
+
+  const html = renderEmail({
+    preheader: `Invoice ${data.invoiceNumber} is ready`,
+    heading: 'Your invoice',
+    subheading: `Invoice ${data.invoiceNumber}`,
+    bodyBlocks: blocks,
+  });
+
+  return { subject, html };
+}

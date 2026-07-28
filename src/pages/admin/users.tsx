@@ -17,6 +17,14 @@ import {
   DialogTrigger,
 } from "../../components/ui/dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
+import { Textarea } from "../../components/ui/textarea";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -36,11 +44,13 @@ import {
   EyeOff,
   Copy,
   Check,
+  MoreHorizontal,
+  Trash2,
 } from "lucide-react";
 import { toast } from "../../hooks/use-toast";
 import { format } from "date-fns";
-import { sendWelcomeEmail } from "../../utils/emailHelpers";
 import { formatPlanLabel, PLAN_OPTIONS, type PlanId } from "../../lib/plans";
+import { useAuth } from "../../contexts/AuthContext";
 
 type User = Tables<"users">;
 type PlanFormValue = PlanId | "";
@@ -54,6 +64,7 @@ function statusVariant(
 }
 
 export default function UsersManagement() {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -61,6 +72,17 @@ export default function UsersManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  const [softDeleteUser, setSoftDeleteUser] = useState<User | null>(null);
+  const [softDeleteEmailConfirm, setSoftDeleteEmailConfirm] = useState("");
+  const [softDeleteReason, setSoftDeleteReason] = useState("");
+  const [isSoftDeleting, setIsSoftDeleting] = useState(false);
+
+  const [hardDeleteUser, setHardDeleteUser] = useState<User | null>(null);
+  const [hardDeleteEmailConfirm, setHardDeleteEmailConfirm] = useState("");
+  const [hardDeleteWordConfirm, setHardDeleteWordConfirm] = useState("");
+  const [hardDeleteReason, setHardDeleteReason] = useState("");
+  const [isHardDeleting, setIsHardDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -225,19 +247,9 @@ export default function UsersManagement() {
         throw new Error("User creation failed - no success response");
       }
 
-      try {
-        await sendWelcomeEmail(formData.email, {
-          userName: formData.full_name || formData.email.split("@")[0],
-          loginUrl: "https://theenclosure.co.uk/login",
-          dashboardUrl: "https://theenclosure.co.uk/dashboard",
-        });
-      } catch (welcomeError) {
-        console.error("Welcome email failed after user creation:", welcomeError);
-      }
-
       toast({
         title: "User created",
-        description: `User ${formData.email} has been created. Temporary password: ${tempPassword}. Share the credentials securely with the user.`,
+        description: `User ${formData.email} has been created. A welcome email with their temporary password has been sent.`,
       });
 
       resetCreateForm();
@@ -334,6 +346,117 @@ export default function UsersManagement() {
         description: "Failed to update user status. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleSoftDelete = async () => {
+    if (!softDeleteUser || !currentUser?.id) return;
+
+    if (
+      softDeleteEmailConfirm.trim().toLowerCase() !==
+      softDeleteUser.email.toLowerCase()
+    ) {
+      toast({
+        title: "Email does not match",
+        description: "Type the user's email exactly to confirm.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSoftDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-account", {
+        body: {
+          user_id: softDeleteUser.id,
+          initiated_by: currentUser.id,
+          reason: softDeleteReason.trim() || undefined,
+        },
+      });
+      if (error || data?.error) {
+        throw new Error(data?.error || error?.message || "Soft delete failed");
+      }
+      toast({
+        title: "Account deactivated",
+        description: `${softDeleteUser.email} has been soft-deleted with a 30-day recovery window.`,
+      });
+      setSoftDeleteUser(null);
+      setSoftDeleteEmailConfirm("");
+      setSoftDeleteReason("");
+      fetchUsers();
+    } catch (error: unknown) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Soft delete failed",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSoftDeleting(false);
+    }
+  };
+
+  const handleHardDelete = async () => {
+    if (!hardDeleteUser || !currentUser?.id) return;
+
+    if (
+      hardDeleteEmailConfirm.trim().toLowerCase() !==
+      hardDeleteUser.email.toLowerCase()
+    ) {
+      toast({
+        title: "Email does not match",
+        description: "Type the user's email exactly to confirm.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (hardDeleteWordConfirm.trim() !== "DELETE") {
+      toast({
+        title: "Confirmation incomplete",
+        description: "Type DELETE in capitals to confirm permanent deletion.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!hardDeleteReason.trim()) {
+      toast({
+        title: "Reason required",
+        description: "Provide a reason for permanent deletion.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsHardDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("hard-delete-account", {
+        body: {
+          user_id: hardDeleteUser.id,
+          admin_id: currentUser.id,
+          reason: hardDeleteReason.trim(),
+        },
+      });
+      if (error || data?.error) {
+        throw new Error(data?.error || error?.message || "Hard delete failed");
+      }
+      toast({
+        title: "Account permanently deleted",
+        description: `${hardDeleteUser.email} has been anonymised.`,
+      });
+      setHardDeleteUser(null);
+      setHardDeleteEmailConfirm("");
+      setHardDeleteWordConfirm("");
+      setHardDeleteReason("");
+      fetchUsers();
+    } catch (error: unknown) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Hard delete failed",
+        variant: "destructive",
+      });
+    } finally {
+      setIsHardDeleting(false);
     }
   };
 
@@ -576,34 +699,30 @@ export default function UsersManagement() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="requires_password_change"
-                  checked={formData.requires_password_change}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      requires_password_change: e.target.checked,
-                    })
-                  }
-                  className="h-4 w-4 rounded-sm border-border text-accent focus:ring-ring"
-                />
-                <Label
-                  htmlFor="requires_password_change"
-                  className="cursor-pointer text-sm font-normal"
-                >
-                  Require password change on first login
-                </Label>
-              </div>
-              <div className="rounded-sm border border-warning/30 bg-warning/10 p-3">
-                <p className="text-sm font-medium text-foreground">
-                  Share credentials securely
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  After creating this user, share the email and password through a secure
-                  channel. A welcome email is sent when creation succeeds, but the temporary
-                  password must still be shared separately.
+              <div className="space-y-2">
+                <div className="flex items-start gap-2">
+                  <input
+                    type="checkbox"
+                    id="requires_password_change"
+                    checked={formData.requires_password_change}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        requires_password_change: e.target.checked,
+                      })
+                    }
+                    className="mt-0.5 h-4 w-4 rounded-sm border-border text-accent focus:ring-ring"
+                  />
+                  <Label
+                    htmlFor="requires_password_change"
+                    className="cursor-pointer text-sm font-normal leading-snug"
+                  >
+                    Require password change on first login
+                  </Label>
+                </div>
+                <p className="pl-6 text-xs text-muted-foreground">
+                  Users will receive their temporary password by email and be prompted to set
+                  a new one on first sign in. Recommended for security.
                 </p>
               </div>
             </form>
@@ -706,6 +825,7 @@ export default function UsersManagement() {
                           aria-label={
                             user.status === "active" ? "Deactivate user" : "Activate user"
                           }
+                          disabled={Boolean(user.deleted_at) || user.status === "deleted"}
                         >
                           {user.status === "active" ? (
                             <Ban className="h-4 w-4 text-destructive" strokeWidth={1.5} />
@@ -713,6 +833,47 @@ export default function UsersManagement() {
                             <CheckCircle className="h-4 w-4 text-success" strokeWidth={1.5} />
                           )}
                         </Button>
+                        {user.role !== "admin" &&
+                          !user.anonymised_at &&
+                          user.status !== "deleted" && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label="More actions"
+                              >
+                                <MoreHorizontal className="h-4 w-4" strokeWidth={1.5} />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {!user.deleted_at && (
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSoftDeleteUser(user);
+                                    setSoftDeleteEmailConfirm("");
+                                    setSoftDeleteReason("");
+                                  }}
+                                >
+                                  Delete client account
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => {
+                                  setHardDeleteUser(user);
+                                  setHardDeleteEmailConfirm("");
+                                  setHardDeleteWordConfirm("");
+                                  setHardDeleteReason("");
+                                }}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" strokeWidth={1.5} />
+                                Permanently delete (hard delete)
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -813,6 +974,118 @@ export default function UsersManagement() {
             </Button>
             <Button onClick={handleUpdateUser} disabled={isSubmitting}>
               {isSubmitting ? "Updating…" : "Update user"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(softDeleteUser)}
+        onOpenChange={(open) => {
+          if (!open) setSoftDeleteUser(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>Delete client account</DialogTitle>
+            <DialogDescription>
+              This deactivates the account immediately with a 30-day recovery window. Type
+              the user email to confirm.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="soft-delete-email">Type email to confirm</Label>
+              <Input
+                id="soft-delete-email"
+                value={softDeleteEmailConfirm}
+                onChange={(e) => setSoftDeleteEmailConfirm(e.target.value)}
+                placeholder={softDeleteUser?.email || ""}
+                autoComplete="off"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="soft-delete-reason">Reason (optional)</Label>
+              <Textarea
+                id="soft-delete-reason"
+                value={softDeleteReason}
+                onChange={(e) => setSoftDeleteReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSoftDeleteUser(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={isSoftDeleting}
+              onClick={handleSoftDelete}
+            >
+              {isSoftDeleting ? "Deleting..." : "Delete client account"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(hardDeleteUser)}
+        onOpenChange={(open) => {
+          if (!open) setHardDeleteUser(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle>Permanently delete this account?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. Personal data will be anonymised and the user
+              will lose access immediately. Invoices, payments, and support tickets will be
+              preserved for audit purposes but will no longer show identifying details.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="hard-delete-email">Type email to confirm</Label>
+              <Input
+                id="hard-delete-email"
+                value={hardDeleteEmailConfirm}
+                onChange={(e) => setHardDeleteEmailConfirm(e.target.value)}
+                placeholder={hardDeleteUser?.email || ""}
+                autoComplete="off"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="hard-delete-word">Type DELETE to confirm</Label>
+              <Input
+                id="hard-delete-word"
+                value={hardDeleteWordConfirm}
+                onChange={(e) => setHardDeleteWordConfirm(e.target.value)}
+                placeholder="DELETE"
+                autoComplete="off"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="hard-delete-reason">Reason (required)</Label>
+              <Textarea
+                id="hard-delete-reason"
+                value={hardDeleteReason}
+                onChange={(e) => setHardDeleteReason(e.target.value)}
+                rows={3}
+                required
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHardDeleteUser(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={isHardDeleting}
+              onClick={handleHardDelete}
+            >
+              {isHardDeleting ? "Deleting..." : "Permanently delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

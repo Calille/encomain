@@ -38,7 +38,7 @@ serve(async (req) => {
     // Send email
     const result = await sendEmail({
       to: body.email,
-      subject: 'Account Deletion Confirmed',
+      subject: 'Account deletion confirmed',
       html: emailHtml,
       from: 'The Enclosure <noreply@theenclosure.co.uk>',
       replyTo: 'hello@theenclosure.co.uk',

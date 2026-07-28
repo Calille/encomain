@@ -2,7 +2,7 @@
  * Send Re-engagement Email Edge Function
  * Triggered for inactive users
  * 
- * Subject: We Miss You! - Come Back to The Enclosure
+ * Subject: We miss you - come back to The Enclosure
  */
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { sendEmail, handleCors, corsHeaders } from '../_shared/email-service.ts';
@@ -39,7 +39,7 @@ serve(async (req) => {
     // Send email
     const result = await sendEmail({
       to: body.email,
-      subject: 'We Miss You! - Come Back to The Enclosure',
+      subject: 'We miss you - come back to The Enclosure',
       html: emailHtml,
       from: 'The Enclosure <noreply@theenclosure.co.uk>',
       replyTo: 'hello@theenclosure.co.uk',

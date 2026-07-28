@@ -49,13 +49,18 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (profile && profile.status !== "active") {
+  if (profile && (profile.deleted_at || profile.status !== "active")) {
+    const deactivated = Boolean(profile.deleted_at);
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="max-w-md rounded-md border border-border bg-surface p-6 text-center">
-          <h2 className="text-lg font-semibold text-foreground">Account inactive</h2>
+          <h2 className="text-lg font-semibold text-foreground">
+            {deactivated ? "Account deactivated" : "Account inactive"}
+          </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Your account is currently {profile.status}. Please contact support for assistance.
+            {deactivated
+              ? "This account has been deactivated. If you deleted it recently, check your email for a recovery link. Otherwise, contact hello@theenclosure.co.uk."
+              : `Your account is currently ${profile.status}. Please contact support for assistance.`}
           </p>
         </div>
       </div>

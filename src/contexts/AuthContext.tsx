@@ -150,6 +150,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       const userProfile = await fetchProfile(userId);
       if (cancelled) return;
+
+      if (userProfile?.deleted_at) {
+        try {
+          await supabase.auth.signOut();
+        } catch (err) {
+          console.error("Sign out for soft-deleted session failed:", err);
+        }
+        if (cancelled) return;
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setProfileLoading(false);
+        toast({
+          title: "Account deactivated",
+          description:
+            "This account has been deactivated. If you deleted it recently, check your email for a recovery link. Otherwise, contact hello@theenclosure.co.uk.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setProfile(userProfile);
       setProfileLoading(false);
     })();
@@ -158,6 +179,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
     };
   }, [user?.id]);
+
+  const DEACTIVATED_MESSAGE =
+    "This account has been deactivated. If you deleted it recently, check your email for a recovery link. Otherwise, contact hello@theenclosure.co.uk.";
+
+  const signOutQuiet = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Sign out after deactivation check failed:", err);
+    }
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    setProfileLoading(false);
+  };
+
+  const isSoftDeleted = (userProfile: UserProfile | null): boolean => {
+    return Boolean(userProfile && (userProfile as UserProfile & { deleted_at?: string | null }).deleted_at);
+  };
 
   const signIn = async (email: string, password: string, _rememberMe = false) => {
     try {
@@ -185,6 +225,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const userProfile = await fetchProfile(data.user.id);
         setProfile(userProfile);
         setProfileLoading(false);
+
+        if (isSoftDeleted(userProfile)) {
+          await signOutQuiet();
+          return {
+            error: new Error(DEACTIVATED_MESSAGE),
+            requiresPasswordChange: false,
+          };
+        }
 
         try {
           await supabase

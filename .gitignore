@@ -34,3 +34,6 @@ core
 # Supabase CLI local cache
 supabase/.temp/
 
+# Generated email HTML previews
+preview-emails/
+

@@ -124,6 +124,7 @@ export type Database = {
           billing_id: string | null
           created_at: string
           currency: string
+          description: string | null
           due_date: string
           id: string
           invoice_number: string
@@ -131,16 +132,22 @@ export type Database = {
           notes: string | null
           paid_date: string | null
           payment_method: string | null
+          payment_reference: string | null
           pdf_url: string | null
+          schedule_id: string | null
           sent_at: string | null
           status: string
           user_id: string
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
         }
         Insert: {
           amount: number
           billing_id?: string | null
           created_at?: string
           currency?: string
+          description?: string | null
           due_date: string
           id?: string
           invoice_number: string
@@ -148,16 +155,22 @@ export type Database = {
           notes?: string | null
           paid_date?: string | null
           payment_method?: string | null
+          payment_reference?: string | null
           pdf_url?: string | null
+          schedule_id?: string | null
           sent_at?: string | null
           status?: string
           user_id: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
         }
         Update: {
           amount?: number
           billing_id?: string | null
           created_at?: string
           currency?: string
+          description?: string | null
           due_date?: string
           id?: string
           invoice_number?: string
@@ -165,10 +178,15 @@ export type Database = {
           notes?: string | null
           paid_date?: string | null
           payment_method?: string | null
+          payment_reference?: string | null
           pdf_url?: string | null
+          schedule_id?: string | null
           sent_at?: string | null
           status?: string
           user_id?: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
         }
         Relationships: [
           {
@@ -179,7 +197,305 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "invoices_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_invoice_schedules"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "invoices_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_voided_by_fkey"
+            columns: ["voided_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          id: string
+          invoice_id: string | null
+          notes: string | null
+          paid_at: string
+          payment_method: string
+          payment_reference: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          paid_at: string
+          payment_method: string
+          payment_reference?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          paid_at?: string
+          payment_method?: string
+          payment_reference?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_notes: {
+        Row: {
+          amount: number
+          created_by: string | null
+          credit_number: string
+          currency: string
+          id: string
+          invoice_id: string
+          issued_at: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_by?: string | null
+          credit_number: string
+          currency?: string
+          id?: string
+          invoice_id: string
+          issued_at?: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_by?: string | null
+          credit_number?: string
+          currency?: string
+          id?: string
+          invoice_id?: string
+          issued_at?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_notes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_notes_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_notes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recurring_invoice_schedules: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          day_of_month: number
+          end_date: string | null
+          frequency: string
+          id: string
+          is_active: boolean
+          last_invoice_date: string | null
+          next_invoice_date: string
+          notes: string | null
+          start_date: string
+          template_description: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          day_of_month: number
+          end_date?: string | null
+          frequency: string
+          id?: string
+          is_active?: boolean
+          last_invoice_date?: string | null
+          next_invoice_date: string
+          notes?: string | null
+          start_date: string
+          template_description: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          day_of_month?: number
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          last_invoice_date?: string | null
+          next_invoice_date?: string
+          notes?: string | null
+          start_date?: string
+          template_description?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_invoice_schedules_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_invoice_schedules_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_reminders: {
+        Row: {
+          email_status: string | null
+          id: string
+          invoice_id: string
+          reminder_level: number
+          resend_message_id: string | null
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          email_status?: string | null
+          id?: string
+          invoice_id: string
+          reminder_level: number
+          resend_message_id?: string | null
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          email_status?: string | null
+          id?: string
+          invoice_id?: string
+          reminder_level?: number
+          resend_message_id?: string | null
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_reminders_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_reminders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_notes: {
+        Row: {
+          author_id: string
+          created_at: string
+          id: string
+          note: string
+          pinned: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          author_id: string
+          created_at?: string
+          id?: string
+          note: string
+          pinned?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          author_id?: string
+          created_at?: string
+          id?: string
+          note?: string
+          pinned?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_notes_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_notes_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -193,9 +509,10 @@ export type Database = {
           bounced_at: string | null
           created_at: string
           direction: string
+          email_type: string | null
           error_message: string | null
           id: string
-          lead_id: string
+          lead_id: string | null
           opened_at: string | null
           replied_at: string | null
           resend_message_id: string | null
@@ -203,15 +520,17 @@ export type Database = {
           sent_by: string | null
           subject: string | null
           unsubscribe_token: string | null
+          user_id: string | null
         }
         Insert: {
           body?: string | null
           bounced_at?: string | null
           created_at?: string
           direction: string
+          email_type?: string | null
           error_message?: string | null
           id?: string
-          lead_id: string
+          lead_id?: string | null
           opened_at?: string | null
           replied_at?: string | null
           resend_message_id?: string | null
@@ -219,15 +538,17 @@ export type Database = {
           sent_by?: string | null
           subject?: string | null
           unsubscribe_token?: string | null
+          user_id?: string | null
         }
         Update: {
           body?: string | null
           bounced_at?: string | null
           created_at?: string
           direction?: string
+          email_type?: string | null
           error_message?: string | null
           id?: string
-          lead_id?: string
+          lead_id?: string | null
           opened_at?: string | null
           replied_at?: string | null
           resend_message_id?: string | null
@@ -235,6 +556,7 @@ export type Database = {
           sent_by?: string | null
           subject?: string | null
           unsubscribe_token?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -247,6 +569,13 @@ export type Database = {
           {
             foreignKeyName: "email_events_sent_by_fkey"
             columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_events_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -642,57 +971,107 @@ export type Database = {
       }
       users: {
         Row: {
+          account_manager_id: string | null
+          billing_address: string | null
+          billing_email: string | null
+          company_name: string | null
           created_at: string
           current_plan: string | null
           email: string
           full_name: string | null
           id: string
+          industry: string | null
           last_login: string | null
           must_change_password: boolean | null
           password_changed_at: string | null
           password_set_by_admin: boolean | null
+          payment_terms_days: number
           plan_started_at: string | null
+          reminders_paused: boolean
           requires_password_change: boolean | null
           role: string
           status: string
           updated_at: string
+          vat_number: string | null
           welcome_email_sent_at: string | null
+          deleted_at: string | null
+          deletion_scheduled_for: string | null
+          deleted_by: string | null
+          deletion_reason: string | null
+          recovery_token: string | null
+          anonymised_at: string | null
         }
         Insert: {
+          account_manager_id?: string | null
+          billing_address?: string | null
+          billing_email?: string | null
+          company_name?: string | null
           created_at?: string
           current_plan?: string | null
           email: string
           full_name?: string | null
           id: string
+          industry?: string | null
           last_login?: string | null
           must_change_password?: boolean | null
           password_changed_at?: string | null
           password_set_by_admin?: boolean | null
+          payment_terms_days?: number
           plan_started_at?: string | null
+          reminders_paused?: boolean
           requires_password_change?: boolean | null
           role?: string
           status?: string
           updated_at?: string
+          vat_number?: string | null
           welcome_email_sent_at?: string | null
+          deleted_at?: string | null
+          deletion_scheduled_for?: string | null
+          deleted_by?: string | null
+          deletion_reason?: string | null
+          recovery_token?: string | null
+          anonymised_at?: string | null
         }
         Update: {
+          account_manager_id?: string | null
+          billing_address?: string | null
+          billing_email?: string | null
+          company_name?: string | null
           created_at?: string
           current_plan?: string | null
           email?: string
           full_name?: string | null
           id?: string
+          industry?: string | null
           last_login?: string | null
           must_change_password?: boolean | null
           password_changed_at?: string | null
           password_set_by_admin?: boolean | null
+          payment_terms_days?: number
           plan_started_at?: string | null
+          reminders_paused?: boolean
           requires_password_change?: boolean | null
           role?: string
           status?: string
           updated_at?: string
+          vat_number?: string | null
           welcome_email_sent_at?: string | null
+          deleted_at?: string | null
+          deletion_scheduled_for?: string | null
+          deleted_by?: string | null
+          deletion_reason?: string | null
+          recovery_token?: string | null
+          anonymised_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "users_account_manager_id_fkey"
+            columns: ["account_manager_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       websites: {
         Row: {
@@ -750,8 +1129,10 @@ export type Database = {
         }
         Returns: string
       }
+      generate_credit_number: { Args: never; Returns: string }
       generate_invoice_number: { Args: never; Returns: string }
       get_user_role: { Args: never; Returns: string }
+      invoke_edge_function: { Args: { function_name: string }; Returns: number }
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
