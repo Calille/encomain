@@ -21,6 +21,8 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   refreshProfile: () => Promise<void>;
   isAdmin: boolean;
+  /** True when profile.is_owner or role is admin (active). */
+  isOwner: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,6 +58,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [initError, setInitError] = useState<Error | null>(null);
 
   const isAdmin = profile?.role === "admin" && profile?.status === "active";
+  const isOwner =
+    profile?.status === "active" &&
+    (Boolean(profile?.is_owner) || profile?.role === "admin");
 
   // Show error if initialization fails
   if (initError) {
@@ -414,6 +419,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     resetPassword,
     refreshProfile,
     isAdmin,
+    isOwner,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

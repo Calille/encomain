@@ -41,13 +41,14 @@ const adminRoutes = [
   { name: "Audits and Leads", href: "/admin/audits", icon: TrendingUp },
   { name: "Outreach", href: "/admin/outreach", icon: MessageSquare },
   { name: "Suppressions", href: "/admin/suppressions", icon: Ban },
+  { name: "Sentry team", href: "/admin/sentry-team", icon: Users, ownersOnly: true },
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isOwner } = useAuth();
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -80,7 +81,9 @@ export function CommandPalette() {
         </CommandGroup>
         {isAdmin && (
           <CommandGroup heading="Admin">
-            {adminRoutes.map((item) => (
+            {adminRoutes
+              .filter((item) => !("ownersOnly" in item && item.ownersOnly) || isOwner)
+              .map((item) => (
               <CommandItem key={item.href} onSelect={() => go(item.href)} className="gap-2">
                 <item.icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                 <Shield className="sr-only" />

@@ -27,10 +27,16 @@ export function setViewAsClient(enabled: boolean) {
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
+  /** Owners, or admins when the role model falls back to admin-only. */
+  requireOwner?: boolean;
 }
 
-export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
-  const { user, profile, loading, profileLoading } = useAuth();
+export function ProtectedRoute({
+  children,
+  requireAdmin = false,
+  requireOwner = false,
+}: ProtectedRouteProps) {
+  const { user, profile, loading, profileLoading, isOwner } = useAuth();
   const location = useLocation();
 
   // Wait for session AND profile when signed in — role checks need public.users.
@@ -80,11 +86,16 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     return <Navigate to="/dashboard" replace />;
   }
 
+  if (requireOwner && !isOwner) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
   // Admins landing on client routes go to the CRM unless "view as client" is active
   const onClientRoute =
     location.pathname === "/dashboard" || location.pathname.startsWith("/dashboard/");
   if (
     !requireAdmin &&
+    !requireOwner &&
     profile?.role === "admin" &&
     onClientRoute &&
     !isViewingAsClient()

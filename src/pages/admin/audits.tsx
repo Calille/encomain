@@ -13,28 +13,12 @@ import { useCancellableLoad } from "../../hooks/useCancellableLoad";
 import { FileUp, Upload } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-
-interface SiteEntryLead {
-  business_name?: unknown;
-  domain?: unknown;
-  google_place_id?: unknown;
-  contact_email?: unknown;
-  contact_name?: unknown;
-  phone?: unknown;
-  address?: unknown;
-  audit_findings_summary?: unknown;
-  audit_data?: unknown;
-  personalised_email_draft?: unknown;
-  last_audited_at?: unknown;
-}
-
-interface SiteEntryExport {
-  schema_version?: unknown;
-  generated_at?: unknown;
-  generator?: unknown;
-  run_id?: unknown;
-  leads?: unknown;
-}
+import {
+  isAcceptedSchemaVersion,
+  validateLead,
+  type SiteEntryExport,
+  type SiteEntryLead,
+} from "../../lib/siteentry-import";
 
 type RowStatus = "new" | "update" | "skip-unsubscribed" | "skip-invalid";
 
@@ -59,56 +43,6 @@ interface ImportBatch {
   skipped_unsubscribed: number;
   skipped_invalid: number;
   imported_at: string;
-}
-
-function isIsoDate(value: unknown): value is string {
-  return typeof value === "string" && !Number.isNaN(Date.parse(value));
-}
-
-function validateLead(raw: SiteEntryLead): { ok: true; data: Record<string, unknown> } | { ok: false; reason: string } {
-  if (typeof raw.business_name !== "string" || !raw.business_name.trim()) {
-    return { ok: false, reason: "Missing business_name" };
-  }
-  if (typeof raw.domain !== "string" || !raw.domain.trim()) {
-    return { ok: false, reason: "Missing domain" };
-  }
-  if (typeof raw.audit_findings_summary !== "string") {
-    return { ok: false, reason: "Missing audit_findings_summary" };
-  }
-  if (!raw.audit_data || typeof raw.audit_data !== "object" || Array.isArray(raw.audit_data)) {
-    return { ok: false, reason: "audit_data must be an object" };
-  }
-  if (!isIsoDate(raw.last_audited_at)) {
-    return { ok: false, reason: "Invalid last_audited_at" };
-  }
-
-  const domain = raw.domain.trim().toLowerCase();
-  const email =
-    typeof raw.contact_email === "string" && raw.contact_email.trim()
-      ? raw.contact_email.trim().toLowerCase()
-      : null;
-
-  return {
-    ok: true,
-    data: {
-      business_name: raw.business_name.trim(),
-      domain,
-      google_place_id:
-        typeof raw.google_place_id === "string" && raw.google_place_id.trim()
-          ? raw.google_place_id.trim()
-          : null,
-      contact_email: email,
-      contact_name: typeof raw.contact_name === "string" ? raw.contact_name : null,
-      phone: typeof raw.phone === "string" ? raw.phone : null,
-      address: typeof raw.address === "string" ? raw.address : null,
-      audit_findings_summary: raw.audit_findings_summary,
-      audit_data: raw.audit_data,
-      personalised_email_draft:
-        typeof raw.personalised_email_draft === "string" ? raw.personalised_email_draft : null,
-      last_audited_at: raw.last_audited_at,
-      source: "siteentry",
-    },
-  };
 }
 
 export default function AdminAuditsPage() {
@@ -152,8 +86,10 @@ export default function AdminAuditsPage() {
     setParseError(null);
     setFilename(name);
 
-    if (doc.schema_version !== "1.0") {
-      setParseError(`Unsupported schema_version: ${String(doc.schema_version)}. Expected "1.0".`);
+    if (!isAcceptedSchemaVersion(doc.schema_version)) {
+      setParseError(
+        `Unsupported schema_version: ${String(doc.schema_version)}. Expected "1.0", "2.0", or "3.0".`,
+      );
       setPreview([]);
       return;
     }

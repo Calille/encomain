@@ -9,9 +9,11 @@ import {
   LifeBuoy,
   AlertTriangle,
 } from "lucide-react";
+import { useMemo } from "react";
 import { DashboardLayout } from "../dashboard/dashboard-layout";
+import { useAuth } from "../../contexts/AuthContext";
 
-const adminNav = [
+const baseAdminNav = [
   { name: "Overview", href: "/admin/dashboard", icon: LayoutDashboard },
   { name: "Clients", href: "/admin/clients", icon: Users },
   { name: "Payments", href: "/admin/payments", icon: CreditCard },
@@ -30,6 +32,20 @@ export function AdminLayout({
   title: string;
   children: React.ReactNode;
 }) {
+  const { isOwner } = useAuth();
+
+  const adminNav = useMemo(() => {
+    if (!isOwner) return baseAdminNav;
+    const settingsIndex = baseAdminNav.findIndex((item) => item.href === "/admin/settings");
+    const withSentry = [...baseAdminNav];
+    withSentry.splice(settingsIndex === -1 ? withSentry.length : settingsIndex, 0, {
+      name: "Sentry team",
+      href: "/admin/sentry-team",
+      icon: Users,
+    });
+    return withSentry;
+  }, [isOwner]);
+
   return (
     <DashboardLayout title={title} navigation={adminNav} showAdminToggle>
       {children}
