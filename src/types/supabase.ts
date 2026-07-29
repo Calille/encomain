@@ -873,6 +873,48 @@ export type Database = {
           },
         ]
       }
+      tool_releases: {
+        Row: {
+          file_path: string
+          file_size: number
+          id: string
+          is_latest: boolean
+          platform: string
+          release_notes: string | null
+          tool_name: string
+          tool_slug: string
+          uploaded_at: string
+          uploaded_by: string | null
+          version: string
+        }
+        Insert: {
+          file_path: string
+          file_size: number
+          id?: string
+          is_latest?: boolean
+          platform: string
+          release_notes?: string | null
+          tool_name: string
+          tool_slug: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          version: string
+        }
+        Update: {
+          file_path?: string
+          file_size?: number
+          id?: string
+          is_latest?: boolean
+          platform?: string
+          release_notes?: string | null
+          tool_name?: string
+          tool_slug?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
           category: string | null
