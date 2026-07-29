@@ -5,7 +5,11 @@
  * 500MB (524288000 bytes), matching the `tool-installers` bucket migration.
  * Free-tier default is 50MB; installers larger than that will be rejected until
  * the project plan / bucket limit is raised.
+ *
+ * Files over 6MB use TUS resumable uploads (required: standard Storage POST is
+ * capped around 50MB). Smaller files use a single XHR POST with progress events.
  */
+import * as tus from "tus-js-client";
 import { supabase } from "./supabase";
 
 export type Platform = "mac" | "windows" | "linux";
@@ -46,6 +50,9 @@ export const SEMVER_PATTERN =
 
 const BUCKET = "tool-installers";
 const MAX_UPLOAD_BYTES = 524288000; // 500MB — matches bucket file_size_limit
+/** Supabase recommends TUS for anything over 6MB; chunk size must stay at 6MB. */
+const RESUMABLE_THRESHOLD_BYTES = 6 * 1024 * 1024;
+const TUS_CHUNK_SIZE = 6 * 1024 * 1024;
 
 function authErrorMessage(error: { message?: string } | null, fallback: string): string {
   const msg = error?.message?.trim();
@@ -54,6 +61,16 @@ function authErrorMessage(error: { message?: string } | null, fallback: string):
     return `Authorisation failed: ${msg}`;
   }
   return msg;
+}
+
+/** Prefer the direct storage hostname for large TUS uploads. */
+function resumableUploadEndpoint(): string {
+  const baseUrl = (import.meta.env.VITE_SUPABASE_URL as string).replace(/\/$/, "");
+  const match = baseUrl.match(/^https:\/\/([a-z0-9-]+)\.supabase\.co$/i);
+  if (match) {
+    return `https://${match[1]}.storage.supabase.co/storage/v1/upload/resumable`;
+  }
+  return `${baseUrl}/storage/v1/upload/resumable`;
 }
 
 export function isValidSemver(version: string): boolean {
@@ -91,10 +108,10 @@ function storageObjectPath(
 }
 
 /**
- * Upload via XHR so we can report progress for large installers.
- * Supabase JS `.upload()` does not expose upload progress events.
+ * Small-file path: single Storage object POST with XHR progress.
+ * Do not use for files over ~50MB (API gateway limit).
  */
-function uploadFileWithProgress(
+function uploadFileSimple(
   path: string,
   file: File,
   accessToken: string,
@@ -141,6 +158,74 @@ function uploadFileWithProgress(
     xhr.onabort = () => reject(new Error("Upload aborted"));
     xhr.send(file);
   });
+}
+
+/**
+ * Large-file path: TUS resumable upload (6MB chunks) with chunk-level progress.
+ * @see https://supabase.com/docs/guides/storage/uploads/resumable-uploads
+ */
+function uploadFileResumable(
+  path: string,
+  file: File,
+  accessToken: string,
+  onProgress?: (percent: number) => void,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const upload = new tus.Upload(file, {
+      endpoint: resumableUploadEndpoint(),
+      retryDelays: [0, 3000, 5000, 10000, 20000],
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        "x-upsert": "false",
+      },
+      uploadDataDuringCreation: true,
+      removeFingerprintOnSuccess: true,
+      metadata: {
+        bucketName: BUCKET,
+        objectName: path,
+        contentType: file.type || "application/octet-stream",
+        cacheControl: "3600",
+      },
+      chunkSize: TUS_CHUNK_SIZE,
+      onError(error) {
+        reject(
+          error instanceof Error
+            ? error
+            : new Error(String(error) || "Resumable upload failed"),
+        );
+      },
+      onProgress(bytesUploaded, bytesTotal) {
+        if (!onProgress || bytesTotal <= 0) return;
+        onProgress(Math.min(99, Math.round((bytesUploaded / bytesTotal) * 100)));
+      },
+      onSuccess() {
+        onProgress?.(100);
+        resolve();
+      },
+    });
+
+    upload
+      .findPreviousUploads()
+      .then((previousUploads) => {
+        if (previousUploads.length > 0) {
+          upload.resumeFromPreviousUpload(previousUploads[0]);
+        }
+        upload.start();
+      })
+      .catch(reject);
+  });
+}
+
+function uploadFileWithProgress(
+  path: string,
+  file: File,
+  accessToken: string,
+  onProgress?: (percent: number) => void,
+): Promise<void> {
+  if (file.size > RESUMABLE_THRESHOLD_BYTES) {
+    return uploadFileResumable(path, file, accessToken, onProgress);
+  }
+  return uploadFileSimple(path, file, accessToken, onProgress);
 }
 
 export async function listReleases(toolSlug: string): Promise<ToolRelease[]> {

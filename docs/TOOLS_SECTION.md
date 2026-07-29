@@ -79,13 +79,12 @@ Download buttons never embed the storage path. The browser calls the `get-tool-d
 
 The `tool-installers` bucket is configured with `file_size_limit = 524288000` (500MB).
 
-- **Free tier** default object limit is typically **50MB**. Installers larger than that will fail until the project is on a plan that allows raising the limit, and the bucket limit is set accordingly.
-- **Pro** commonly supports **500MB** objects (verify in the Supabase dashboard for this project).
-- Enterprise can go higher; update the migration / bucket setting if Sentry builds exceed 500MB.
+There is also a **project-wide global file size limit** in Supabase Storage settings. That global limit caps every bucket, even if the bucket allows more. It must be at least as high as your largest installer (currently set to 500MB on production).
 
-Before the first real Sentry upload, confirm in Supabase → Storage → `tool-installers` that the file size limit covers your installer.
+- **Free tier** global limit cannot exceed **50MB**.
+- **Pro** can raise the global limit (up to hundreds of GB depending on plan).
 
-Client-side upload uses XMLHttpRequest so progress can be shown for large files. The client also rejects files over 500MB before starting the request.
+Uploads over **6MB** use **TUS resumable upload** (`tus-js-client`, 6MB chunks) against the Storage resumable endpoint. Smaller files use a single Storage POST via XMLHttpRequest. Both paths report progress to the upload dialog. The client also rejects files over 500MB before starting the request.
 
 ## Non-goals
 

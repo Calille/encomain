@@ -24,6 +24,7 @@ import {
 import { toast } from "../../hooks/use-toast";
 import {
   INTERNAL_TOOLS,
+  formatFileSize,
   isValidSemver,
   platformLabel,
   uploadRelease,
@@ -31,6 +32,8 @@ import {
 } from "../../lib/tool-releases";
 import { cn } from "@/lib/utils";
 import { Upload } from "lucide-react";
+
+const RESUMABLE_THRESHOLD_BYTES = 6 * 1024 * 1024;
 
 interface ToolUploadDialogProps {
   open: boolean;
@@ -227,12 +230,17 @@ export function ToolUploadDialog({
                 <p className="text-sm text-foreground">
                   {file.name}{" "}
                   <span className="text-muted-foreground">
-                    ({(file.size / (1024 * 1024)).toFixed(1)} MB)
+                    ({formatFileSize(file.size)})
                   </span>
                 </p>
               ) : (
                 <p className="text-sm text-muted-foreground">
                   Drag and drop the installer, or click to browse
+                </p>
+              )}
+              {file && file.size > RESUMABLE_THRESHOLD_BYTES && !uploading && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Large file: will use resumable upload (6MB chunks).
                 </p>
               )}
               <input
@@ -246,7 +254,11 @@ export function ToolUploadDialog({
             {uploading && (
               <div className="space-y-1">
                 <Progress value={progress} />
-                <p className="text-xs text-muted-foreground">{progress}%</p>
+                <p className="text-xs text-muted-foreground">
+                  {file && file.size > RESUMABLE_THRESHOLD_BYTES
+                    ? `Uploading… ${progress}% (resumable)`
+                    : `${progress}%`}
+                </p>
               </div>
             )}
           </div>
