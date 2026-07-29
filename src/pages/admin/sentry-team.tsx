@@ -50,6 +50,11 @@ import {
   type QualificationConfig,
   type SentryTeamMember,
 } from "../../lib/sentry-team";
+import {
+  getUserCoverageStats,
+  type SentryCoverageStats,
+} from "../../lib/sentry-coverage";
+import { Link } from "react-router-dom";
 
 type ConfirmAction =
   | { type: "revoke"; member: SentryTeamMember }
@@ -59,6 +64,9 @@ type ConfirmAction =
 export default function AdminSentryTeamPage() {
   const { user, isOwner } = useAuth();
   const [members, setMembers] = useState<SentryTeamMember[]>([]);
+  const [coverageByUser, setCoverageByUser] = useState<
+    Record<string, SentryCoverageStats>
+  >({});
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteAsOwner, setInviteAsOwner] = useState(false);
@@ -80,6 +88,23 @@ export default function AdminSentryTeamPage() {
     setPlacesKey(config.google_places_api_key ?? "");
     setPagespeedKey(config.pagespeed_api_key ?? "");
     setQualification(config.qualification_config);
+
+    const coverageEntries = await Promise.all(
+      team.map(async (member) => {
+        try {
+          const stats = await getUserCoverageStats(member.id);
+          return [member.id, stats] as const;
+        } catch {
+          return null;
+        }
+      }),
+    );
+    if (ctl.isCancelled()) return;
+    const next: Record<string, SentryCoverageStats> = {};
+    for (const entry of coverageEntries) {
+      if (entry) next[entry[0]] = entry[1];
+    }
+    setCoverageByUser(next);
   }, []);
 
   const { loading, error, retry } = useCancellableLoad(load);
@@ -220,14 +245,22 @@ export default function AdminSentryTeamPage() {
                     <th className="px-3 py-2 font-medium">Name</th>
                     <th className="px-3 py-2 font-medium">Email</th>
                     <th className="px-3 py-2 font-medium">Roles</th>
-                    <th className="px-3 py-2 font-medium">Joined</th>
-                    <th className="px-3 py-2 font-medium">Discoveries</th>
-                    <th className="px-3 py-2 font-medium">Audits</th>
+                    <th className="px-3 py-2 font-medium">Active claim</th>
+                    <th className="px-3 py-2 font-medium">Cells (mo)</th>
+                    <th className="px-3 py-2 font-medium">Discoveries (mo)</th>
+                    <th className="px-3 py-2 font-medium">Audits (mo)</th>
                     <th className="px-3 py-2 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {members.map((member) => (
+                  {members.map((member) => {
+                    const coverage = coverageByUser[member.id];
+                    const claimLabel = coverage?.activeClaim
+                      ? coverage.recentClaims.find(
+                          (c) => c.id === coverage.activeClaim?.id,
+                        )?.lad_name || coverage.activeClaim.lad_code
+                      : "None";
+                    return (
                     <tr key={member.id}>
                       <td className="px-3 py-2.5 font-medium">
                         {member.full_name || "Not set"}
@@ -246,10 +279,17 @@ export default function AdminSentryTeamPage() {
                         </div>
                       </td>
                       <td className="px-3 py-2.5 text-muted-foreground">
-                        {format(new Date(member.created_at), "PP")}
+                        {claimLabel}
                       </td>
-                      <td className="px-3 py-2.5">{member.discoveries}</td>
-                      <td className="px-3 py-2.5">{member.audits}</td>
+                      <td className="px-3 py-2.5">
+                        {coverage?.cellsSweptThisMonth ?? "—"}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        {coverage?.discoveriesThisMonth ?? "—"}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        {coverage?.auditsThisMonth ?? "—"}
+                      </td>
                       <td className="px-3 py-2.5">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -262,6 +302,11 @@ export default function AdminSentryTeamPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link to={`/admin/coverage`}>
+                                View coverage map
+                              </Link>
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() =>
                                 setConfirm({ type: "revoke", member })
@@ -285,12 +330,53 @@ export default function AdminSentryTeamPage() {
                         </DropdownMenu>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           </Card>
         )}
+      </section>
+
+      <section className="mt-8 space-y-3">
+        <h2 className="text-sm font-medium text-foreground">
+          Recent claims by member
+        </h2>
+        <div className="grid gap-3 md:grid-cols-2">
+          {members.map((member) => {
+            const claims = coverageByUser[member.id]?.recentClaims || [];
+            return (
+              <Card key={`claims-${member.id}`}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">
+                    {member.full_name || member.email}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground">
+                  {claims.length === 0 ? (
+                    <p>No claims yet.</p>
+                  ) : (
+                    <ul className="space-y-1">
+                      {claims.map((claim) => (
+                        <li key={claim.id}>
+                          {claim.lad_name || claim.lad_code} ·{" "}
+                          {format(new Date(claim.claimed_at), "PP")}
+                          {claim.released_at
+                            ? ` · released (${claim.release_reason || "unknown"})`
+                            : " · active"}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <Button asChild variant="link" className="mt-2 h-auto p-0">
+                    <Link to="/admin/coverage">Open coverage map</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </section>
 
       {isOwner && (
