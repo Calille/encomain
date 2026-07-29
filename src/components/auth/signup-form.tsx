@@ -82,7 +82,7 @@ export function SignupForm() {
             },
             {
               adminName: "Admin",
-              adminDashboardUrl: "https://theenclosure.co.uk/admin/users",
+              adminDashboardUrl: "https://theenclosure.co.uk/admin/clients",
             }
           ).catch((notifyError) => {
             console.error("Failed to send admin alert:", notifyError);

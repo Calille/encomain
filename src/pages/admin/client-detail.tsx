@@ -18,17 +18,6 @@ import { Button } from "../../components/ui/button";
 import { Skeleton } from "../../components/ui/skeleton";
 import { EmptyState } from "../../components/ui/empty-state";
 import { LoadError } from "../../components/ui/load-error";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Textarea } from "../../components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../../components/ui/dialog";
 import {
   Tabs,
   TabsContent,
@@ -43,7 +32,6 @@ import {
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import { supabase } from "../../lib/supabase";
-import { useAuth } from "../../contexts/AuthContext";
 import { useCancellableLoad } from "../../hooks/useCancellableLoad";
 import { formatPlanLabel } from "../../lib/plans";
 import { toast } from "../../hooks/use-toast";
@@ -65,6 +53,10 @@ import {
   isOutstandingInvoice,
 } from "../../components/admin/client/types";
 import { EditClientDialog } from "../../components/admin/client/edit-client-dialog";
+import {
+  HardDeleteClientDialog,
+  SoftDeleteClientDialog,
+} from "../../components/admin/client/delete-client-dialogs";
 import { ClientOverviewTab } from "../../components/admin/client/client-overview-tab";
 import { ClientBillingTab } from "../../components/admin/client/client-billing-tab";
 import { ClientWebsitesTab } from "../../components/admin/client/client-websites-tab";
@@ -90,7 +82,6 @@ function isTabValue(v: string | null): v is TabValue {
 export default function AdminClientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user: currentUser } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
   const activeTab: TabValue = isTabValue(tabParam) ? tabParam : "overview";
@@ -98,18 +89,8 @@ export default function AdminClientDetailPage() {
   const [data, setData] = useState<ClientDetailData | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [statusUpdating, setStatusUpdating] = useState(false);
-
   const [softDeleteOpen, setSoftDeleteOpen] = useState(false);
-  const [softDeleteEmailConfirm, setSoftDeleteEmailConfirm] = useState("");
-  const [softDeleteReason, setSoftDeleteReason] = useState("");
-  const [isSoftDeleting, setIsSoftDeleting] = useState(false);
-
   const [hardDeleteOpen, setHardDeleteOpen] = useState(false);
-  const [hardDeleteEmailConfirm, setHardDeleteEmailConfirm] = useState("");
-  const [hardDeleteWordConfirm, setHardDeleteWordConfirm] = useState("");
-  const [hardDeleteReason, setHardDeleteReason] = useState("");
-  const [isHardDeleting, setIsHardDeleting] = useState(false);
-
   const [isRecovering, setIsRecovering] = useState(false);
 
   const load = useCallback(
@@ -290,116 +271,6 @@ export default function AdminClientDetailPage() {
     }
   };
 
-  const handleSoftDelete = async () => {
-    if (!data || !currentUser?.id) return;
-    if (
-      softDeleteEmailConfirm.trim().toLowerCase() !==
-      data.user.email.toLowerCase()
-    ) {
-      toast({
-        title: "Email does not match",
-        description: "Type the client's email exactly to confirm.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSoftDeleting(true);
-    try {
-      const { data: fnData, error } = await supabase.functions.invoke(
-        "delete-account",
-        {
-          body: {
-            user_id: data.user.id,
-            initiated_by: currentUser.id,
-            reason: softDeleteReason.trim() || undefined,
-          },
-        }
-      );
-      if (error || fnData?.error) {
-        throw new Error(fnData?.error || error?.message || "Soft delete failed");
-      }
-      toast({
-        title: "Account deactivated",
-        description: `${data.user.email} has been soft-deleted with a 30-day recovery window.`,
-      });
-      setSoftDeleteOpen(false);
-      setSoftDeleteEmailConfirm("");
-      setSoftDeleteReason("");
-      retry();
-    } catch (err: unknown) {
-      toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Soft delete failed",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSoftDeleting(false);
-    }
-  };
-
-  const handleHardDelete = async () => {
-    if (!data || !currentUser?.id) return;
-    if (
-      hardDeleteEmailConfirm.trim().toLowerCase() !==
-      data.user.email.toLowerCase()
-    ) {
-      toast({
-        title: "Email does not match",
-        description: "Type the client's email exactly to confirm.",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (hardDeleteWordConfirm.trim() !== "DELETE") {
-      toast({
-        title: "Confirmation incomplete",
-        description: "Type DELETE in capitals to confirm permanent deletion.",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (!hardDeleteReason.trim()) {
-      toast({
-        title: "Reason required",
-        description: "Provide a reason for permanent deletion.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsHardDeleting(true);
-    try {
-      const { data: fnData, error } = await supabase.functions.invoke(
-        "hard-delete-account",
-        {
-          body: {
-            user_id: data.user.id,
-            admin_id: currentUser.id,
-            reason: hardDeleteReason.trim(),
-          },
-        }
-      );
-      if (error || fnData?.error) {
-        throw new Error(fnData?.error || error?.message || "Hard delete failed");
-      }
-      toast({
-        title: "Account permanently deleted",
-        description: `${data.user.email} has been anonymised.`,
-      });
-      setHardDeleteOpen(false);
-      navigate("/admin/clients");
-    } catch (err: unknown) {
-      toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Hard delete failed",
-        variant: "destructive",
-      });
-    } finally {
-      setIsHardDeleting(false);
-    }
-  };
-
   const handleRecover = async () => {
     if (!data) return;
     setIsRecovering(true);
@@ -572,22 +443,13 @@ export default function AdminClientDetailPage() {
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => {
-                    setSoftDeleteEmailConfirm("");
-                    setSoftDeleteReason("");
-                    setSoftDeleteOpen(true);
-                  }}
+                  onClick={() => setSoftDeleteOpen(true)}
                 >
                   Delete client account
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
-                  onClick={() => {
-                    setHardDeleteEmailConfirm("");
-                    setHardDeleteWordConfirm("");
-                    setHardDeleteReason("");
-                    setHardDeleteOpen(true);
-                  }}
+                  onClick={() => setHardDeleteOpen(true)}
                 >
                   <Trash2 className="mr-2 h-4 w-4" strokeWidth={1.5} />
                   Permanently delete (hard delete)
@@ -668,117 +530,19 @@ export default function AdminClientDetailPage() {
         onSaved={retry}
       />
 
-      <Dialog
+      <SoftDeleteClientDialog
+        client={user}
         open={softDeleteOpen}
-        onOpenChange={(open) => {
-          if (!open) setSoftDeleteOpen(false);
-        }}
-      >
-        <DialogContent className="sm:max-w-[480px]">
-          <DialogHeader>
-            <DialogTitle>Delete client account</DialogTitle>
-            <DialogDescription>
-              This deactivates the account immediately with a 30-day recovery window. Type
-              the client email to confirm.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="client-soft-delete-email">Type email to confirm</Label>
-              <Input
-                id="client-soft-delete-email"
-                value={softDeleteEmailConfirm}
-                onChange={(e) => setSoftDeleteEmailConfirm(e.target.value)}
-                placeholder={user.email}
-                autoComplete="off"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="client-soft-delete-reason">Reason (optional)</Label>
-              <Textarea
-                id="client-soft-delete-reason"
-                value={softDeleteReason}
-                onChange={(e) => setSoftDeleteReason(e.target.value)}
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSoftDeleteOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              disabled={isSoftDeleting}
-              onClick={handleSoftDelete}
-            >
-              {isSoftDeleting ? "Deleting…" : "Delete client account"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onOpenChange={setSoftDeleteOpen}
+        onDeleted={retry}
+      />
 
-      <Dialog
+      <HardDeleteClientDialog
+        client={user}
         open={hardDeleteOpen}
-        onOpenChange={(open) => {
-          if (!open) setHardDeleteOpen(false);
-        }}
-      >
-        <DialogContent className="sm:max-w-[520px]">
-          <DialogHeader>
-            <DialogTitle>Permanently delete this account?</DialogTitle>
-            <DialogDescription>
-              This cannot be undone. Personal data will be anonymised and the client
-              will lose access immediately. Invoices, payments, and support tickets will be
-              preserved for audit purposes but will no longer show identifying details.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="client-hard-delete-email">Type email to confirm</Label>
-              <Input
-                id="client-hard-delete-email"
-                value={hardDeleteEmailConfirm}
-                onChange={(e) => setHardDeleteEmailConfirm(e.target.value)}
-                placeholder={user.email}
-                autoComplete="off"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="client-hard-delete-word">Type DELETE to confirm</Label>
-              <Input
-                id="client-hard-delete-word"
-                value={hardDeleteWordConfirm}
-                onChange={(e) => setHardDeleteWordConfirm(e.target.value)}
-                placeholder="DELETE"
-                autoComplete="off"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="client-hard-delete-reason">Reason (required)</Label>
-              <Textarea
-                id="client-hard-delete-reason"
-                value={hardDeleteReason}
-                onChange={(e) => setHardDeleteReason(e.target.value)}
-                rows={3}
-                required
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setHardDeleteOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              disabled={isHardDeleting}
-              onClick={handleHardDelete}
-            >
-              {isHardDeleting ? "Deleting…" : "Permanently delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onOpenChange={setHardDeleteOpen}
+        onDeleted={() => navigate("/admin/clients")}
+      />
     </AdminLayout>
   );
 }
