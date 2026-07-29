@@ -8,6 +8,7 @@ import {
   Ban,
   LifeBuoy,
   AlertTriangle,
+  Map,
 } from "lucide-react";
 import { useMemo } from "react";
 import { DashboardLayout } from "../dashboard/dashboard-layout";
@@ -32,19 +33,36 @@ export function AdminLayout({
   title: string;
   children: React.ReactNode;
 }) {
-  const { isOwner } = useAuth();
+  const { isOwner, isAdmin } = useAuth();
 
   const adminNav = useMemo(() => {
-    if (!isOwner) return baseAdminNav;
-    const settingsIndex = baseAdminNav.findIndex((item) => item.href === "/admin/settings");
-    const withSentry = [...baseAdminNav];
-    withSentry.splice(settingsIndex === -1 ? withSentry.length : settingsIndex, 0, {
-      name: "Sentry team",
-      href: "/admin/sentry-team",
-      icon: Users,
-    });
-    return withSentry;
-  }, [isOwner]);
+    const nav = [...baseAdminNav];
+    const settingsIndex = nav.findIndex((item) => item.href === "/admin/settings");
+    const insertAt = settingsIndex === -1 ? nav.length : settingsIndex;
+
+    if (isOwner) {
+      nav.splice(insertAt, 0, {
+        name: "Sentry team",
+        href: "/admin/sentry-team",
+        icon: Users,
+      });
+    }
+
+    if (isAdmin) {
+      const sentryIndex = nav.findIndex((item) => item.href === "/admin/sentry-team");
+      const coverageAt =
+        sentryIndex >= 0
+          ? sentryIndex + 1
+          : nav.findIndex((item) => item.href === "/admin/settings");
+      nav.splice(coverageAt === -1 ? nav.length : coverageAt, 0, {
+        name: "Coverage",
+        href: "/admin/coverage",
+        icon: Map,
+      });
+    }
+
+    return nav;
+  }, [isOwner, isAdmin]);
 
   return (
     <DashboardLayout title={title} navigation={adminNav} showAdminToggle>

@@ -34,6 +34,12 @@ core
 # Supabase CLI local cache
 supabase/.temp/
 
+# Large LAD / ONS source artefacts (regenerate via seed script)
+supabase/scripts/data/lad-may-2024-uk-bgc.geojson
+supabase/scripts/data/lad-rows.json
+supabase/scripts/data/sql-batches/
+supabase/scripts/data/ukbusinessworkbook2024.xlsx
+
 # Generated email HTML previews
 preview-emails/
 

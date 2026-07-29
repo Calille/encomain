@@ -12,6 +12,7 @@ import {
   Ban,
   LifeBuoy,
   AlertTriangle,
+  Map,
 } from "lucide-react";
 import {
   CommandDialog,
@@ -42,6 +43,7 @@ const adminRoutes = [
   { name: "Outreach", href: "/admin/outreach", icon: MessageSquare },
   { name: "Suppressions", href: "/admin/suppressions", icon: Ban },
   { name: "Sentry team", href: "/admin/sentry-team", icon: Users, ownersOnly: true },
+  { name: "Coverage", href: "/admin/coverage", icon: Map },
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
