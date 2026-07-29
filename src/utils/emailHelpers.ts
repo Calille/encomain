@@ -231,7 +231,7 @@ export async function notifyAdminNewUser(
         userName: userData.name,
         signupDate: new Date().toISOString(),
         userRole: userData.role,
-        adminDashboardUrl: options?.adminDashboardUrl || 'https://theenclosure.co.uk/admin/users',
+        adminDashboardUrl: options?.adminDashboardUrl || 'https://theenclosure.co.uk/admin/clients',
       },
     });
 

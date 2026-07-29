@@ -1,7 +1,14 @@
 import { useCallback, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { AdminLayout } from "../../components/admin/admin-layout";
 import { WebsiteThumbnail } from "../../components/admin/WebsiteThumbnail";
+import { CreateUserDialog } from "../../components/admin/create-user-dialog";
+import {
+  HardDeleteClientDialog,
+  SoftDeleteClientDialog,
+} from "../../components/admin/client/delete-client-dialogs";
+import { EditClientDialog } from "../../components/admin/client/edit-client-dialog";
+import type { AdminOption } from "../../components/admin/client/types";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -15,9 +22,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../../components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
 import { supabase } from "../../lib/supabase";
 import { Tables } from "../../types/supabase";
-import { Users, Plus } from "lucide-react";
+import { Users, Plus, MoreHorizontal, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import {
   compareValues,
@@ -26,12 +40,14 @@ import {
 } from "../../hooks/useTableSort";
 import { useCancellableLoad } from "../../hooks/useCancellableLoad";
 import { formatPlanLabel, PLAN_OPTIONS } from "../../lib/plans";
+import { toast } from "../../hooks/use-toast";
 
 type UserRow = Tables<"users">;
 
 type ClientSortKey =
   | "name"
   | "email"
+  | "role"
   | "plan"
   | "websites"
   | "outstanding"
@@ -90,7 +106,6 @@ function pickPrimaryWebsiteUrl(sites: WebsiteRow[]): string | null {
   return sorted[0]?.url?.trim() || null;
 }
 
-/** Prefer latest pinned note; otherwise most recent note. */
 function pickLatestNotePreview(notes: NotePreview[]): string | null {
   if (notes.length === 0) return null;
   const pinned = notes
@@ -116,6 +131,7 @@ function truncateNote(text: string, max = 40): string {
 export default function AdminClientsPage() {
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserRow[]>([]);
+  const [admins, setAdmins] = useState<AdminOption[]>([]);
   const [websites, setWebsites] = useState<WebsiteRow[]>([]);
   const [invoices, setInvoices] = useState<
     { user_id: string; amount: number; status: string }[]
@@ -126,8 +142,15 @@ export default function AdminClientsPage() {
   const [planFilter, setPlanFilter] = useState("all");
   const { sort, cycleSort } = useTableSort<ClientSortKey>();
 
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editUser, setEditUser] = useState<UserRow | null>(null);
+  const [softDeleteUser, setSoftDeleteUser] = useState<UserRow | null>(null);
+  const [hardDeleteUser, setHardDeleteUser] = useState<UserRow | null>(null);
+  const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
+  const [recoveringId, setRecoveringId] = useState<string | null>(null);
+
   const load = useCallback(async (ctl: { isCancelled: () => boolean }) => {
-    const [u, w, i, n] = await Promise.all([
+    const [u, w, i, n, a] = await Promise.all([
       supabase.from("users").select("*").order("created_at", { ascending: false }),
       supabase
         .from("websites")
@@ -138,14 +161,20 @@ export default function AdminClientsPage() {
         .from("client_notes")
         .select("user_id, note, pinned, created_at")
         .order("created_at", { ascending: false }),
+      supabase
+        .from("users")
+        .select("id, full_name, email")
+        .eq("role", "admin")
+        .order("full_name", { ascending: true }),
     ]);
     if (ctl.isCancelled()) return;
-    const firstError = u.error || w.error || i.error || n.error;
+    const firstError = u.error || w.error || i.error || n.error || a.error;
     if (firstError) throw firstError;
     setUsers(u.data || []);
     setWebsites((w.data as WebsiteRow[]) || []);
     setInvoices(i.data || []);
     setNotes((n.data as NotePreview[]) || []);
+    setAdmins((a.data as AdminOption[]) || []);
   }, []);
 
   const { loading, error, retry } = useCancellableLoad(load);
@@ -161,7 +190,6 @@ export default function AdminClientsPage() {
   }, [notes]);
 
   const rows = useMemo(() => {
-    // Outstanding = sum of issued unpaid invoices (sent or overdue). Drafts are excluded.
     const mapped = users
       .filter((u) => u.role === "user" || u.role === "admin")
       .filter((u) => statusFilter === "all" || u.status === statusFilter)
@@ -199,6 +227,8 @@ export default function AdminClientsPage() {
           return compareValues(a.user.full_name, b.user.full_name, dir);
         case "email":
           return compareValues(a.user.email, b.user.email, dir);
+        case "role":
+          return compareValues(a.user.role, b.user.role, dir);
         case "plan":
           return compareValues(
             a.user.current_plan || "none",
@@ -234,6 +264,64 @@ export default function AdminClientsPage() {
     </button>
   );
 
+  const toggleStatus = async (user: UserRow) => {
+    if (user.deleted_at) return;
+    const next = user.status === "active" ? "inactive" : "active";
+    setStatusUpdatingId(user.id);
+    try {
+      const { error: updError } = await supabase
+        .from("users")
+        .update({ status: next })
+        .eq("id", user.id);
+      if (updError) throw updError;
+      toast({
+        title: next === "active" ? "Client activated" : "Client marked inactive",
+      });
+      retry();
+    } catch (err: unknown) {
+      toast({
+        title: "Error",
+        description:
+          err instanceof Error ? err.message : "Failed to update status.",
+        variant: "destructive",
+      });
+    } finally {
+      setStatusUpdatingId(null);
+    }
+  };
+
+  const recoverClient = async (user: UserRow) => {
+    setRecoveringId(user.id);
+    try {
+      const { error: updError } = await supabase
+        .from("users")
+        .update({
+          deleted_at: null,
+          deletion_scheduled_for: null,
+          deleted_by: null,
+          deletion_reason: null,
+          recovery_token: null,
+          status: "active",
+        })
+        .eq("id", user.id);
+      if (updError) throw updError;
+      toast({
+        title: "Client recovered",
+        description: "The account is active again.",
+      });
+      retry();
+    } catch (err: unknown) {
+      toast({
+        title: "Error",
+        description:
+          err instanceof Error ? err.message : "Failed to recover client.",
+        variant: "destructive",
+      });
+    } finally {
+      setRecoveringId(null);
+    }
+  };
+
   return (
     <AdminLayout title="Clients">
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -265,11 +353,13 @@ export default function AdminClientsPage() {
             </option>
           ))}
         </select>
-        <Button asChild size="sm" className="ml-auto gap-1.5">
-          <Link to="/admin/users">
-            <Plus className="h-4 w-4" strokeWidth={1.5} />
-            Create user
-          </Link>
+        <Button
+          size="sm"
+          className="ml-auto gap-1.5"
+          onClick={() => setCreateOpen(true)}
+        >
+          <Plus className="h-4 w-4" strokeWidth={1.5} />
+          Create user
         </Button>
       </div>
 
@@ -292,6 +382,7 @@ export default function AdminClientsPage() {
                     <th className="px-3 py-2">Website</th>
                     <th className="px-3 py-2">Latest note</th>
                     <th className="px-3 py-2">{headerButton("email", "Email")}</th>
+                    <th className="px-3 py-2">{headerButton("role", "Role")}</th>
                     <th className="px-3 py-2">{headerButton("plan", "Plan")}</th>
                     <th className="px-3 py-2">{headerButton("websites", "Websites")}</th>
                     <th className="px-3 py-2">
@@ -301,6 +392,7 @@ export default function AdminClientsPage() {
                       {headerButton("last_login", "Last login")}
                     </th>
                     <th className="px-3 py-2">{headerButton("status", "Status")}</th>
+                    <th className="px-3 py-2 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -311,92 +403,194 @@ export default function AdminClientsPage() {
                       outstanding,
                       primaryWebsiteUrl,
                       latestNote,
-                    }) => (
-                      <tr
-                        key={user.id}
-                        className="cursor-pointer transition-colors-fast hover:bg-muted/40"
-                        onClick={() => navigate(`/admin/clients/${user.id}`)}
-                      >
-                        <td className="px-3 py-2.5 font-medium text-foreground">
-                          {user.full_name || "Not set"}
-                        </td>
-                        <td className="px-3 py-2.5">
-                          {primaryWebsiteUrl ? (
-                            <a
-                              href={primaryWebsiteUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-block"
-                              title={primaryWebsiteUrl}
-                            >
-                              <WebsiteThumbnail url={primaryWebsiteUrl} size="sm" />
-                            </a>
-                          ) : (
-                            <WebsiteThumbnail url={null} size="sm" />
-                          )}
-                        </td>
-                        <td className="max-w-[160px] px-3 py-2.5">
-                          {latestNote ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  type="button"
-                                  className="block w-full truncate text-left text-muted-foreground hover:text-foreground"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate(`/admin/clients/${user.id}?tab=notes`);
-                                  }}
-                                >
-                                  {truncateNote(latestNote)}
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent
-                                side="top"
-                                className="max-w-xs whitespace-pre-wrap"
+                    }) => {
+                      const isSoftDeleted = Boolean(user.deleted_at);
+                      const showDeleteActions =
+                        user.role !== "admin" &&
+                        !isSoftDeleted &&
+                        !user.anonymised_at;
+                      const showRecover =
+                        user.role !== "admin" &&
+                        isSoftDeleted &&
+                        !user.anonymised_at;
+
+                      return (
+                        <tr
+                          key={user.id}
+                          className="cursor-pointer transition-colors-fast hover:bg-muted/40"
+                          onClick={() => navigate(`/admin/clients/${user.id}`)}
+                        >
+                          <td className="px-3 py-2.5 font-medium text-foreground">
+                            {user.full_name || "Not set"}
+                          </td>
+                          <td className="px-3 py-2.5">
+                            {primaryWebsiteUrl ? (
+                              <a
+                                href={primaryWebsiteUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-block"
+                                title={primaryWebsiteUrl}
                               >
-                                {latestNote}
-                              </TooltipContent>
-                            </Tooltip>
-                          ) : (
-                            <span className="text-muted-foreground">None</span>
-                          )}
-                        </td>
-                        <td className="px-3 py-2.5 text-muted-foreground">
-                          {user.email}
-                        </td>
-                        <td className="px-3 py-2.5">
-                          {formatPlanLabel(user.current_plan)}
-                        </td>
-                        <td className="px-3 py-2.5 font-mono-nums text-xs">
-                          {sites.label}
-                        </td>
-                        <td className="px-3 py-2.5 font-mono-nums">
-                          £
-                          {outstanding.toLocaleString("en-GB", {
-                            minimumFractionDigits: 2,
-                          })}
-                        </td>
-                        <td className="px-3 py-2.5 text-muted-foreground">
-                          {user.last_login
-                            ? format(new Date(user.last_login), "PP")
-                            : "Never"}
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <Badge
-                            variant={
-                              user.status === "active"
-                                ? "success"
-                                : user.status === "suspended"
-                                  ? "destructive"
-                                  : "secondary"
-                            }
-                          >
-                            {user.status}
-                          </Badge>
-                        </td>
-                      </tr>
-                    )
+                                <WebsiteThumbnail
+                                  url={primaryWebsiteUrl}
+                                  size="sm"
+                                />
+                              </a>
+                            ) : (
+                              <WebsiteThumbnail url={null} size="sm" />
+                            )}
+                          </td>
+                          <td className="max-w-[160px] px-3 py-2.5">
+                            {latestNote ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    className="block w-full truncate text-left text-muted-foreground hover:text-foreground"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(
+                                        `/admin/clients/${user.id}?tab=notes`
+                                      );
+                                    }}
+                                  >
+                                    {truncateNote(latestNote)}
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent
+                                  side="top"
+                                  className="max-w-xs whitespace-pre-wrap"
+                                >
+                                  {latestNote}
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              <span className="text-muted-foreground">None</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2.5 text-muted-foreground">
+                            {user.email}
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <Badge
+                              variant={
+                                user.role === "admin" ? "default" : "secondary"
+                              }
+                            >
+                              {user.role}
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-2.5">
+                            {formatPlanLabel(user.current_plan)}
+                          </td>
+                          <td className="px-3 py-2.5 font-mono-nums text-xs">
+                            {sites.label}
+                          </td>
+                          <td className="px-3 py-2.5 font-mono-nums">
+                            £
+                            {outstanding.toLocaleString("en-GB", {
+                              minimumFractionDigits: 2,
+                            })}
+                          </td>
+                          <td className="px-3 py-2.5 text-muted-foreground">
+                            {user.last_login
+                              ? format(new Date(user.last_login), "PP")
+                              : "Never"}
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <Badge
+                              variant={
+                                isSoftDeleted
+                                  ? "warning"
+                                  : user.status === "active"
+                                    ? "success"
+                                    : user.status === "suspended"
+                                      ? "destructive"
+                                      : "secondary"
+                              }
+                            >
+                              {isSoftDeleted ? "soft-deleted" : user.status}
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-2.5 text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label="Row actions"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MoreHorizontal
+                                    className="h-4 w-4"
+                                    strokeWidth={1.5}
+                                  />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                align="end"
+                                className="w-56"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <DropdownMenuItem
+                                  onClick={() => setEditUser(user)}
+                                >
+                                  Edit client
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  disabled={
+                                    isSoftDeleted ||
+                                    statusUpdatingId === user.id
+                                  }
+                                  onClick={() => toggleStatus(user)}
+                                >
+                                  {user.status === "active"
+                                    ? "Mark inactive"
+                                    : "Mark active"}
+                                </DropdownMenuItem>
+
+                                {showRecover && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      disabled={recoveringId === user.id}
+                                      onClick={() => recoverClient(user)}
+                                    >
+                                      {recoveringId === user.id
+                                        ? "Recovering…"
+                                        : "Recover client"}
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+
+                                {showDeleteActions && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={() => setSoftDeleteUser(user)}
+                                    >
+                                      Delete client account
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      className="text-destructive focus:text-destructive"
+                                      onClick={() => setHardDeleteUser(user)}
+                                    >
+                                      <Trash2
+                                        className="mr-2 h-4 w-4"
+                                        strokeWidth={1.5}
+                                      />
+                                      Permanently delete (hard delete)
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </td>
+                        </tr>
+                      );
+                    }
                   )}
                 </tbody>
               </table>
@@ -404,6 +598,51 @@ export default function AdminClientsPage() {
           </Card>
         </TooltipProvider>
       )}
+
+      <CreateUserDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={retry}
+      />
+
+      {editUser && (
+        <EditClientDialog
+          open={Boolean(editUser)}
+          onOpenChange={(open) => {
+            if (!open) setEditUser(null);
+          }}
+          user={editUser}
+          admins={admins}
+          onSaved={() => {
+            setEditUser(null);
+            retry();
+          }}
+        />
+      )}
+
+      <SoftDeleteClientDialog
+        client={softDeleteUser}
+        open={Boolean(softDeleteUser)}
+        onOpenChange={(open) => {
+          if (!open) setSoftDeleteUser(null);
+        }}
+        onDeleted={() => {
+          setSoftDeleteUser(null);
+          retry();
+        }}
+      />
+
+      <HardDeleteClientDialog
+        client={hardDeleteUser}
+        open={Boolean(hardDeleteUser)}
+        onOpenChange={(open) => {
+          if (!open) setHardDeleteUser(null);
+        }}
+        onDeleted={() => {
+          setHardDeleteUser(null);
+          retry();
+        }}
+      />
     </AdminLayout>
   );
 }
