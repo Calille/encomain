@@ -245,10 +245,13 @@ export default function AdminSentryTeamPage() {
                     <th className="px-3 py-2 font-medium">Name</th>
                     <th className="px-3 py-2 font-medium">Email</th>
                     <th className="px-3 py-2 font-medium">Roles</th>
+                    <th className="px-3 py-2 font-medium">Joined</th>
                     <th className="px-3 py-2 font-medium">Active claim</th>
                     <th className="px-3 py-2 font-medium">Cells (mo)</th>
                     <th className="px-3 py-2 font-medium">Discoveries (mo)</th>
                     <th className="px-3 py-2 font-medium">Audits (mo)</th>
+                    <th className="px-3 py-2 font-medium">Discoveries</th>
+                    <th className="px-3 py-2 font-medium">Audits</th>
                     <th className="px-3 py-2 font-medium">Actions</th>
                   </tr>
                 </thead>
@@ -279,6 +282,9 @@ export default function AdminSentryTeamPage() {
                         </div>
                       </td>
                       <td className="px-3 py-2.5 text-muted-foreground">
+                        {format(new Date(member.created_at), "PP")}
+                      </td>
+                      <td className="px-3 py-2.5 text-muted-foreground">
                         {claimLabel}
                       </td>
                       <td className="px-3 py-2.5">
@@ -290,6 +296,8 @@ export default function AdminSentryTeamPage() {
                       <td className="px-3 py-2.5">
                         {coverage?.auditsThisMonth ?? "—"}
                       </td>
+                      <td className="px-3 py-2.5">{member.discoveries}</td>
+                      <td className="px-3 py-2.5">{member.audits}</td>
                       <td className="px-3 py-2.5">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
