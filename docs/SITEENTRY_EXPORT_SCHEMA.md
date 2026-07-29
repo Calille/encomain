@@ -2,13 +2,13 @@
 
 Manual sync format for importing local-business website audits into The Enclosure admin CRM.
 
-`schema_version` governs parser compatibility. The admin importer currently accepts `1.0`.
+`schema_version` governs parser compatibility. The admin importer accepts `"1.0"`, `"2.0"`, and `"3.0"`.
 
 ## Top-level document
 
 ```json
 {
-  "schema_version": "1.0",
+  "schema_version": "3.0",
   "generated_at": "2026-07-25T10:00:00.000Z",
   "generator": "siteentry",
   "run_id": "run_20260725_001",
@@ -18,7 +18,7 @@ Manual sync format for importing local-business website audits into The Enclosur
 
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `schema_version` | string | yes | Currently `"1.0"` |
+| `schema_version` | string | yes | `"1.0"`, `"2.0"`, or `"3.0"` |
 | `generated_at` | ISO 8601 timestamp | yes | When the export was produced |
 | `generator` | string | yes | Expected `"siteentry"` |
 | `run_id` | string | yes | Unique id for this export run |
@@ -38,7 +38,10 @@ Manual sync format for importing local-business website audits into The Enclosur
   "audit_findings_summary": "Missing meta description; slow LCP; incomplete GBP categories.",
   "audit_data": {},
   "personalised_email_draft": "Hi Alex, …",
-  "last_audited_at": "2026-07-24T18:30:00.000Z"
+  "last_audited_at": "2026-07-24T18:30:00.000Z",
+  "sentry_discovered_by": "9f9bdeae-d306-48d7-89fa-0518517f2e9f",
+  "sentry_first_audited_by": "401bff94-0783-47e0-b8d2-feff2f0a6a01",
+  "sentry_export_batch_id": "batch_20260729_001"
 }
 ```
 
@@ -55,6 +58,9 @@ Manual sync format for importing local-business website audits into The Enclosur
 | `audit_data` | object | yes | Full structured audit payload |
 | `personalised_email_draft` | string \| null | no | Optional outreach draft |
 | `last_audited_at` | ISO 8601 timestamp | yes | |
+| `sentry_discovered_by` | UUID string \| null | no | Schema 3.0; written to `leads.sentry_discovered_by` |
+| `sentry_first_audited_by` | UUID string \| null | no | Schema 3.0; written to `leads.sentry_first_audited_by` |
+| `sentry_export_batch_id` | string \| null | no | Schema 3.0; accepted for traceability, not persisted yet |
 
 ## Import behaviour
 
@@ -63,3 +69,4 @@ Manual sync format for importing local-business website audits into The Enclosur
 3. Skip any lead whose `contact_email` appears in `email_suppression`.
 4. Never send email during import. Ingest only.
 5. Record counts on `import_batches`.
+6. Schema 3.0 attribution UUIDs are stored when present; they are not resolved to live users at import time.

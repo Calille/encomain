@@ -672,6 +672,8 @@ export type Database = {
           last_audited_at: string | null
           personalised_email_draft: string | null
           phone: string | null
+          sentry_discovered_by: string | null
+          sentry_first_audited_by: string | null
           source: string
           status: string
           unsubscribed_at: string | null
@@ -692,6 +694,8 @@ export type Database = {
           last_audited_at?: string | null
           personalised_email_draft?: string | null
           phone?: string | null
+          sentry_discovered_by?: string | null
+          sentry_first_audited_by?: string | null
           source?: string
           status?: string
           unsubscribed_at?: string | null
@@ -712,6 +716,8 @@ export type Database = {
           last_audited_at?: string | null
           personalised_email_draft?: string | null
           phone?: string | null
+          sentry_discovered_by?: string | null
+          sentry_first_audited_by?: string | null
           source?: string
           status?: string
           unsubscribed_at?: string | null
@@ -981,6 +987,8 @@ export type Database = {
           full_name: string | null
           id: string
           industry: string | null
+          is_owner: boolean
+          is_sentry_user: boolean
           last_login: string | null
           must_change_password: boolean | null
           password_changed_at: string | null
@@ -1012,6 +1020,8 @@ export type Database = {
           full_name?: string | null
           id: string
           industry?: string | null
+          is_owner?: boolean
+          is_sentry_user?: boolean
           last_login?: string | null
           must_change_password?: boolean | null
           password_changed_at?: string | null
@@ -1043,6 +1053,8 @@ export type Database = {
           full_name?: string | null
           id?: string
           industry?: string | null
+          is_owner?: boolean
+          is_sentry_user?: boolean
           last_login?: string | null
           must_change_password?: boolean | null
           password_changed_at?: string | null
@@ -1134,6 +1146,13 @@ export type Database = {
       get_user_role: { Args: never; Returns: string }
       invoke_edge_function: { Args: { function_name: string }; Returns: number }
       is_admin: { Args: never; Returns: boolean }
+      is_owner: { Args: never; Returns: boolean }
+      is_sentry_user: { Args: never; Returns: boolean }
+      revoke_sentry_access: { Args: { target_user_id: string }; Returns: undefined }
+      set_sentry_owner: {
+        Args: { grant_owner: boolean; target_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
