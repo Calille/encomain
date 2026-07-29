@@ -13,6 +13,7 @@ import {
   LifeBuoy,
   AlertTriangle,
   Map,
+  Wrench,
 } from "lucide-react";
 import {
   CommandDialog,
@@ -41,9 +42,10 @@ const adminRoutes = [
   { name: "Support tickets", href: "/admin/support-tickets", icon: LifeBuoy },
   { name: "Audits and Leads", href: "/admin/audits", icon: TrendingUp },
   { name: "Outreach", href: "/admin/outreach", icon: MessageSquare },
-  { name: "Suppressions", href: "/admin/suppressions", icon: Ban },
   { name: "Sentry team", href: "/admin/sentry-team", icon: Users, ownersOnly: true },
   { name: "Coverage", href: "/admin/coverage", icon: Map },
+  { name: "Tools", href: "/admin/tools", icon: Wrench },
+  { name: "Suppressions", href: "/admin/suppressions", icon: Ban },
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 

@@ -9,6 +9,7 @@ import {
   LifeBuoy,
   AlertTriangle,
   Map,
+  Wrench,
 } from "lucide-react";
 import { useMemo } from "react";
 import { DashboardLayout } from "../dashboard/dashboard-layout";
@@ -22,7 +23,6 @@ const baseAdminNav = [
   { name: "Support tickets", href: "/admin/support-tickets", icon: LifeBuoy },
   { name: "Audits and Leads", href: "/admin/audits", icon: TrendingUp },
   { name: "Outreach", href: "/admin/outreach", icon: MessageSquare },
-  { name: "Suppressions", href: "/admin/suppressions", icon: Ban },
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
@@ -60,6 +60,25 @@ export function AdminLayout({
         icon: Map,
       });
     }
+
+    // Tools then Suppressions: Coverage → Tools → Suppressions → Settings
+    const coverageIndex = nav.findIndex((item) => item.href === "/admin/coverage");
+    const toolsAt =
+      coverageIndex >= 0
+        ? coverageIndex + 1
+        : nav.findIndex((item) => item.href === "/admin/settings");
+    const toolsInsert = toolsAt === -1 ? nav.length : toolsAt;
+    nav.splice(toolsInsert, 0, {
+      name: "Tools",
+      href: "/admin/tools",
+      icon: Wrench,
+    });
+    const toolsIndex = nav.findIndex((item) => item.href === "/admin/tools");
+    nav.splice(toolsIndex + 1, 0, {
+      name: "Suppressions",
+      href: "/admin/suppressions",
+      icon: Ban,
+    });
 
     return nav;
   }, [isOwner, isAdmin]);

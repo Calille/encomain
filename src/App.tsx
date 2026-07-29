@@ -45,6 +45,7 @@ const AdminSettings = lazy(() => import("./pages/admin/settings"));
 const AdminSuppressions = lazy(() => import("./pages/admin/suppressions"));
 const AdminSentryTeam = lazy(() => import("./pages/admin/sentry-team"));
 const AdminCoverage = lazy(() => import("./pages/admin/coverage"));
+const AdminTools = lazy(() => import("./pages/admin/tools"));
 const AdminSupportTickets = lazy(() => import("./pages/admin/support-tickets"));
 const WebsitesManagement = lazy(() => import("./pages/admin/websites"));
 const BillingManagement = lazy(() => import("./pages/admin/billing"));
@@ -253,6 +254,14 @@ function App() {
             element={
               <ProtectedRoute requireAdmin>
                 <AdminCoverage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/tools"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminTools />
               </ProtectedRoute>
             }
           />
