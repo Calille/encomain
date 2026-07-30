@@ -191,7 +191,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { token, email: replyTo } = tokenResult;
+    const { token } = tokenResult;
     const subject = readSubject(lead);
     const personalisedBody =
       typeof lead.personalised_email_draft === "string" &&
@@ -215,12 +215,14 @@ Deno.serve(async (req) => {
       unsubscribeUrl,
     });
 
+    // Reply capture stubbed for phase 1. Change REPLY-TO back to reply_token_email
+    // once Resend Inbound is enabled and receive-outreach-reply is deployed.
     const sendResult = await sendEmail({
       to: email,
       subject: rendered.subject,
       html: rendered.html,
       from: "The Enclosure <noreply@theenclosure.co.uk>",
-      replyTo,
+      replyTo: "hello@theenclosure.co.uk",
       idempotencyKey: batchId
         ? `outreach-batch-${batchId}-${leadId}`
         : `outreach-${leadId}-${token}`,
