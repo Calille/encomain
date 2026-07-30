@@ -1356,7 +1356,7 @@ export function renderOutreachEmail(data: OutreachEmailData): RenderedEmail {
   const footerNote =
     `${mailtoLink()} · ` +
     `If you would rather not hear from us again, <a href="${data.unsubscribeUrl}" style="color: #1A4D2E; text-decoration: underline;">unsubscribe here</a>.` +
-    ` <!-- ADDRESS -->`;
+    ` The Enclosure, Welwyn Garden City, United Kingdom`;
 
   const html = renderEmail({
     preheader: subject,
