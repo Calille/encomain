@@ -1,6 +1,3 @@
--- Auto-bump area_claims.last_activity_at when sweeps or audits happen.
--- Clients cannot UPDATE area_claims directly (no UPDATE RLS policy).
-
 CREATE OR REPLACE FUNCTION bump_claim_activity_from_sweep()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 BEGIN
@@ -46,4 +43,4 @@ $$;
 CREATE TRIGGER trg_bump_claim_activity_from_audit
 AFTER INSERT ON sentry_audits
 FOR EACH ROW
-EXECUTE FUNCTION bump_claim_activity_from_audit();
+EXECUTE FUNCTION bump_claim_activity_from_audit();;

@@ -187,46 +187,4 @@ CREATE POLICY "sentry_users_read_config"
 DROP POLICY IF EXISTS "owners_update_config" ON public.sentry_config;
 CREATE POLICY "owners_update_config"
   ON public.sentry_config FOR UPDATE
-  USING (public.is_owner());
-
--- Owners can list team member profiles (admin policy already covers admins).
-DROP POLICY IF EXISTS "owners_select_users_for_sentry" ON public.users;
-CREATE POLICY "owners_select_users_for_sentry"
-  ON public.users FOR SELECT
-  USING (public.is_owner());
-
--- Restricted flag updates: owners must not get a blanket UPDATE on users.
-CREATE OR REPLACE FUNCTION public.revoke_sentry_access(target_user_id UUID)
-RETURNS VOID
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  IF NOT public.is_owner() THEN
-    RAISE EXCEPTION 'Forbidden: owner role required';
-  END IF;
-  UPDATE public.users
-  SET is_sentry_user = false
-  WHERE id = target_user_id;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.set_sentry_owner(target_user_id UUID, grant_owner BOOLEAN)
-RETURNS VOID
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  IF NOT public.is_owner() THEN
-    RAISE EXCEPTION 'Forbidden: owner role required';
-  END IF;
-  UPDATE public.users
-  SET is_owner = grant_owner
-  WHERE id = target_user_id;
-END;
-$$;
-
-GRANT EXECUTE ON FUNCTION public.revoke_sentry_access(UUID) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.set_sentry_owner(UUID, BOOLEAN) TO authenticated;
+  USING (public.is_owner());;

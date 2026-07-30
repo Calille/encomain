@@ -195,7 +195,6 @@ CREATE POLICY "sentry_users_insert_own_sweeps"
 GRANT SELECT ON public.sweep_cell_coverage TO authenticated;
 GRANT SELECT ON public.area_coverage TO authenticated;
 
--- Daily auto-release of stale area claims (10:00 UTC ≈ mid-morning UK).
 DO $$
 BEGIN
   PERFORM cron.unschedule('auto-release-stale-claims-daily');
@@ -207,4 +206,4 @@ SELECT cron.schedule(
   'auto-release-stale-claims-daily',
   '0 10 * * *',
   $$SELECT public.invoke_edge_function('auto-release-stale-claims');$$
-);
+);;
