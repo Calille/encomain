@@ -74,7 +74,7 @@ export function renderWelcomeEmail(data: WelcomeEmailData): string {
       {
         type: 'text',
         content: p(
-          'This link expires in 7 days. If it does expire, email <a href="mailto:hello@theenclosure.co.uk" style="color: #1A4D2E; text-decoration: underline;">hello@theenclosure.co.uk</a> and we\'ll send a new one.'
+          'This link expires in 1 hour. If it does, email <a href="mailto:hello@theenclosure.co.uk" style="color: #1A4D2E; text-decoration: underline;">hello@theenclosure.co.uk</a> and we will send you a new one.'
         ),
       },
       {
