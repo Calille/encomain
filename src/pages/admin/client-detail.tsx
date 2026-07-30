@@ -112,7 +112,11 @@ export default function AdminClientDetailPage() {
         adminsRes,
       ] = await Promise.all([
         supabase.from("users").select("*").eq("id", id).maybeSingle(),
-        supabase.from("websites").select("*").eq("user_id", id),
+        supabase
+          .from("websites")
+          .select("*")
+          .eq("user_id", id)
+          .order("created_at", { ascending: true }),
         supabase
           .from("invoices")
           .select("*")

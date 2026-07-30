@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { microlinkScreenshotUrl } from "../../lib/website-url";
@@ -14,6 +14,8 @@ type Props = {
   url: string | null | undefined;
   size?: Size;
   className?: string;
+  /** When this changes, remount with a cache-busted Microlink URL. */
+  refreshKey?: string | number;
 };
 
 function Placeholder({ size, className }: { size: Size; className?: string }) {
@@ -35,9 +37,18 @@ function Placeholder({ size, className }: { size: Size; className?: string }) {
  * Lazy Microlink screenshot thumbnail for a client website URL.
  * Falls back to a neutral placeholder when url is missing or the image fails.
  */
-export function WebsiteThumbnail({ url, size = "sm", className }: Props) {
+export function WebsiteThumbnail({
+  url,
+  size = "sm",
+  className,
+  refreshKey,
+}: Props) {
   const [failed, setFailed] = useState(false);
   const trimmed = url?.trim() || "";
+
+  useEffect(() => {
+    setFailed(false);
+  }, [trimmed, refreshKey]);
 
   if (!trimmed || failed) {
     return <Placeholder size={size} className={className} />;
@@ -45,7 +56,13 @@ export function WebsiteThumbnail({ url, size = "sm", className }: Props) {
 
   return (
     <img
-      src={microlinkScreenshotUrl(trimmed)}
+      key={`${trimmed}:${refreshKey ?? ""}`}
+      src={microlinkScreenshotUrl(
+        trimmed,
+        refreshKey != null && refreshKey !== ""
+          ? { cacheBust: refreshKey }
+          : undefined
+      )}
       alt=""
       loading="lazy"
       onError={() => setFailed(true)}
