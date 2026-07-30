@@ -97,13 +97,18 @@ function summariseSites(sites: { status: string }[]): SiteSummary {
   return { count, inProgress, complete, onHold, label };
 }
 
+/** Primary site = earliest by created_at; skip rows with no usable URL. */
 function pickPrimaryWebsiteUrl(sites: WebsiteRow[]): string | null {
   if (sites.length === 0) return null;
   const sorted = [...sites].sort(
     (a, b) =>
       new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   );
-  return sorted[0]?.url?.trim() || null;
+  for (const site of sorted) {
+    const url = site.url?.trim();
+    if (url) return url;
+  }
+  return null;
 }
 
 function pickLatestNotePreview(notes: NotePreview[]): string | null {

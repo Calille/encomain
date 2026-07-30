@@ -64,7 +64,10 @@ export function websiteDisplayName(url: string): string {
 }
 
 /** Microlink screenshot URL used as an <img src>. */
-export function microlinkScreenshotUrl(websiteUrl: string): string {
+export function microlinkScreenshotUrl(
+  websiteUrl: string,
+  options?: { cacheBust?: string | number }
+): string {
   const params = new URLSearchParams({
     url: websiteUrl,
     screenshot: "true",
@@ -74,5 +77,9 @@ export function microlinkScreenshotUrl(websiteUrl: string): string {
     "viewport.height": "800",
     waitUntil: "networkidle2",
   });
+  // Cache-bust so Microlink re-fetches after a URL change (their CDN caches ~24h).
+  if (options?.cacheBust != null && options.cacheBust !== "") {
+    params.set("_", String(options.cacheBust));
+  }
   return `https://api.microlink.io/?${params.toString()}`;
 }
