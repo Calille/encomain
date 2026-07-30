@@ -9,6 +9,12 @@ export { buildCorsHeaders, corsHeaders, handleCors, getAllowedOrigin } from './c
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const resend = new Resend(RESEND_API_KEY);
 
+/** Default deliverability headers applied to every send */
+const DEFAULT_EMAIL_HEADERS: Record<string, string> = {
+  'List-Unsubscribe': '<mailto:unsubscribe@theenclosure.co.uk>',
+  'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+};
+
 export interface EmailOptions {
   to: string | string[];
   subject: string;
@@ -17,6 +23,8 @@ export interface EmailOptions {
   replyTo?: string;
   cc?: string | string[];
   bcc?: string | string[];
+  /** Extra MIME headers merged over the default List-Unsubscribe pair */
+  headers?: Record<string, string>;
   /** Resend idempotency key to avoid duplicate sends on retries */
   idempotencyKey?: string;
 }
@@ -52,6 +60,10 @@ export async function sendEmail(
       replyTo: options.replyTo,
       cc: options.cc,
       bcc: options.bcc,
+      headers: {
+        ...DEFAULT_EMAIL_HEADERS,
+        ...(options.headers || {}),
+      },
     };
 
     const { data, error } = options.idempotencyKey

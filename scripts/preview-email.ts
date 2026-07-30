@@ -49,11 +49,8 @@ const previews: Preview[] = [
     name: 'welcome',
     html: renderWelcomeEmail({
       userName: 'Alex Morgan',
-      email: 'alex@example.co.uk',
-      loginUrl: 'https://theenclosure.co.uk/login',
-      dashboardUrl,
-      temporaryPassword: 'Tmp-Ex4mple!',
-      requiresPasswordChange: true,
+      recoveryUrl:
+        'https://theenclosure.co.uk/change-password#access_token=demo&type=recovery',
     }),
   },
   {

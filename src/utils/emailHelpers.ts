@@ -17,22 +17,21 @@ export interface EmailResponse {
 /**
  * Send welcome email to new user (idempotent server-side).
  * Prefer calling this only from admin user-creation flows, not on every login.
+ * recoveryUrl must be a Supabase recovery / set-password action link.
  */
 export async function sendWelcomeEmail(
   email: string,
-  options?: {
+  options: {
     userName?: string;
-    loginUrl?: string;
-    dashboardUrl?: string;
+    recoveryUrl: string;
   }
 ): Promise<EmailResponse> {
   try {
     const { data, error } = await supabase.functions.invoke('send-welcome-email', {
       body: {
         email,
-        userName: options?.userName || 'there',
-        loginUrl: options?.loginUrl || 'https://theenclosure.co.uk/login',
-        dashboardUrl: options?.dashboardUrl || 'https://theenclosure.co.uk/dashboard',
+        userName: options.userName || 'there',
+        recoveryUrl: options.recoveryUrl,
       },
     });
 
