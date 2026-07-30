@@ -170,6 +170,13 @@ export default function AdminOutreachPage() {
   const [batchLeads, setBatchLeads] = useState<LeadRow[]>([]);
   const [batchActionLoading, setBatchActionLoading] = useState(false);
 
+  const [markRepliedOpen, setMarkRepliedOpen] = useState(false);
+  const [markRepliedNote, setMarkRepliedNote] = useState("");
+  const [markingReplied, setMarkingReplied] = useState(false);
+  const [markUnsubOpen, setMarkUnsubOpen] = useState(false);
+  const [markUnsubReason, setMarkUnsubReason] = useState("");
+  const [markingUnsub, setMarkingUnsub] = useState(false);
+
   const load = useCallback(async (ctl: { isCancelled: () => boolean }) => {
     const [leadsRes, adminsRes, batchesRes, suppressedRes] = await Promise.all([
       supabase
@@ -489,6 +496,140 @@ export default function AdminOutreachPage() {
     setReplies((prev) =>
       prev.map((r) => (r.id === reply.id ? { ...r, read_at: now } : r)),
     );
+  };
+
+  const confirmMarkReplied = async () => {
+    if (!selected) return;
+    setMarkingReplied(true);
+    const now = new Date().toISOString();
+    const note = markRepliedNote.trim();
+
+    const { error: replyError } = await supabase.from("outreach_replies").insert({
+      lead_id: selected.id,
+      from_email: "manual",
+      body_text: note || null,
+      received_at: now,
+      read_at: now,
+    });
+
+    if (replyError) {
+      setMarkingReplied(false);
+      toast({
+        title: "Could not mark as replied",
+        description: replyError.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error: leadError } = await supabase
+      .from("leads")
+      .update({
+        first_replied_at: selected.first_replied_at || now,
+        reply_count: (selected.reply_count || 0) + 1,
+        status:
+          selected.status === "contacted" ||
+          selected.status === "queued" ||
+          selected.status === "new"
+            ? "responded"
+            : selected.status,
+      })
+      .eq("id", selected.id);
+
+    setMarkingReplied(false);
+    if (leadError) {
+      toast({
+        title: "Reply recorded, lead update failed",
+        description: leadError.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({ title: "Marked as replied" });
+    setMarkRepliedOpen(false);
+    setMarkRepliedNote("");
+    const refreshed = {
+      ...selected,
+      first_replied_at: selected.first_replied_at || now,
+      reply_count: (selected.reply_count || 0) + 1,
+      status:
+        selected.status === "contacted" ||
+        selected.status === "queued" ||
+        selected.status === "new"
+          ? "responded"
+          : selected.status,
+    };
+    setSelected(refreshed);
+    await openLead(refreshed);
+    retry();
+  };
+
+  const confirmMarkUnsubscribed = async () => {
+    if (!selected?.contact_email) {
+      toast({
+        title: "No contact email",
+        description: "This lead has no email to suppress.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setMarkingUnsub(true);
+    const now = new Date().toISOString();
+    const note = markUnsubReason.trim();
+    // email_suppression has no source column; encode source in reason.
+    const reason = note
+      ? `manual_reply_request: ${note}`
+      : "manual_reply_request";
+    const email = selected.contact_email.toLowerCase().trim();
+
+    const { error: suppressError } = await supabase.from("email_suppression").upsert(
+      {
+        email,
+        reason,
+        suppressed_at: now,
+      },
+      { onConflict: "email" },
+    );
+
+    if (suppressError) {
+      setMarkingUnsub(false);
+      toast({
+        title: "Could not suppress email",
+        description: suppressError.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error: leadError } = await supabase
+      .from("leads")
+      .update({
+        status: "unsubscribed",
+        unsubscribed_at: now,
+      })
+      .eq("id", selected.id);
+
+    setMarkingUnsub(false);
+    if (leadError) {
+      toast({
+        title: "Suppressed, but lead update failed",
+        description: leadError.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({ title: "Marked as unsubscribed" });
+    setMarkUnsubOpen(false);
+    setMarkUnsubReason("");
+    setSelected({
+      ...selected,
+      status: "unsubscribed",
+      unsubscribed_at: now,
+    });
+    retry();
   };
 
   const createBatch = async () => {
@@ -916,6 +1057,10 @@ export default function AdminOutreachPage() {
           <DialogHeader>
             <DialogTitle>New outreach batch</DialogTitle>
           </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Replies come to hello@theenclosure.co.uk. If someone replies asking
+            to be removed, mark them as unsubscribed from their lead detail view.
+          </p>
           <div className="space-y-3">
             <div>
               <label className="mb-1 block text-sm font-medium">Name</label>
@@ -1050,6 +1195,80 @@ export default function AdminOutreachPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Mark as replied */}
+      <Dialog open={markRepliedOpen} onOpenChange={setMarkRepliedOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Mark as replied</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Record a manual reply for {selected?.business_name}. Optional note
+            is stored on the reply for your records.
+          </p>
+          <div>
+            <label className="mb-1 block text-sm font-medium">Note (optional)</label>
+            <Textarea
+              value={markRepliedNote}
+              onChange={(e) => setMarkRepliedNote(e.target.value)}
+              rows={4}
+              placeholder="e.g. Interested in Growth package, call next week"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setMarkRepliedOpen(false)}
+              disabled={markingReplied}
+            >
+              Cancel
+            </Button>
+            <Button onClick={confirmMarkReplied} disabled={markingReplied}>
+              {markingReplied ? "Saving…" : "Confirm"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mark as unsubscribed */}
+      <Dialog open={markUnsubOpen} onOpenChange={setMarkUnsubOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Mark as unsubscribed</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Suppress {selected?.contact_email || "this lead"} and stop further
+            outreach. Same effect as if they used the unsubscribe link.
+          </p>
+          <div>
+            <label className="mb-1 block text-sm font-medium">
+              Reason (optional)
+            </label>
+            <Textarea
+              value={markUnsubReason}
+              onChange={(e) => setMarkUnsubReason(e.target.value)}
+              rows={3}
+              placeholder="e.g. Asked to be removed via email"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setMarkUnsubOpen(false)}
+              disabled={markingUnsub}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmMarkUnsubscribed}
+              disabled={markingUnsub}
+            >
+              {markingUnsub ? "Saving…" : "Confirm unsubscribe"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Lead detail sheet */}
       <Sheet open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
         <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
@@ -1150,7 +1369,7 @@ export default function AdminOutreachPage() {
                     onChange={(e) => setDraft(e.target.value)}
                     rows={10}
                   />
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -1167,6 +1386,28 @@ export default function AdminOutreachPage() {
                     >
                       <Mail className="h-4 w-4" strokeWidth={1.5} />
                       {sending ? "Sending…" : "Send outreach"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setMarkRepliedNote("");
+                        setMarkRepliedOpen(true);
+                      }}
+                      disabled={!!selected.unsubscribed_at}
+                    >
+                      Mark as replied
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setMarkUnsubReason("");
+                        setMarkUnsubOpen(true);
+                      }}
+                      disabled={!!selected.unsubscribed_at}
+                    >
+                      Mark as unsubscribed
                     </Button>
                   </div>
                 </div>
