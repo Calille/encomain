@@ -2,7 +2,8 @@
  * Send Welcome Email Edge Function
  * Idempotent: skips if public.users.welcome_email_sent_at is already set.
  *
- * Subject: Welcome to The Enclosure
+ * Invite pattern: subject "You've been invited to The Enclosure" with a
+ * set-password (recovery) CTA. No temporary password in the body.
  */
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.6';
@@ -13,10 +14,9 @@ import { renderWelcomeEmail } from '../_shared/email-templates.ts';
 interface RequestBody {
   email: string;
   userName?: string;
-  loginUrl?: string;
-  dashboardUrl?: string;
-  temporary_password?: string;
-  requires_password_change?: boolean;
+  recoveryUrl?: string;
+  /** @deprecated Prefer recoveryUrl */
+  recovery_url?: string;
 }
 
 serve(async (req) => {
@@ -62,6 +62,21 @@ serve(async (req) => {
     if (!body.email) {
       return new Response(
         JSON.stringify({ error: 'Email address is required' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const recoveryUrl =
+      (typeof body.recoveryUrl === 'string' && body.recoveryUrl.trim()) ||
+      (typeof body.recovery_url === 'string' && body.recovery_url.trim()) ||
+      '';
+
+    if (!recoveryUrl) {
+      return new Response(
+        JSON.stringify({ error: 'recoveryUrl is required' }),
         {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -130,25 +145,15 @@ serve(async (req) => {
     }
 
     const userName = body.userName || userRow.full_name || 'there';
-    const loginUrl = body.loginUrl || 'https://theenclosure.co.uk/login';
-    const dashboardUrl = body.dashboardUrl || 'https://theenclosure.co.uk/dashboard';
-    const temporaryPassword =
-      typeof body.temporary_password === 'string' && body.temporary_password.trim()
-        ? body.temporary_password.trim()
-        : undefined;
 
     const emailHtml = renderWelcomeEmail({
       userName,
-      email,
-      loginUrl,
-      dashboardUrl,
-      temporaryPassword,
-      requiresPasswordChange: Boolean(body.requires_password_change),
+      recoveryUrl,
     });
 
     const result = await sendEmail({
       to: email,
-      subject: 'Welcome to The Enclosure',
+      subject: "You've been invited to The Enclosure",
       html: emailHtml,
       from: 'The Enclosure <noreply@theenclosure.co.uk>',
       replyTo: 'hello@theenclosure.co.uk',

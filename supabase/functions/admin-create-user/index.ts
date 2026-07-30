@@ -1,27 +1,31 @@
 /**
  * Admin Create User Edge Function
  * Creates an auth user + public.users profile. Admin JWT required.
+ * Sends an invite-style welcome email with a recovery (set-password) link.
+ * The server-generated password is never returned to the admin UI.
  */
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { buildCorsHeaders, handleCors } from "../_shared/cors.ts";
 
 interface CreateUserBody {
   email?: string;
-  password?: string;
   full_name?: string | null;
   role?: string;
   status?: string;
   /** Plan slug: essential | professional | signature | bespoke, or null/omit for none */
   current_plan?: string | null;
-  /** Preferred flag name used by the admin UI */
-  requires_password_change?: boolean;
-  /** @deprecated Prefer requires_password_change; still accepted for older clients */
-  must_change_password?: boolean;
   /** Optional primary site URL; inserted into public.websites after profile create */
   primary_website_url?: string | null;
 }
 
 const ALLOWED_PLANS = ["essential", "professional", "signature", "bespoke"] as const;
+const PASSWORD_REDIRECT = "https://theenclosure.co.uk/change-password";
+
+function generateServerPassword(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 function normaliseWebsiteUrl(raw: string): string {
   let input = raw.trim();
@@ -149,17 +153,9 @@ Deno.serve(async (req) => {
     }
 
     const email = body.email?.toLowerCase().trim();
-    const password = body.password;
 
-    if (!email || !password) {
-      return new Response(JSON.stringify({ error: "Email and password are required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (password.length < 8) {
-      return new Response(JSON.stringify({ error: "Password must be at least 8 characters" }), {
+    if (!email) {
+      return new Response(JSON.stringify({ error: "Email is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -182,14 +178,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Prefer requires_password_change; fall back to deprecated must_change_password
-    const requiresPasswordChange =
-      body.requires_password_change !== undefined
-        ? Boolean(body.requires_password_change)
-        : body.must_change_password !== undefined
-          ? Boolean(body.must_change_password)
-          : true;
-
     let currentPlan: string | null = null;
     if (body.current_plan !== undefined && body.current_plan !== null && body.current_plan !== "") {
       const plan = String(body.current_plan).toLowerCase().trim();
@@ -202,9 +190,12 @@ Deno.serve(async (req) => {
       currentPlan = plan;
     }
 
+    // Random password never returned to admin or client; user must set via recovery link
+    const serverPassword = generateServerPassword();
+
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
-      password,
+      password: serverPassword,
       email_confirm: true,
       user_metadata: {
         full_name: body.full_name || null,
@@ -226,6 +217,7 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Invite flow always requires setting a password before using the account
     const profileInsert: Record<string, unknown> = {
       id: authData.user.id,
       email,
@@ -233,9 +225,8 @@ Deno.serve(async (req) => {
       role,
       status,
       password_set_by_admin: true,
-      // Write both columns until the dual-flag schema is consolidated
-      requires_password_change: requiresPasswordChange,
-      must_change_password: requiresPasswordChange,
+      requires_password_change: true,
+      must_change_password: true,
     };
 
     if (currentPlan) {
@@ -258,32 +249,45 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Send welcome email with temporary password (idempotent via welcome_email_sent_at)
+    // Generate set-password (recovery) link, then send welcome email
     let welcomeEmailSent = false;
     let welcomeEmailError: string | null = null;
     try {
-      const welcomeRes = await fetch(`${supabaseUrl}/functions/v1/send-welcome-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${serviceRoleKey}`,
+      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+        type: "recovery",
+        email,
+        options: {
+          redirectTo: PASSWORD_REDIRECT,
         },
-        body: JSON.stringify({
-          email,
-          userName: body.full_name || email.split("@")[0],
-          loginUrl: "https://theenclosure.co.uk/login",
-          dashboardUrl: "https://theenclosure.co.uk/dashboard",
-          temporary_password: password,
-          requires_password_change: requiresPasswordChange,
-        }),
       });
-      const welcomeJson = await welcomeRes.json().catch(() => ({}));
-      if (!welcomeRes.ok || welcomeJson?.error) {
+
+      const recoveryUrl = linkData?.properties?.action_link;
+
+      if (linkError || !recoveryUrl) {
         welcomeEmailError =
-          welcomeJson?.error || `Welcome email failed with status ${welcomeRes.status}`;
-        console.error("Welcome email invoke failed:", welcomeEmailError);
+          linkError?.message || "Failed to generate password setup link";
+        console.error("generateLink failed:", linkError);
       } else {
-        welcomeEmailSent = !welcomeJson?.skipped;
+        const welcomeRes = await fetch(`${supabaseUrl}/functions/v1/send-welcome-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${serviceRoleKey}`,
+          },
+          body: JSON.stringify({
+            email,
+            userName: body.full_name || email.split("@")[0],
+            recoveryUrl,
+          }),
+        });
+        const welcomeJson = await welcomeRes.json().catch(() => ({}));
+        if (!welcomeRes.ok || welcomeJson?.error) {
+          welcomeEmailError =
+            welcomeJson?.error || `Welcome email failed with status ${welcomeRes.status}`;
+          console.error("Welcome email invoke failed:", welcomeEmailError);
+        } else {
+          welcomeEmailSent = !welcomeJson?.skipped;
+        }
       }
     } catch (welcomeErr) {
       welcomeEmailError =

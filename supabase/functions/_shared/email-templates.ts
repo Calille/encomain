@@ -49,86 +49,41 @@ function mailtoLink(email: string = BRAND.supportEmail): string {
 
 export interface WelcomeEmailData {
   userName?: string;
-  email?: string;
-  loginUrl: string;
-  dashboardUrl: string;
-  temporaryPassword?: string;
-  requiresPasswordChange?: boolean;
+  /** Supabase recovery / set-password action link */
+  recoveryUrl: string;
 }
 
 export function renderWelcomeEmail(data: WelcomeEmailData): string {
   const userName = data.userName || 'there';
-  const loginUrl = data.loginUrl || 'https://theenclosure.co.uk/login';
-  const hasPassword =
-    typeof data.temporaryPassword === 'string' &&
-    data.temporaryPassword.trim().length > 0;
-
-  if (hasPassword) {
-    const passwordNote = data.requiresPasswordChange
-      ? 'For security, you will be asked to set your own password the first time you sign in.'
-      : 'For your security, we recommend changing this password from your account settings after your first sign in.';
-
-    return renderEmail({
-      preheader: 'Your Enclosure account is ready. Sign-in details inside.',
-      heading: 'Welcome to The Enclosure',
-      subheading: 'Your account is ready to use.',
-      bodyBlocks: [
-        {
-          type: 'text',
-          content: p(
-            `Hi ${userName}, your account has been set up. Here are your sign-in details.`
-          ),
-        },
-        {
-          type: 'card',
-          content: {
-            Email: data.email || '',
-            'Temporary password': data.temporaryPassword!.trim(),
-          },
-        },
-        {
-          type: 'text',
-          content: p(passwordNote),
-        },
-        {
-          type: 'button',
-          content: { text: 'Sign in to your account', href: loginUrl },
-        },
-        {
-          type: 'signoff',
-          content: p('Cheers,') + p('Josh and Will at The Enclosure'),
-        },
-      ],
-      footerNote:
-        'If you did not expect this account, please contact us at <a href="mailto:hello@theenclosure.co.uk" style="color: #1A4D2E; text-decoration: underline;">hello@theenclosure.co.uk</a> so we can look into it.',
-    });
-  }
+  const recoveryUrl = data.recoveryUrl;
 
   return renderEmail({
-    preheader: 'Your Enclosure account is ready. Here is what to do next.',
+    preheader: 'Set your password to get started.',
     heading: 'Welcome to The Enclosure',
-    subheading: 'Your account is ready to use.',
     bodyBlocks: [
       {
         type: 'text',
-        content:
-          p(`Hi ${userName},`) +
-          p(
-            'Thanks for joining us. Your dashboard is set up so you can view projects, manage your account, and get in touch whenever you need a hand.'
-          ) +
-          p(
-            'When you are ready, open your dashboard to explore your workspace and complete your profile.'
-          ),
+        content: p(
+          `Hi ${userName}, your account is ready. Set your password using the button below to sign in for the first time.`
+        ),
       },
       {
         type: 'button',
-        content: { text: 'Go to dashboard', href: data.dashboardUrl },
+        content: { text: 'Set your password', href: recoveryUrl },
+      },
+      {
+        type: 'text',
+        content: p(
+          'This link expires in 1 hour. If it does, email <a href="mailto:hello@theenclosure.co.uk" style="color: #1A4D2E; text-decoration: underline;">hello@theenclosure.co.uk</a> and we will send you a new one.'
+        ),
       },
       {
         type: 'signoff',
         content: p('Cheers,') + p('Josh and Will at The Enclosure'),
       },
     ],
+    footerNote:
+      'If you did not expect this account, please contact us at <a href="mailto:hello@theenclosure.co.uk" style="color: #1A4D2E; text-decoration: underline;">hello@theenclosure.co.uk</a> so we can look into it.',
   });
 }
 
