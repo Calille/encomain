@@ -1,5 +1,16 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/audit/:token",
+      "destination": "https://eqqcbdpbeohtfwnlfdgx.supabase.co/functions/v1/get-audit-pdf?token=:token"
+    },
+    {
+      "source": "/unsubscribe/:token",
+      "destination": "https://eqqcbdpbeohtfwnlfdgx.supabase.co/functions/v1/process-unsubscribe?token=:token"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
