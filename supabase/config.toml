@@ -412,3 +412,17 @@ enabled = true
 # declarative_schema_path = "./database"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+# Public email-link and webhook endpoints (no caller JWT).
+[functions.get-audit-pdf]
+verify_jwt = false
+
+[functions.process-unsubscribe]
+verify_jwt = false
+
+[functions.receive-outreach-reply]
+verify_jwt = false
+
+# Cron + admin; auth checked inside via assertServiceRoleOrAdmin.
+[functions.run-outreach-batch]
+verify_jwt = false

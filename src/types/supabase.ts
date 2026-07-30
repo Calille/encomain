@@ -606,6 +606,142 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_batches: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          delay_seconds: number
+          error: string | null
+          id: string
+          lead_count: number
+          name: string
+          next_lead_index: number
+          next_send_at: string | null
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          delay_seconds?: number
+          error?: string | null
+          id?: string
+          lead_count: number
+          name: string
+          next_lead_index?: number
+          next_send_at?: string | null
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          delay_seconds?: number
+          error?: string | null
+          id?: string
+          lead_count?: number
+          name?: string
+          next_lead_index?: number
+          next_send_at?: string | null
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_batches_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outreach_replies: {
+        Row: {
+          body_html: string | null
+          body_text: string | null
+          from_email: string
+          from_name: string | null
+          id: string
+          lead_id: string
+          raw_headers: Json | null
+          read_at: string | null
+          received_at: string
+          resend_message_id: string | null
+          subject: string | null
+        }
+        Insert: {
+          body_html?: string | null
+          body_text?: string | null
+          from_email: string
+          from_name?: string | null
+          id?: string
+          lead_id: string
+          raw_headers?: Json | null
+          read_at?: string | null
+          received_at?: string
+          resend_message_id?: string | null
+          subject?: string | null
+        }
+        Update: {
+          body_html?: string | null
+          body_text?: string | null
+          from_email?: string
+          from_name?: string | null
+          id?: string
+          lead_id?: string
+          raw_headers?: Json | null
+          read_at?: string | null
+          received_at?: string
+          resend_message_id?: string | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_replies_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      unmatched_inbound: {
+        Row: {
+          from_email: string | null
+          id: string
+          notes: string | null
+          raw_payload: Json | null
+          received_at: string
+          resend_message_id: string | null
+          subject: string | null
+          to_address: string | null
+        }
+        Insert: {
+          from_email?: string | null
+          id?: string
+          notes?: string | null
+          raw_payload?: Json | null
+          received_at?: string
+          resend_message_id?: string | null
+          subject?: string | null
+          to_address?: string | null
+        }
+        Update: {
+          from_email?: string | null
+          id?: string
+          notes?: string | null
+          raw_payload?: Json | null
+          received_at?: string
+          resend_message_id?: string | null
+          subject?: string | null
+          to_address?: string | null
+        }
+        Relationships: []
+      }
       import_batches: {
         Row: {
           filename: string
@@ -662,16 +798,25 @@ export type Database = {
           assigned_to: string | null
           audit_data: Json
           audit_findings_summary: string | null
+          audit_pdf_storage_path: string | null
           business_name: string
           contact_email: string | null
           contact_name: string | null
           created_at: string
           domain: string
+          first_replied_at: string | null
           google_place_id: string | null
           id: string
           last_audited_at: string | null
+          opened_at: string | null
+          outreach_batch_id: string | null
+          pdf_clicked_at: string | null
           personalised_email_draft: string | null
           phone: string | null
+          reply_count: number
+          reply_token: string | null
+          reply_token_email: string | null
+          sent_at: string | null
           sentry_discovered_by: string | null
           sentry_first_audited_by: string | null
           source: string
@@ -684,16 +829,25 @@ export type Database = {
           assigned_to?: string | null
           audit_data?: Json
           audit_findings_summary?: string | null
+          audit_pdf_storage_path?: string | null
           business_name: string
           contact_email?: string | null
           contact_name?: string | null
           created_at?: string
           domain: string
+          first_replied_at?: string | null
           google_place_id?: string | null
           id?: string
           last_audited_at?: string | null
+          opened_at?: string | null
+          outreach_batch_id?: string | null
+          pdf_clicked_at?: string | null
           personalised_email_draft?: string | null
           phone?: string | null
+          reply_count?: number
+          reply_token?: string | null
+          reply_token_email?: string | null
+          sent_at?: string | null
           sentry_discovered_by?: string | null
           sentry_first_audited_by?: string | null
           source?: string
@@ -706,16 +860,25 @@ export type Database = {
           assigned_to?: string | null
           audit_data?: Json
           audit_findings_summary?: string | null
+          audit_pdf_storage_path?: string | null
           business_name?: string
           contact_email?: string | null
           contact_name?: string | null
           created_at?: string
           domain?: string
+          first_replied_at?: string | null
           google_place_id?: string | null
           id?: string
           last_audited_at?: string | null
+          opened_at?: string | null
+          outreach_batch_id?: string | null
+          pdf_clicked_at?: string | null
           personalised_email_draft?: string | null
           phone?: string | null
+          reply_count?: number
+          reply_token?: string | null
+          reply_token_email?: string | null
+          sent_at?: string | null
           sentry_discovered_by?: string | null
           sentry_first_audited_by?: string | null
           source?: string
@@ -729,6 +892,13 @@ export type Database = {
             columns: ["assigned_to"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_outreach_batch_id_fkey"
+            columns: ["outreach_batch_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_batches"
             referencedColumns: ["id"]
           },
         ]

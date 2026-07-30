@@ -8,7 +8,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { renderEmail } from '../supabase/functions/_shared/email-base-template.ts';
 import {
   renderWelcomeEmail,
   renderOrderConfirmationEmail,
@@ -28,6 +27,7 @@ import {
   renderTicketResponseClientEmail,
   renderPaymentReminderEmail,
   renderInvoiceIssuedEmail,
+  renderOutreachEmail,
 } from '../supabase/functions/_shared/email-templates.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -285,31 +285,19 @@ const previews: Preview[] = [
   },
   {
     name: 'outreach',
-    html: renderEmail({
-      preheader: 'A quick note about your website audit',
-      heading: 'A quick note about your website',
-      bodyBlocks: [
-        {
-          type: 'text',
-          content:
-            '<p style="margin: 0 0 12px 0;">Hi Riverside Cafe,</p><p style="margin: 0 0 12px 0;">We recently reviewed your public website and spotted a few opportunities that could help visitors find you more easily.</p>',
-        },
-        {
-          type: 'button',
-          content: {
-            text: 'View the audit summary',
-            href: 'https://theenclosure.co.uk/audit/demo',
-          },
-        },
-        {
-          type: 'signoff',
-          content:
-            '<p style="margin: 0 0 12px 0;">Cheers,</p><p style="margin: 0 0 12px 0;">The Enclosure team</p>',
-        },
-      ],
-      footerNote:
-        'You are receiving this because we audited a public business website. <a href="https://theenclosure.co.uk/unsubscribe?token=demo" style="color: #1A4D2E; text-decoration: underline;">Unsubscribe</a>',
-    }),
+    html: renderOutreachEmail({
+      lead: {
+        business_name: 'Riverside Cafe',
+        contact_name: 'Sam',
+        recommended_package: 'the Growth package',
+      },
+      personalisedBody:
+        'Hi Sam,\n\nWe recently reviewed the public website for Riverside Cafe and spotted a few opportunities that could help visitors find you more easily.\n\nThe audit covers speed, mobile layout, and how clearly your opening hours come across.',
+      subject: 'A quick look at Riverside Cafe',
+      auditUrl: 'https://theenclosure.co.uk/audit/demo-token-example',
+      packagesUrl: 'https://theenclosure.co.uk/pricing',
+      unsubscribeUrl: 'https://theenclosure.co.uk/unsubscribe/demo-token-example',
+    }).html,
   },
 ];
 

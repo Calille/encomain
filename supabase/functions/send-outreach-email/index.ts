@@ -1,22 +1,92 @@
 /**
  * Send outreach email to a lead via Resend.
- * Admin JWT required. Respects email_suppression. Never emails suppressed addresses.
+ * Accepts admin JWT or service role (batch cron).
+ * Payload: { lead_id, batch_id? }
+ * Respects unsubscribed_at and email_suppression. Uses warmer outreach template.
  */
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { buildCorsHeaders, handleCors } from "../_shared/cors.ts";
+import {
+  assertServiceRoleOrAdmin,
+  isAuthError,
+} from "../_shared/admin-auth.ts";
 import { sendEmail } from "../_shared/email-service.ts";
-import { renderEmail } from "../_shared/email-base-template.ts";
+import { renderOutreachEmail } from "../_shared/email-templates.ts";
+
+const SITE = "https://theenclosure.co.uk";
+const REPLY_DOMAIN = "reply.theenclosure.co.uk";
+const PACKAGES_URL = `${SITE}/pricing`;
 
 interface OutreachBody {
   lead_id?: string;
-  subject?: string;
-  body_html?: string;
+  batch_id?: string | null;
 }
 
-function randomToken(): string {
+/** 32-char URL-safe token (24 random bytes, base64url without padding). */
+function randomReplyToken(): string {
   const bytes = new Uint8Array(24);
   crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  let binary = "";
+  for (const b of bytes) binary += String.fromCharCode(b);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function readSubject(lead: Record<string, unknown>): string {
+  const audit = (lead.audit_data || {}) as Record<string, unknown>;
+  const fromAudit =
+    typeof audit.outreach_draft_subject === "string"
+      ? audit.outreach_draft_subject.trim()
+      : "";
+  if (fromAudit) return fromAudit;
+  const business = String(lead.business_name || "your business");
+  return `A quick look at ${business}`;
+}
+
+function readPackage(lead: Record<string, unknown>): string | null {
+  const audit = (lead.audit_data || {}) as Record<string, unknown>;
+  if (typeof audit.recommended_package === "string" && audit.recommended_package.trim()) {
+    return audit.recommended_package.trim();
+  }
+  if (typeof audit.suggested_package === "string" && audit.suggested_package.trim()) {
+    return audit.suggested_package.trim();
+  }
+  return null;
+}
+
+async function ensureReplyToken(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  lead: Record<string, unknown>,
+): Promise<{ token: string; email: string } | { error: string }> {
+  if (
+    typeof lead.reply_token === "string" &&
+    lead.reply_token.length > 0 &&
+    typeof lead.reply_token_email === "string" &&
+    lead.reply_token_email.length > 0
+  ) {
+    return { token: lead.reply_token, email: lead.reply_token_email };
+  }
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const token = randomReplyToken();
+    const email = `${token}@${REPLY_DOMAIN}`;
+    const { error } = await supabaseAdmin
+      .from("leads")
+      .update({ reply_token: token, reply_token_email: email })
+      .eq("id", lead.id as string);
+
+    if (!error) {
+      return { token, email };
+    }
+
+    // Unique violation — regenerate
+    if (error.code === "23505") {
+      continue;
+    }
+    console.error("ensureReplyToken failed:", error);
+    return { error: "Failed to allocate reply token" };
+  }
+
+  return { error: "Failed to allocate unique reply token" };
 }
 
 Deno.serve(async (req) => {
@@ -32,58 +102,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    const auth = await assertServiceRoleOrAdmin(req);
+    if (isAuthError(auth)) return auth;
 
-    if (!supabaseUrl || !serviceRoleKey) {
-      return new Response(JSON.stringify({ error: "Server configuration error" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing authorisation header" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const supabaseCaller = createClient(supabaseUrl, anonKey || serviceRoleKey, {
-      global: { headers: { Authorization: authHeader } },
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-
-    const {
-      data: { user: caller },
-      error: callerError,
-    } = await supabaseCaller.auth.getUser();
-
-    if (callerError || !caller) {
-      return new Response(JSON.stringify({ error: "Invalid or expired session" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-
-    const { data: callerProfile } = await supabaseAdmin
-      .from("users")
-      .select("id, role, status")
-      .eq("id", caller.id)
-      .maybeSingle();
-
-    if (!callerProfile || callerProfile.role !== "admin") {
-      return new Response(JSON.stringify({ error: "Forbidden: admin role required" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const { supabaseAdmin, callerId } = auth;
 
     let body: OutreachBody;
     try {
@@ -96,17 +118,13 @@ Deno.serve(async (req) => {
     }
 
     const leadId = body.lead_id?.trim();
-    const subject = body.subject?.trim();
-    const bodyHtml = body.body_html?.trim();
+    const batchId = body.batch_id?.trim() || null;
 
-    if (!leadId || !subject || !bodyHtml) {
-      return new Response(
-        JSON.stringify({ error: "lead_id, subject, and body_html are required" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+    if (!leadId) {
+      return new Response(JSON.stringify({ error: "lead_id is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const { data: lead, error: leadError } = await supabaseAdmin
@@ -120,6 +138,16 @@ Deno.serve(async (req) => {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    if (lead.unsubscribed_at) {
+      return new Response(
+        JSON.stringify({ skipped: true, reason: "unsubscribed" }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     if (!lead.contact_email) {
@@ -144,45 +172,73 @@ Deno.serve(async (req) => {
       });
     }
 
-    const unsubscribeToken = randomToken();
-    const unsubscribeUrl = `https://theenclosure.co.uk/unsubscribe?token=${unsubscribeToken}`;
-    const leadName = lead.business_name || lead.contact_name || 'there';
-    const emailHtml = renderEmail({
-      preheader: subject,
-      heading: subject,
-      bodyBlocks: [
+    // Single-send retry guard. Batch sends may resend if explicitly re-included.
+    if (lead.sent_at && !batchId) {
+      return new Response(
+        JSON.stringify({ skipped: true, reason: "already_sent" }),
         {
-          type: 'text',
-          content: `<p style="margin: 0 0 12px 0;">Hi ${leadName},</p>${bodyHtml}`,
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         },
-        {
-          type: 'signoff',
-          content:
-            '<p style="margin: 0 0 12px 0;">Cheers,</p><p style="margin: 0 0 12px 0;">The Enclosure team</p>',
-        },
-      ],
-      footerNote: `You are receiving this because we audited a public business website. <a href="${unsubscribeUrl}" style="color: #1A4D2E; text-decoration: underline;">Unsubscribe</a> to stop further emails from The Enclosure.`,
+      );
+    }
+
+    const tokenResult = await ensureReplyToken(supabaseAdmin, lead);
+    if ("error" in tokenResult) {
+      return new Response(JSON.stringify({ error: tokenResult.error }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { token, email: replyTo } = tokenResult;
+    const subject = readSubject(lead);
+    const personalisedBody =
+      typeof lead.personalised_email_draft === "string" &&
+      lead.personalised_email_draft.trim()
+        ? lead.personalised_email_draft
+        : "We recently reviewed your public website and wanted to share a few observations.";
+
+    const auditUrl = `${SITE}/audit/${token}`;
+    const unsubscribeUrl = `${SITE}/unsubscribe/${token}`;
+
+    const rendered = renderOutreachEmail({
+      lead: {
+        business_name: String(lead.business_name),
+        contact_name: lead.contact_name,
+        recommended_package: readPackage(lead),
+      },
+      personalisedBody,
+      subject,
+      auditUrl,
+      packagesUrl: PACKAGES_URL,
+      unsubscribeUrl,
     });
 
     const sendResult = await sendEmail({
       to: email,
-      subject,
-      html: emailHtml,
+      subject: rendered.subject,
+      html: rendered.html,
       from: "The Enclosure <noreply@theenclosure.co.uk>",
-      replyTo: "hello@theenclosure.co.uk",
-      idempotencyKey: `outreach-${leadId}-${unsubscribeToken}`,
+      replyTo,
+      idempotencyKey: batchId
+        ? `outreach-batch-${batchId}-${leadId}`
+        : `outreach-${leadId}-${token}`,
     });
+
+    const now = new Date().toISOString();
 
     if (!sendResult.success) {
       await supabaseAdmin.from("email_events").insert({
         lead_id: leadId,
         direction: "outbound",
-        subject,
-        body: bodyHtml,
-        sent_by: caller.id,
-        sent_at: new Date().toISOString(),
+        email_type: "outreach_failed",
+        subject: rendered.subject,
+        body: personalisedBody,
+        sent_by: callerId,
+        sent_at: now,
         error_message: sendResult.error || "Send failed",
-        unsubscribe_token: unsubscribeToken,
+        unsubscribe_token: token,
       });
 
       return new Response(JSON.stringify({ error: sendResult.error || "Failed to send" }), {
@@ -191,39 +247,42 @@ Deno.serve(async (req) => {
       });
     }
 
+    const leadUpdate: Record<string, unknown> = {
+      sent_at: now,
+      status: lead.status === "new" || lead.status === "queued" ? "contacted" : lead.status,
+    };
+    if (batchId) {
+      leadUpdate.outreach_batch_id = batchId;
+    }
+
+    await supabaseAdmin.from("leads").update(leadUpdate).eq("id", leadId);
+
     const { error: eventError } = await supabaseAdmin.from("email_events").insert({
       lead_id: leadId,
       direction: "outbound",
-      subject,
-      body: bodyHtml,
-      sent_by: caller.id,
-      sent_at: new Date().toISOString(),
+      email_type: "outreach_sent",
+      subject: rendered.subject,
+      body: personalisedBody,
+      sent_by: callerId,
+      sent_at: now,
       resend_message_id: sendResult.messageId || null,
-      unsubscribe_token: unsubscribeToken,
+      unsubscribe_token: token,
     });
 
     if (eventError) {
       console.error("Failed to record email_events:", eventError);
     }
 
-    if (lead.status === "new") {
-      await supabaseAdmin
-        .from("leads")
-        .update({ status: "contacted" })
-        .eq("id", leadId)
-        .eq("status", "new");
-    }
-
     return new Response(
       JSON.stringify({
         success: true,
         message_id: sendResult.messageId,
-        unsubscribe_token: unsubscribeToken,
+        reply_token: token,
       }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (error) {
     console.error("send-outreach-email error:", error);

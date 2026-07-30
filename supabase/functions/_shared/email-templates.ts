@@ -1270,3 +1270,100 @@ export function renderInvoiceIssuedEmail(
 
   return { subject, html };
 }
+
+// ---------------------------------------------------------------------------
+// Outreach (lead cold email)
+// ---------------------------------------------------------------------------
+
+export interface OutreachEmailData {
+  lead: {
+    business_name: string;
+    contact_name?: string | null;
+    recommended_package?: string | null;
+  };
+  personalisedBody: string;
+  subject: string;
+  auditUrl: string;
+  packagesUrl: string;
+  unsubscribeUrl: string;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** Escape plain text and turn newlines into paragraphs. */
+function plainTextToParagraphs(text: string): string {
+  const trimmed = text.replace(/\r\n/g, '\n').trim();
+  if (!trimmed) return '';
+  return trimmed
+    .split(/\n{2,}/)
+    .map((block) => {
+      const withBreaks = escapeHtml(block).replace(/\n/g, '<br />');
+      return `<p style="margin: 0 0 12px 0;">${withBreaks}</p>`;
+    })
+    .join('');
+}
+
+/**
+ * Warmer branded outreach wrapping Sentry's personalised body.
+ * Subject is taken from the Sentry export (or admin override) and used as the email subject.
+ */
+export function renderOutreachEmail(data: OutreachEmailData): RenderedEmail {
+  const businessName = data.lead.business_name || 'your business';
+  const subject = data.subject.trim() || `A quick look at ${businessName}`;
+  const packageLabel =
+    data.lead.recommended_package?.trim() || 'our fixed website packages';
+
+  const bodyHtml = plainTextToParagraphs(data.personalisedBody);
+
+  const blocks: EmailBodyBlock[] = [
+    {
+      type: 'text',
+      content: bodyHtml || p('We recently reviewed your public website.'),
+    },
+    {
+      type: 'card',
+      content: {
+        'See your full audit report':
+          'We put together a short report covering the main opportunities we found.',
+      },
+    },
+    {
+      type: 'button',
+      content: { text: 'View your audit', href: data.auditUrl },
+    },
+    {
+      type: 'card',
+      content: {
+        'How we can help': `If you would like a hand putting this into practice, have a look at ${escapeHtml(packageLabel)}.`,
+      },
+    },
+    {
+      type: 'button',
+      content: { text: 'See our packages', href: data.packagesUrl },
+    },
+    {
+      type: 'signoff',
+      content: p('Cheers,') + p('Josh at The Enclosure'),
+    },
+  ];
+
+  const footerNote =
+    `${mailtoLink()} · ` +
+    `If you would rather not hear from us again, <a href="${data.unsubscribeUrl}" style="color: #1A4D2E; text-decoration: underline;">unsubscribe here</a>.` +
+    ` <!-- ADDRESS -->`;
+
+  const html = renderEmail({
+    preheader: subject,
+    heading: `A quick look at ${escapeHtml(businessName)}`,
+    bodyBlocks: blocks,
+    footerNote,
+  });
+
+  return { subject, html };
+}

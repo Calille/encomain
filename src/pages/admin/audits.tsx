@@ -14,11 +14,14 @@ import { FileUp, Upload } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
+  getImportPdfHint,
   isAcceptedSchemaVersion,
+  stripEphemeralImportFields,
   validateLead,
   type SiteEntryExport,
   type SiteEntryLead,
 } from "../../lib/siteentry-import";
+import { uploadLeadAuditPdf } from "../../lib/outreach-pdf";
 
 type RowStatus = "new" | "update" | "skip-unsubscribed" | "skip-invalid";
 
@@ -183,26 +186,64 @@ export default function AdminAuditsPage() {
       const toInsert = preview.filter((r) => r.status === "new" && r.payload);
       const toUpdate = preview.filter((r) => r.status === "update" && r.payload && r.existingId);
 
+      const pdfJobs: Array<{
+        leadId: string;
+        payload: Record<string, unknown>;
+      }> = [];
+
       if (toInsert.length > 0) {
-        const { error } = await supabase.from("leads").insert(
-          toInsert.map((r) => ({
-            ...r.payload!,
-            status: "new",
-          }))
-        );
+        const rows = toInsert.map((r) => ({
+          ...stripEphemeralImportFields(r.payload!),
+          status: "new",
+        }));
+        const { data: inserted, error } = await supabase
+          .from("leads")
+          .insert(rows)
+          .select("id, domain");
         if (error) throw error;
+        const byDomain = new Map(
+          (inserted || []).map((l) => [String(l.domain).toLowerCase(), l.id]),
+        );
+        for (const row of toInsert) {
+          const domain = String(row.payload!.domain).toLowerCase();
+          const leadId = byDomain.get(domain);
+          if (leadId) pdfJobs.push({ leadId, payload: row.payload! });
+        }
       }
 
       for (const row of toUpdate) {
         const { error } = await supabase
           .from("leads")
           .update({
-            ...row.payload!,
+            ...stripEphemeralImportFields(row.payload!),
             // Never overwrite unsubscribed status via import
           })
           .eq("id", row.existingId!)
           .neq("status", "unsubscribed");
         if (error) throw error;
+        pdfJobs.push({ leadId: row.existingId!, payload: row.payload! });
+      }
+
+      for (const job of pdfJobs) {
+        const hint = getImportPdfHint(job.payload);
+        if (!hint.path && !hint.base64) continue;
+        if (!hint.base64) {
+          console.info(
+            `[siteentry-import] PDF path reference only for lead ${job.leadId} (${hint.path}); skipping upload.`,
+          );
+          continue;
+        }
+        const result = await uploadLeadAuditPdf({
+          leadId: job.leadId,
+          filename: hint.filename || "audit.pdf",
+          base64: hint.base64,
+        });
+        if ("error" in result && !result.skipped) {
+          console.warn(
+            `[siteentry-import] PDF upload failed for lead ${job.leadId}:`,
+            result.error,
+          );
+        }
       }
 
       const { error: batchError } = await supabase.from("import_batches").insert({

@@ -24,6 +24,11 @@ export interface SiteEntryLead {
   sentry_discovered_by?: unknown;
   sentry_first_audited_by?: unknown;
   sentry_export_batch_id?: unknown;
+  /** Storage path or local path reference from Sentry export (may lack bytes). */
+  report_pdf_path?: unknown;
+  /** Optional base64 PDF bytes when the export embeds the file. */
+  report_pdf_base64?: unknown;
+  report_pdf_filename?: unknown;
 }
 
 export interface SiteEntryExport {
@@ -110,6 +115,28 @@ export function validateLead(
       ? raw.contact_email.trim().toLowerCase()
       : null;
 
+  const reportPdfPath =
+    typeof raw.report_pdf_path === "string" && raw.report_pdf_path.trim()
+      ? raw.report_pdf_path.trim()
+      : typeof (raw.audit_data as Record<string, unknown> | undefined)?.report_pdf_path ===
+          "string"
+        ? String(
+            (raw.audit_data as Record<string, unknown>).report_pdf_path,
+          ).trim()
+        : null;
+
+  const reportPdfBase64 =
+    typeof raw.report_pdf_base64 === "string" && raw.report_pdf_base64.trim()
+      ? raw.report_pdf_base64.trim()
+      : null;
+
+  const reportPdfFilename =
+    typeof raw.report_pdf_filename === "string" && raw.report_pdf_filename.trim()
+      ? raw.report_pdf_filename.trim()
+      : reportPdfPath
+        ? reportPdfPath.split(/[/\\]/).pop() || "audit.pdf"
+        : null;
+
   return {
     ok: true,
     data: {
@@ -133,6 +160,46 @@ export function validateLead(
       source: "siteentry",
       sentry_discovered_by: discoveredBy.value,
       sentry_first_audited_by: firstAuditedBy.value,
+      // Ephemeral import hints — stripped before DB insert
+      _report_pdf_path: reportPdfPath,
+      _report_pdf_base64: reportPdfBase64,
+      _report_pdf_filename: reportPdfFilename,
     },
+  };
+}
+
+/** Fields that must not be written to public.leads. */
+const EPHEMERAL_IMPORT_KEYS = [
+  "_report_pdf_path",
+  "_report_pdf_base64",
+  "_report_pdf_filename",
+] as const;
+
+export function stripEphemeralImportFields(
+  payload: Record<string, unknown>,
+): Record<string, unknown> {
+  const next = { ...payload };
+  for (const key of EPHEMERAL_IMPORT_KEYS) {
+    delete next[key];
+  }
+  return next;
+}
+
+export function getImportPdfHint(payload: Record<string, unknown>): {
+  path: string | null;
+  base64: string | null;
+  filename: string | null;
+} {
+  return {
+    path:
+      typeof payload._report_pdf_path === "string" ? payload._report_pdf_path : null,
+    base64:
+      typeof payload._report_pdf_base64 === "string"
+        ? payload._report_pdf_base64
+        : null,
+    filename:
+      typeof payload._report_pdf_filename === "string"
+        ? payload._report_pdf_filename
+        : null,
   };
 }
