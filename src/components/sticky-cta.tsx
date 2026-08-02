@@ -21,7 +21,7 @@ export default function StickyCTA() {
         to="/contact#book"
         className="flex w-full items-center justify-center rounded-lg bg-marketing-forest px-4 py-3 text-marketing-sm font-semibold text-white transition-colors hover:bg-marketing-forest-dark min-h-[44px]"
       >
-        Book a free intro call
+        Book a 20 min chat
       </Link>
     </div>
   );

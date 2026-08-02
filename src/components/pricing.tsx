@@ -11,15 +11,13 @@ const packages = [
     oneOff: "£1,749.99",
     year1: "£50/month for year 1",
     year2: "£37.50/month from year 2",
-    description: "For small businesses that need a professional presence online.",
+    description: "For businesses that need a proper site fast without paying for things they won't use.",
     features: [
-      "Up to 5 pages",
-      "Mobile-optimised responsive design",
-      "Contact form with email delivery",
-      "Basic on-page SEO setup",
-      "Hosting included",
-      "Basic database for form submissions and simple content",
-      "2 rounds of revisions during build",
+      "A five-page site that captures enquiries and works cleanly on phones",
+      "Contact form that lands in your inbox",
+      "Set up so local search has a fair shot at finding you",
+      "Hosting included so you're not hunting for a host",
+      "Two revision rounds during the build",
     ],
     featured: false,
   },
@@ -28,16 +26,13 @@ const packages = [
     oneOff: "£2,499.99",
     year1: "£50/month for year 1",
     year2: "£37.50/month from year 2",
-    description: "For businesses that need more than a brochure site.",
+    description: "For businesses that want the site to keep working after launch: more pages, clearer leads, and a stronger local presence.",
     features: [
-      "Up to 10 pages",
-      "Everything in Essential",
-      "Fully custom design, no templates",
-      "Blog or news section with content management",
-      "Lead capture forms with CRM integration",
-      "Google Business Profile setup and optimisation",
-      "Intermediate database for content, users, and custom data",
-      "3 rounds of revisions during build",
+      "Up to ten pages, everything in Essential, plus room to grow",
+      "Designed for your business, not pulled from a template",
+      "Forms that capture leads and feed into the tools you already use",
+      "Google Business Profile set up so locals can find and trust you",
+      "Three revision rounds during the build",
     ],
     featured: true,
   },
@@ -46,16 +41,13 @@ const packages = [
     oneOff: "£3,999.99",
     year1: "£100/month for year 1",
     year2: "£75/month from year 2",
-    description: "For businesses that want a full digital operation.",
+    description: "For businesses that need the site to do more than explain: bookings, members areas, payments, and the workflows behind them.",
     features: [
-      "Unlimited pages",
-      "Everything in Professional",
-      "Custom web application features (booking, calculators, member areas)",
-      "Third-party integrations (Stripe, Mailchimp, HubSpot, and similar)",
-      "Custom automation and workflows",
-      "Enterprise database for high-traffic and complex data",
+      "Everything in Professional, with room for custom features",
+      "Bookings, calculators, or member areas built around how you sell",
+      "Payments and mailing tools connected so you're not copying data by hand",
       "Priority support in the monthly retainer",
-      "4 rounds of revisions during build",
+      "Four revision rounds during the build",
     ],
     featured: false,
   },
@@ -64,23 +56,23 @@ const packages = [
 const bespokeOfferings = [
   {
     icon: Code2,
-    title: "Custom web applications",
-    description: "Purpose-built tools and experiences beyond a standard marketing site.",
+    title: "Tools built around your process",
+    description: "Software shaped to how you actually work, not a bolted-on form.",
   },
   {
     icon: Boxes,
-    title: "SaaS products",
-    description: "Product interfaces, dashboards, and platforms shaped around your users.",
+    title: "Products your customers can use",
+    description: "Clear interfaces and dashboards for the people who pay you.",
   },
   {
     icon: Zap,
-    title: "Integrations and automation",
-    description: "Stripe, CRM, and third-party API wiring that removes manual work.",
+    title: "Less copying between apps",
+    description: "Payments, mail, and your other tools talking to each other so you don't.",
   },
   {
     icon: Database,
-    title: "Internal tools and CRM",
-    description: "Admin panels, client portals, and systems tailored to how you work.",
+    title: "Systems your team can live in",
+    description: "Client portals and admin tools that match your real workflow.",
   },
 ];
 
@@ -88,22 +80,22 @@ const faqs = [
   {
     question: "What does the monthly retainer cover?",
     answer:
-      "The monthly covers ongoing maintenance, backend fixes, and support if anything goes wrong with your site. Hosting is included in the build fee. Third-party services like paid advertising or premium tools are billed at cost.",
+      "Peace of mind after launch: fixes, updates, and support when something goes wrong. Hosting is included in the build fee. Paid ads and premium tools are billed at cost.",
   },
   {
     question: "What happens after year 2?",
     answer:
-      "The monthly stays at the year 2 rate for as long as you want us to maintain the site. There is no long-term contract, you can end the retainer at any time with 30 days notice.",
+      "The monthly stays at the year 2 rate for as long as you want us looking after the site. No long-term lock-in; you can end the retainer with 30 days' notice.",
   },
   {
     question: "Do I own the site?",
     answer:
-      "Yes. Once the build is complete and paid for, the code and content are yours. If you ever want to move to a different provider, we will hand everything over cleanly.",
+      "Yes. Once the build is complete and paid for, the site is yours. If you ever move elsewhere, we'll hand everything over cleanly.",
   },
   {
     question: "How long does a build take?",
     answer:
-      "Essential and Professional builds typically take 3 to 4 weeks. Signature and bespoke projects vary based on scope. We will give you a firm timeline during the intro call.",
+      "Essential and Professional builds typically take 3 to 4 weeks. Signature and bespoke work varies with scope. We'll give you a firm timeline on the intro call.",
   },
 ];
 
@@ -125,7 +117,10 @@ function CtaButton({
 }
 
 export default function PricingSection() {
-  useDocumentTitle("Pricing");
+  useDocumentTitle(
+    "Pricing",
+    "Clear Essential, Professional, and Signature packages for UK business websites, plus a short intro call to choose the right fit."
+  );
 
   return (
     <div className="bg-white">
@@ -134,13 +129,13 @@ export default function PricingSection() {
         <Container className="relative pt-20 pb-20 sm:pt-28 sm:pb-24">
           <div className="mx-auto max-w-3xl text-center">
             <MarketingHeading level="h1" variant="display">
-              Clear packages, or bespoke to fit.
+              Pick a package that matches what you need.
             </MarketingHeading>
             <p className="mt-6 text-marketing-lg leading-8 text-marketing-muted max-w-2xl mx-auto">
-              Fixed packages for standard web design work, or a bespoke quote if your project needs something more custom. Every project starts with a free intro call.
+              Fixed packages for most business websites, or a bespoke quote when the work is bigger. Every project starts with a short intro call.
             </p>
             <div className="mt-10">
-              <CtaButton>Book a free intro call</CtaButton>
+              <CtaButton>Book a 20 min chat</CtaButton>
             </div>
           </div>
         </Container>
@@ -154,7 +149,7 @@ export default function PricingSection() {
               Standard packages
             </MarketingHeading>
             <p className="mt-4 text-marketing-lg text-marketing-muted">
-              Everything you need to go live and stay live. One-off build fee plus a small monthly retainer that covers ongoing maintenance and support.
+              Everything you need to go live, then peace of mind after. One-off build fee plus a small monthly retainer so you're not left maintaining it alone.
             </p>
           </div>
 
@@ -209,7 +204,7 @@ export default function PricingSection() {
                     ))}
                   </ul>
                   <div className="mt-8">
-                    <CtaButton className="w-full">Book a free intro call</CtaButton>
+                    <CtaButton className="w-full">Book a 20 min chat</CtaButton>
                   </div>
                 </article>
               </div>
@@ -217,7 +212,7 @@ export default function PricingSection() {
           </div>
 
           <p className="mx-auto mt-10 max-w-3xl text-center text-marketing-sm text-marketing-muted leading-relaxed">
-            Prefer to pay annually? Ten months upfront covers the year and saves you two. Third-party services like paid advertising, premium integrations, and specialist tools are billed at cost when relevant.
+            Prefer to pay annually? Ten months upfront covers the year and saves you two. Paid ads, premium tools, and specialist add-ons are billed at cost when you need them.
           </p>
         </Container>
       </section>
@@ -227,10 +222,10 @@ export default function PricingSection() {
         <Container>
           <div className="mx-auto max-w-2xl text-center mb-14">
             <MarketingHeading level="h2" variant="section">
-              Something more ambitious?
+              Need something beyond a standard site?
             </MarketingHeading>
             <p className="mt-4 text-marketing-lg text-marketing-muted">
-              We also build custom software, SaaS applications, integrations, and internal tools for businesses that have outgrown a standard website. Every bespoke project is quoted individually based on scope.
+              We also build custom tools, customer portals, and the quiet systems that save a team hours each week. Every bespoke project is quoted on scope.
             </p>
           </div>
 
@@ -259,7 +254,7 @@ export default function PricingSection() {
           </div>
 
           <div className="mt-12 text-center">
-            <CtaButton>Book a free intro call to discuss your project</CtaButton>
+            <CtaButton>Book a 20 min chat about your project</CtaButton>
           </div>
         </Container>
       </section>
@@ -272,10 +267,10 @@ export default function PricingSection() {
               Not sure yet? Start with a draft.
             </MarketingHeading>
             <p className="mt-4 text-marketing-lg leading-relaxed text-marketing-muted">
-              For a small fee, we will design and prototype a draft of your site before you commit to the full project. If you go ahead, the cost of the draft comes off your final invoice.
+              For a small fee, we'll design a draft of your site before you commit to the full build. If you go ahead, that fee comes off your final invoice.
             </p>
             <div className="mt-10">
-              <CtaButton>Book a free intro call to discuss a draft</CtaButton>
+              <CtaButton>Book a 20 min chat about a draft</CtaButton>
             </div>
           </div>
         </Container>

@@ -22,10 +22,10 @@ function PricingTeaser() {
             Pricing
           </MarketingHeading>
           <MarketingHeading level="h2" variant="section">
-            Clear packages for standard web work
+            Clear packages, no mystery maths
           </MarketingHeading>
           <p className="mt-4 text-marketing-lg text-marketing-muted">
-            Fixed packages for most business websites, plus bespoke quotes when you need something more ambitious.
+            Fixed packages for most business sites, plus a bespoke quote when you need something bigger.
           </p>
           <div className="mt-8">
             <Link

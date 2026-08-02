@@ -22,17 +22,17 @@ export default function CTA() {
 
           <div className="mx-auto max-w-2xl text-center">
             <MarketingHeading level="h2" variant="section" tone="dark">
-              Ready to talk about your project?
+              Want a straight view of what's holding the site back?
             </MarketingHeading>
             <p className="mx-auto mt-6 max-w-xl text-marketing-lg leading-8 text-white/75">
-              Book a free intro call and discover how we can improve your online presence.
+              Book a short intro call and we'll talk through what we'd change.
             </p>
             <div className="mt-10 flex items-center justify-center">
               <Link
                 to="/contact#book"
                 className="inline-flex items-center justify-center rounded-lg bg-white px-8 py-3 text-marketing-base font-semibold text-marketing-forest transition-colors hover:bg-marketing-mint min-h-[44px]"
               >
-                Book a free intro call
+                Book a 20 min chat
               </Link>
             </div>
           </div>

@@ -6,39 +6,39 @@ import { MarketingHeading } from "./marketing/marketing-heading";
 const storySteps = [
   {
     id: 1,
-    title: "Discovery and planning",
+    title: "We learn what should change",
     description:
-      "We start by understanding your business goals, target audience, and brand identity. Through a focused consultation, we identify your requirements and create a roadmap tailored to your objectives.",
+      "You tell us who you serve, what isn't working, and what a good week of enquiries looks like. We turn that into a simple plan.",
   },
   {
     id: 2,
-    title: "Design and prototyping",
+    title: "You see the direction early",
     description:
-      "We craft modern, user-centric wireframes and high-fidelity prototypes that align with your brand. Every design decision is made to improve experience and drive conversions.",
+      "You get layouts that show how the site will look and where people enquire, before we build the real thing.",
   },
   {
     id: 3,
-    title: "Content and SEO",
+    title: "Written so locals can find you",
     description:
-      "We create compelling, SEO-optimised content that speaks to your audience and ranks well on search engines. From copywriting to meta tags, every element is built for visibility.",
+      "Copy and page setup aimed at people nearby searching for what you offer, not jargon for search engines.",
   },
   {
     id: 4,
-    title: "Development",
+    title: "Built to stay fast and solid",
     description:
-      "We turn designs into a fast, responsive, and secure website. Using modern technologies, we build a site that performs cleanly across devices and browsers.",
+      "You get a site that works on phones, loads quickly, and is set up properly so you're not fighting with it later.",
   },
   {
     id: 5,
-    title: "Testing and launch",
+    title: "Checked before it goes live",
     description:
-      "Before launch, we rigorously test features, links, and interactions. Our QA process helps ensure your website is accessible, reliable, and ready for real users.",
+      "Forms, links, and key journeys get a proper once-over so your first visitors aren't the ones finding problems.",
   },
   {
     id: 6,
-    title: "Ongoing support",
+    title: "Support after launch",
     description:
-      "We handle the technical launch and can provide ongoing support to keep your website performing well. From updates to troubleshooting, we're here when you need us.",
+      "When something needs changing or fixing, you message us. We handle the technical side so you can get back to the day job.",
   },
 ];
 
@@ -129,13 +129,13 @@ export default function WebsiteStory() {
       <Container>
         <div className="mx-auto mb-16 max-w-2xl lg:text-center">
           <MarketingHeading level="p" variant="eyebrow">
-            Your website journey
+            How you get from stuck to live
           </MarketingHeading>
           <MarketingHeading level="h2" variant="section" className="mt-2">
-            From concept to reality
+            A clear path from first chat to a site that can earn enquiries.
           </MarketingHeading>
           <p className="mt-6 text-marketing-lg leading-8 text-marketing-muted">
-            Follow along as we transform your ideas into a high-performing website through our proven six-step process.
+            Six steps, plain English, no mystery about what happens next.
           </p>
         </div>
 
@@ -152,16 +152,16 @@ export default function WebsiteStory() {
 
         <div className="mt-24 text-center">
           <h3 className="mb-6 font-marketing-display text-marketing-3xl font-medium text-marketing-forest">
-            Ready to start your journey?
+            Want to see what we'd change?
           </h3>
           <p className="mx-auto mb-10 max-w-2xl text-marketing-xl text-marketing-muted">
-            Book a free intro call and we'll talk through what you're trying to build.
+            Book a short intro call and we'll walk through your current site with fresh eyes.
           </p>
           <Link
             to="/contact#book"
             className="inline-flex items-center justify-center rounded-lg bg-marketing-ink px-8 py-4 text-marketing-lg font-semibold text-white transition-colors hover:bg-marketing-forest min-h-[44px]"
           >
-            Book a free intro call
+            Book a 20 min chat
           </Link>
         </div>
       </Container>

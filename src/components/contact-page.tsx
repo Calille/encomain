@@ -30,7 +30,10 @@ const CAL_CONFIG = {
 };
 
 export default function ContactPage() {
-  useDocumentTitle("Contact");
+  useDocumentTitle(
+    "Contact",
+    "Tell us what's not working on your site. Book a short intro call, message on WhatsApp, or email The Enclosure."
+  );
 
   // Configure Cal UI once on mount; Cal component mounts separately below
   useEffect(() => {
@@ -60,17 +63,17 @@ export default function ContactPage() {
           <Container className="relative pt-20 pb-20 sm:pt-28 sm:pb-24">
             <div className="mx-auto max-w-3xl text-center">
               <MarketingHeading level="h1" variant="display">
-                Let's talk about what you're building
+                Tell us what's not working
               </MarketingHeading>
               <p className="mt-6 text-marketing-lg leading-8 text-marketing-muted max-w-2xl mx-auto">
-                Whether you're ready to start or still exploring ideas, we're happy to walk through your goals and what a good next step looks like.
+                Whether you're ready to start or still weighing it up, we'll walk through your site and what a sensible next step looks like.
               </p>
               <div className="mt-10">
                 <a
                   href="#book"
                   className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-marketing-ink px-6 py-3 text-marketing-base font-semibold text-white transition-colors hover:bg-marketing-forest"
                 >
-                  Book a free intro call
+                  Book a 20 min chat
                 </a>
               </div>
             </div>
@@ -83,10 +86,10 @@ export default function ContactPage() {
             <div className="max-w-4xl mx-auto mb-16">
               <div className="text-center mb-12">
                 <MarketingHeading level="h2" variant="section" className="mb-4">
-                  Get in touch
+                  Prefer to write first?
                 </MarketingHeading>
                 <p className="text-marketing-lg text-marketing-muted max-w-2xl mx-auto mb-10">
-                  Prefer to write? Message us directly or drop us an email, we'll reply within 24 hours.
+                  Message us on WhatsApp or email. We'll reply within 24 hours.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left">
@@ -105,7 +108,7 @@ export default function ContactPage() {
                       Message us on WhatsApp
                     </p>
                     <p className="mt-2 text-marketing-sm text-marketing-muted">
-                      Quick questions or a chat before booking.
+                      Quick questions, or a short chat before you book a call.
                     </p>
                   </a>
 
@@ -132,7 +135,7 @@ export default function ContactPage() {
                     href="#book"
                     className="underline underline-offset-2 transition-colors hover:text-marketing-forest"
                   >
-                    Or scroll down to book a call
+                    Or scroll down to pick a time
                   </a>
                 </p>
               </div>
@@ -146,10 +149,10 @@ export default function ContactPage() {
                     <Calendar className="h-8 w-8 text-marketing-forest" strokeWidth={1.5} />
                   </div>
                   <MarketingHeading level="h2" variant="section">
-                    Book a free intro call
+                    Book a 20 min chat
                   </MarketingHeading>
                   <p className="mt-4 text-marketing-base text-marketing-muted max-w-xl mx-auto leading-relaxed">
-                    Free 30-minute intro call. No pitch, no strings, just a conversation about what you're trying to build.
+                    A short intro call. No hard sell. Just a look at your current site and what we'd change.
                   </p>
                 </div>
                 {/* Explicit pixel height so Cal's height:inherit resolves correctly */}

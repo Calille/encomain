@@ -11,6 +11,8 @@ import {
   FileText,
   Zap,
   CheckCircle2,
+  Shield,
+  Gauge,
 } from "lucide-react";
 import Header from "./header";
 import Footer from "./footer";
@@ -40,49 +42,49 @@ const services = [
     icon: Palette,
     title: "Website redesign",
     description:
-      "Transform an outdated site into a modern, mobile-first platform built to drive real business results.",
+      "Replace a tired brochure with a site that wins enquiries and looks the part next to local competitors.",
   },
   {
     icon: Search,
-    title: "SEO optimisation",
+    title: "Get found locally",
     description:
-      "Improve search rankings and attract organic traffic with strategies grounded in measurable growth.",
+      "Show up when nearby people search for what you offer, with clear pages and sensible search setup.",
   },
   {
     icon: ShoppingCart,
-    title: "E-commerce solutions",
+    title: "Sell without the faff",
     description:
-      "Shopping experiences with secure checkout, inventory management, and payment integration.",
+      "A shop that takes payment cleanly, shows stock sensibly, and doesn't confuse customers on their phone.",
   },
   {
     icon: Smartphone,
-    title: "Mobile and performance",
+    title: "Fast on every phone",
     description:
-      "Fast-loading, responsive sites that work cleanly on every device your customers use.",
+      "Pages that load quickly and stay usable wherever your customers are browsing.",
   },
   {
     icon: Wrench,
-    title: "Website maintenance",
+    title: "We look after it",
     description:
-      "Keep your site secure and performing well with regular updates, monitoring, and support.",
+      "Updates, monitoring, and support handled for you so the site stays safe without your evenings.",
   },
   {
     icon: Code,
-    title: "Custom development",
+    title: "Built for how you work",
     description:
-      "Tailored web applications, API integrations, custom features, and database design.",
+      "Extra features and connections shaped around your process, not a generic template.",
   },
   {
     icon: Globe,
-    title: "International SEO",
+    title: "Reach beyond one area",
     description:
-      "Multilingual and geo-targeted strategies for businesses expanding beyond a single market.",
+      "Clear structure and language setup when you need customers outside a single local market.",
   },
   {
     icon: FileText,
-    title: "Content strategy",
+    title: "Content that earns trust",
     description:
-      "SEO-optimised copywriting and content planning that engages your audience and drives conversions.",
+      "Copy and page plans that explain what you do and make the next step feel obvious.",
   },
 ];
 
@@ -92,42 +94,45 @@ const processSteps = [
     icon: Search,
     title: "Discovery",
     duration: "1 week",
-    description: "We analyse your business and goals",
+    description: "We learn what should change for your customers",
   },
   {
     number: 2,
     icon: Palette,
     title: "Design",
     duration: "2 weeks",
-    description: "Create conversion-focused mockups",
+    description: "You see layouts built to win the enquiry",
   },
   {
     number: 3,
     icon: Code,
-    title: "Development",
+    title: "Build",
     duration: "3-4 weeks",
-    description: "Build with modern technologies",
+    description: "We build a fast, phone-friendly site",
   },
   {
     number: 4,
     icon: CheckCircle2,
-    title: "Delivery",
-    duration: "Launch",
-    description: "Go live with full training",
+    title: "Launch",
+    duration: "Go live",
+    description: "You go live with clear handover",
   },
 ];
 
-const technologies = [
-  { name: "React", icon: Code },
-  { name: "Next.js", icon: Zap },
-  { name: "Tailwind", icon: Palette },
-  { name: "TypeScript", icon: FileText },
-  { name: "WordPress", icon: Globe },
-  { name: "Shopify", icon: ShoppingCart },
+const outcomeLabels = [
+  { name: "Fast pages", icon: Gauge },
+  { name: "Works on phones", icon: Smartphone },
+  { name: "Easy to update", icon: Wrench },
+  { name: "Secure by default", icon: Shield },
+  { name: "Shows up on Google", icon: Search },
+  { name: "Ready to take payments", icon: Zap },
 ];
 
 export default function Services() {
-  useDocumentTitle("Services");
+  useDocumentTitle(
+    "Services",
+    "Redesign, local search setup, site care, and custom features for UK businesses that want their website to earn enquiries."
+  );
 
   return (
     <div className="bg-white">
@@ -149,14 +154,14 @@ export default function Services() {
             >
               <motion.div variants={fadeInUp}>
                 <MarketingHeading level="h1" variant="display">
-                  Smart, modern websites designed to convert
+                  The site local customers find when they search for what you sell
                 </MarketingHeading>
               </motion.div>
               <motion.p
                 variants={fadeInUp}
                 className="mt-6 text-marketing-lg leading-8 text-marketing-muted max-w-2xl mx-auto"
               >
-                Clear design, solid engineering, and measurable results. We build websites that work as hard as you do.
+                Clear design built to win enquiries, show up in local search, and look more trustworthy than the competition.
               </motion.p>
               <motion.div
                 variants={fadeInUp}
@@ -166,7 +171,7 @@ export default function Services() {
                   to="/contact#book"
                   className="inline-flex items-center justify-center rounded-lg bg-marketing-ink px-6 py-3 text-marketing-base font-semibold text-white transition-colors hover:bg-marketing-forest min-h-[44px]"
                 >
-                  Book a free intro call
+                  Book a 20 min chat
                 </Link>
                 <Link
                   to="/pricing"
@@ -184,10 +189,10 @@ export default function Services() {
           <Container>
             <div className="text-center mb-14">
               <MarketingHeading level="h2" variant="section" className="mb-4">
-                Comprehensive web solutions
+                What you can get from us
               </MarketingHeading>
               <p className="text-marketing-lg text-marketing-muted max-w-2xl mx-auto">
-                From complete redesigns to ongoing maintenance, we cover the full stack of work most businesses need online.
+                From a full redesign to quiet ongoing care, the work most UK businesses actually need online.
               </p>
             </div>
 
@@ -220,10 +225,10 @@ export default function Services() {
           <Container>
             <div className="text-center mb-14">
               <MarketingHeading level="h2" variant="section" className="mb-4">
-                Our process
+                How the work unfolds
               </MarketingHeading>
               <p className="text-marketing-lg text-marketing-muted max-w-2xl mx-auto">
-                A clear path from discovery to launch.
+                A clear path from first chat to a live site that can take enquiries.
               </p>
             </div>
 
@@ -286,31 +291,31 @@ export default function Services() {
           </Container>
         </section>
 
-        {/* Tech stack */}
+        {/* Outcome labels (replaces tech stack names) */}
         <section className="py-16 md:py-24 bg-marketing-cream">
           <Container>
             <div className="text-center mb-14">
               <MarketingHeading level="h2" variant="section" className="mb-4">
-                Built with modern technologies
+                Built to stay fast and secure
               </MarketingHeading>
               <p className="text-marketing-lg text-marketing-muted max-w-2xl mx-auto">
-                We use proven tools so your website stays fast, secure, and scalable.
+                You get a site that loads quickly, works on phones, and is set up properly for the long run.
               </p>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
-              {technologies.map((tech) => {
-                const Icon = tech.icon;
+              {outcomeLabels.map((item) => {
+                const Icon = item.icon;
                 return (
                   <div
-                    key={tech.name}
+                    key={item.name}
                     className="flex flex-col items-center gap-4 rounded-xl border border-marketing-border bg-white p-6"
                   >
                     <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-marketing-forest text-white">
                       <Icon className="h-8 w-8" strokeWidth={1.5} />
                     </div>
-                    <span className="text-marketing-sm font-semibold text-marketing-ink">
-                      {tech.name}
+                    <span className="text-marketing-sm font-semibold text-marketing-ink text-center">
+                      {item.name}
                     </span>
                   </div>
                 );

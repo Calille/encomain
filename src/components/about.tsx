@@ -10,12 +10,12 @@ const values = [
   {
     title: "Fast, and honest about it.",
     description:
-      "Most agencies take eight weeks to build a site because it fills the invoice. We'd rather ship in three and move on. If your project needs longer, we'll tell you why.",
+      "Most agencies take eight weeks because it fills the invoice. We'd rather ship in three when the scope allows. If your project needs longer, we'll say so upfront.",
   },
   {
     title: "Show, don't sell.",
     description:
-      "For a small fee, we'll design and prototype a draft of your site before you commit to the full project. If you go ahead, that cost comes off your final invoice. We'd rather prove what we can build than talk about it.",
+      "For a small fee, we'll draft your site before you commit to the full build. If you go ahead, that fee comes off the final invoice. Better to show you than talk at you.",
   },
   {
     title: "Small on purpose.",
@@ -25,7 +25,10 @@ const values = [
 ];
 
 export default function About() {
-  useDocumentTitle("About");
+  useDocumentTitle(
+    "About",
+    "A small UK studio building websites meant to win enquiries. You talk to the people doing the work."
+  );
 
   return (
     <div className="bg-white">
@@ -41,10 +44,10 @@ export default function About() {
           <Container className="relative pt-16 pb-20 sm:pt-24 sm:pb-24">
             <div className="mx-auto max-w-3xl text-center">
               <MarketingHeading level="h1" variant="display">
-                Two people, one small studio.
+                A small UK studio that builds sites meant to earn enquiries.
               </MarketingHeading>
               <p className="mt-6 text-marketing-lg leading-8 text-marketing-muted max-w-2xl mx-auto">
-                The Enclosure is a small independent studio building websites, SaaS applications, and lead generation systems for businesses that want more than a brochure site.
+                We're two people. You talk to the people doing the work. We help businesses whose website has become a passive brochure get something that looks the part and brings in contact.
               </p>
             </div>
           </Container>
@@ -55,10 +58,10 @@ export default function About() {
           <Container>
             <div className="mx-auto max-w-3xl">
               <MarketingHeading level="h2" variant="section">
-                What we do
+                What that means for you
               </MarketingHeading>
               <p className="mt-6 text-marketing-lg leading-8 text-marketing-muted">
-                We make websites that turn visitors into customers. We build software that gives businesses better internal tools than they'd otherwise have. And we help clients grow, through lead generation, review systems, and the sort of backend work that lets a business focus on what it's actually good at.
+                You get a site designed to win enquiries and show up for local search, plus the quiet systems behind it when you need them. We handle the build and the fiddly bits so you can stay on the work you're good at.
               </p>
             </div>
           </Container>
@@ -95,10 +98,10 @@ export default function About() {
           <Container>
             <div className="mx-auto max-w-3xl">
               <MarketingHeading level="h2" variant="section">
-                What we build
+                What you can get
               </MarketingHeading>
               <p className="mt-6 text-marketing-lg leading-8 text-marketing-muted">
-                Web design, custom web applications, SaaS products, CRM builds, integrations, and automation. If you want a clear view of fixed packages versus bespoke work, see our{" "}
+                Business websites, booking and enquiry flows, and custom tools when a standard site isn't enough. For fixed packages versus bespoke work, see our{" "}
                 <Link
                   to="/pricing"
                   className="font-semibold text-marketing-forest hover:text-marketing-forest-dark underline underline-offset-2"
@@ -116,14 +119,14 @@ export default function About() {
           <Container>
             <div className="mx-auto max-w-2xl text-center">
               <MarketingHeading level="h2" variant="section" tone="dark">
-                Ready to talk about your project?
+                Curious what we'd change on your site?
               </MarketingHeading>
               <div className="mt-8">
                 <Link
                   to="/contact#book"
                   className="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-marketing-base font-semibold text-marketing-forest transition-colors hover:bg-marketing-mint min-h-[44px]"
                 >
-                  Book a free intro call
+                  Book a 20 min chat
                 </Link>
               </div>
             </div>

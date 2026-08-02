@@ -8,7 +8,7 @@ export default function TrustSection() {
         <div className="mx-auto max-w-[1100px]">
           <div className="mb-16 text-center">
             <MarketingHeading level="p" variant="eyebrow">
-              Leadership
+              Who you'll work with
             </MarketingHeading>
           </div>
 
@@ -29,10 +29,10 @@ export default function TrustSection() {
                 Josh Wicks
               </h3>
               <p className="mb-5 text-marketing-sm tracking-wide text-marketing-muted">
-                Dev (UI/UX)
+                Design and build
               </p>
               <p className="mx-auto max-w-[420px] text-marketing-base leading-relaxed text-marketing-muted">
-                Designs and builds intuitive digital experiences. Focused on creating accessible, high-performing websites.
+                Designs and builds the site you'll actually use. Focused on clear journeys, phone-friendly layouts, and pages that ask for the enquiry.
               </p>
             </div>
 
@@ -52,10 +52,10 @@ export default function TrustSection() {
                 Will Mitchell
               </h3>
               <p className="mb-5 text-marketing-sm tracking-wide text-marketing-muted">
-                Auto Marketing
+                Growth and automation
               </p>
               <p className="mx-auto max-w-[420px] text-marketing-base leading-relaxed text-marketing-muted">
-                Drives growth through intelligent automation. Specialises in AI-powered marketing solutions.
+                Helps the site keep working after launch: the follow-ups, tracking, and quiet systems that save you time.
               </p>
             </div>
           </div>
@@ -63,7 +63,7 @@ export default function TrustSection() {
           <div className="mx-auto mb-20 h-px w-[60px] bg-marketing-border" />
 
           <p className="mx-auto mb-16 max-w-[780px] text-center text-marketing-base leading-relaxed text-marketing-muted">
-            Founded in 2020 to help small businesses compete online through quality website redesigns.
+            Founded in 2020 to help small UK businesses compete online with sites that look the part and bring in work.
           </p>
 
           <div className="mx-auto grid max-w-3xl grid-cols-1 gap-8 sm:grid-cols-3">
@@ -80,7 +80,7 @@ export default function TrustSection() {
                 100%
               </span>
               <span className="mt-2 text-marketing-sm text-marketing-muted">
-                Satisfaction
+                Client satisfaction
               </span>
             </div>
             <div className="flex flex-col items-center">
@@ -88,7 +88,7 @@ export default function TrustSection() {
                 85%
               </span>
               <span className="mt-2 text-marketing-sm text-marketing-muted">
-                Conversion increase
+                Average lift in enquiries
               </span>
             </div>
           </div>

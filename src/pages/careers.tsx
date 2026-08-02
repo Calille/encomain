@@ -7,7 +7,10 @@ import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { Mail, Check, Calendar, DollarSign, Sparkles } from "lucide-react";
 
 export default function Careers() {
-  useDocumentTitle("Careers");
+  useDocumentTitle(
+    "Careers",
+    "Freelance web projects with The Enclosure. Flexible, remote collaboration for developers and designers."
+  );
 
   const scrollToApply = () => {
     const applySection = document.getElementById("apply");
@@ -21,18 +24,18 @@ export default function Careers() {
       icon: Calendar,
       title: "Flexible work",
       description:
-        "Work on projects that fit your schedule and skills, fully remote and asynchronous.",
+        "Projects that fit your schedule and skills. Fully remote and asynchronous.",
     },
     {
       icon: DollarSign,
       title: "Fair pay",
-      description: "Transparent project-based payments, always agreed upfront.",
+      description: "Project-based pay, agreed upfront. No surprises.",
     },
     {
       icon: Sparkles,
       title: "Creative freedom",
       description:
-        "Collaborate on builds using React, Next.js, and modern design tools.",
+        "Collaborate on real client builds with modern design and front-end tools.",
     },
   ];
 
@@ -59,10 +62,10 @@ export default function Careers() {
           <Container className="relative pb-20 pt-16 sm:pb-24 sm:pt-24">
             <div className="mx-auto max-w-3xl text-center">
               <MarketingHeading level="h1" variant="display">
-                Join our network of freelance developers
+                Join our freelance network
               </MarketingHeading>
               <p className="mx-auto mt-6 max-w-2xl text-marketing-lg leading-8 text-marketing-muted">
-                We're always looking for talented developers, designers, and digital creators to collaborate on web projects. Work flexibly, build beautiful websites, and get paid for what you love doing.
+                We're often looking for developers, designers, and digital creators to collaborate on client web projects. Flexible, remote, project-based work with clear scope and pay.
               </p>
               <div className="mt-10">
                 <button
@@ -118,10 +121,10 @@ export default function Careers() {
               <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
                 <div>
                   <p className="mb-6 text-marketing-lg leading-relaxed text-marketing-muted">
-                    We collaborate with skilled professionals who bring creativity and technical expertise to every project. Whether you're a specialist in modern frameworks or a versatile full-stack developer, we'd love to hear from you.
+                    We work with freelancers who bring solid craft to client projects. Whether you specialise in front-end work or cover the full stack, get in touch if the skills below sound like you.
                   </p>
                   <p className="text-marketing-lg leading-relaxed text-marketing-muted">
-                    If you're passionate about modern design, clean code, and problem-solving, you'll fit right in.
+                    If you care about clear design, clean code, and finishing work properly, you'll fit in.
                   </p>
                 </div>
 
@@ -186,16 +189,16 @@ export default function Careers() {
           <Container>
             <div className="mx-auto max-w-3xl text-center">
               <MarketingHeading level="h2" variant="section" tone="dark" className="mb-6">
-                Let's build something brilliant together
+                Interested in working with us?
               </MarketingHeading>
               <p className="mb-10 text-marketing-xl leading-relaxed text-white/80">
-                We collaborate with developers who love clean design, efficient builds, and careful craft. Think you'd fit in?
+                We work with freelancers who value clean design, efficient builds, and careful craft. If that sounds like you, send a short note.
               </p>
               <button
                 onClick={scrollToApply}
                 className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-white px-8 py-3 text-marketing-base font-semibold text-marketing-forest transition-colors hover:bg-marketing-mint"
               >
-                Get in touch
+                Apply now
               </button>
             </div>
           </Container>

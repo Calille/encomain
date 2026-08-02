@@ -69,12 +69,12 @@ export default function Contact() {
             Contact
           </MarketingHeading>
           <MarketingHeading level="h2" variant="section" tone="dark" className="mt-2">
-            Ready to talk about your project?
+            Tell us what's not working
           </MarketingHeading>
           <p className="mt-6 text-marketing-lg leading-8 text-white/80">
-            Fill out the form below and we'll get back to you within 24 hours. Or{" "}
+            Send a short note and we'll reply within 24 hours. Or{" "}
             <a href="/contact#book" className="underline underline-offset-2 hover:text-white">
-              book a free intro call
+              book a 20 min chat
             </a>
             . Prefer WhatsApp?{" "}
             <a

@@ -6,10 +6,10 @@ export default function WhatWeDoSection() {
     <section className="mx-auto max-w-6xl px-8 py-16">
       <div className="mb-12 text-center">
         <MarketingHeading level="h2" variant="section">
-          Building digital experiences that convert.
+          You get a site that works as hard as you do.
         </MarketingHeading>
         <p className="mx-auto mt-4 max-w-2xl text-marketing-lg text-marketing-muted">
-          We design intelligent, high-performing websites that merge clean design, smart strategy, and seamless user experience.
+          We design around the outcome that matters: more of the right people finding you, trusting you, and getting in touch.
         </p>
       </div>
 
@@ -20,39 +20,39 @@ export default function WhatWeDoSection() {
 
 export const projects = [
   {
-    title: "Strategic web design",
+    title: "Built to win enquiries",
     description:
-      "We craft conversion-focused websites designed around clear goals, modern aesthetics, and exceptional user experience.",
+      "You get pages shaped around what you sell and how customers buy, so the next step is obvious.",
     link: "#web-design",
   },
   {
-    title: "Brand identity",
+    title: "Look like the obvious choice",
     description:
-      "From logos to typography, we create cohesive brand systems that communicate trust, clarity, and personality across every touchpoint.",
+      "Local customers should see a site that feels as trustworthy as the best competitor in your area, without looking like a template.",
     link: "#brand-identity",
   },
   {
-    title: "UI / UX design",
+    title: "Easy to use on a phone",
     description:
-      "Beautiful interfaces meet effortless navigation. We design intuitive digital experiences that keep visitors engaged and exploring.",
+      "Most people will find you on mobile. You get a site that loads cleanly and makes booking or contacting you simple.",
     link: "#ui-ux",
   },
   {
-    title: "AI-powered optimisation",
+    title: "Know what's working",
     description:
-      "Leverage automation and analytics to refine performance, SEO, and user satisfaction, keeping your website smart and efficient.",
+      "You can see where enquiries come from and what people look at, so you're not guessing.",
     link: "#ai-optimization",
   },
   {
-    title: "Content and copywriting",
+    title: "Words that ask for the sale",
     description:
-      "Persuasive, clear, and conversion-driven. We write copy that connects with your audience and drives measurable action.",
+      "Clear copy in your customers' language: what you do, why you're the right fit, and how to get in touch.",
     link: "#copywriting",
   },
   {
-    title: "Maintenance and growth",
+    title: "We keep it ticking",
     description:
-      "Stay ahead with ongoing updates, performance tracking, and support designed to evolve your site as your business grows.",
+      "Updates, fixes, and small changes handled for you, so you're not fiddling with the site after hours.",
     link: "#maintenance",
   },
 ];

@@ -72,7 +72,7 @@ const translations: Translations = {
     "footer.cta": "Ready to transform your website?",
     "footer.ctaButton": "Let's Talk",
     "footer.tagline":
-      "If your website looks like it's from 2013, it is costing you leads.",
+      "If your website looks like it's from 2013, it's costing you enquiries.",
     "footer.navigation": "Navigation",
     "footer.services": "Services",
     "footer.company": "Company",
