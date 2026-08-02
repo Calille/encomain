@@ -10,7 +10,7 @@ export const MARKETING_CONFIG = {
     // International format, no leading + or 0
     number: "447877700777",
     // Pre-filled message shown when the user opens the chat
-    defaultMessage: "Hi, I'd like to chat about a project.",
+    defaultMessage: "Hi, I'd like a quick chat about what's not working on our website.",
   },
 };
 

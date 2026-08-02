@@ -13,7 +13,7 @@ type Message = {
 const initialMessages: Message[] = [
   {
     id: 1,
-    text: "Hi there. I'm the Enclosure assistant. How can I help with your website or project today?",
+    text: "Hi. I'm the Enclosure assistant. Ask about packages, timing, or what's included, or book a short intro call.",
     sender: "bot",
     timestamp: new Date(),
   },
@@ -109,7 +109,7 @@ export function Chatbot() {
     setTimeout(() => {
       const newBotMessage: Message = {
         id: Date.now() + 1,
-        text: "Thanks for providing your email. One of our team will reach out shortly to schedule your free intro call. In the meantime, feel free to ask any other questions.",
+        text: "Thanks for providing your email. One of our team will reach out shortly to schedule your intro call. In the meantime, feel free to ask any other questions.",
         sender: "bot",
         timestamp: new Date(),
       };
@@ -131,7 +131,7 @@ export function Chatbot() {
       lowerMessage.includes("pricing")
     ) {
       return {
-        text: "We offer fixed packages for standard web work, plus bespoke quotes for custom builds. You can see the full breakdown on our pricing page, or book a free intro call and we'll help you choose the right fit.",
+        text: "We offer fixed packages for standard web work, plus bespoke quotes for custom builds. You can see the full breakdown on our pricing page, or book a 20 min chat and we'll help you choose the right fit.",
         showEmailCapture: true,
       };
     } else if (
@@ -163,7 +163,7 @@ export function Chatbot() {
       lowerMessage.includes("meeting")
     ) {
       return {
-        text: "You can book a free intro call on our contact page. No pitch, no strings, just a conversation about what you're trying to build. Would you like to leave your email so we can follow up?",
+        text: "You can book a 20 min chat on our contact page. No hard sell, just a look at your current site and what we'd change. Would you like to leave your email so we can follow up?",
         showEmailCapture: true,
       };
     } else if (
@@ -173,7 +173,7 @@ export function Chatbot() {
       lowerMessage.includes("begin")
     ) {
       return {
-        text: "To get started we'll need your current website URL if you have one, brand assets, content for your pages, and a sense of your audience and goals. If you don't have everything ready, we can help. Would you like to book a free intro call?",
+        text: "To get started we'll need your current website URL if you have one, brand assets, content for your pages, and a sense of your audience and goals. If you don't have everything ready, we can help. Would you like to book a 20 min chat?",
         showEmailCapture: true,
       };
     } else if (
@@ -183,7 +183,7 @@ export function Chatbot() {
       lowerMessage.includes("ongoing")
     ) {
       return {
-        text: "Yes. We offer ongoing maintenance to keep your website secure, fast, and up to date, including updates, monitoring, and technical support.",
+        text: "Yes. We look after updates, monitoring, and support so your site stays fast and secure without you managing it.",
         showEmailCapture: false,
       };
     } else if (
@@ -193,7 +193,7 @@ export function Chatbot() {
       lowerMessage.includes("search")
     ) {
       return {
-        text: "SEO is part of every site we build, including on-page setup, fast loading speeds, and mobile responsiveness. We can also discuss deeper SEO strategy on an intro call.",
+        text: "Every site is set up so local search has a fair shot: clear pages, sensible titles, and a fast, phone-friendly build. We can talk through a deeper plan on an intro call.",
         showEmailCapture: true,
       };
     } else if (
@@ -203,7 +203,7 @@ export function Chatbot() {
       lowerMessage.includes("previous")
     ) {
       return {
-        text: "We're happy to walk through relevant examples on a free intro call and talk about what would suit your industry and goals.",
+        text: "We're happy to walk through relevant examples on a 20 min chat and talk about what would suit your industry and goals.",
         showEmailCapture: true,
       };
     } else if (
@@ -222,7 +222,7 @@ export function Chatbot() {
       lowerMessage.includes("stack")
     ) {
       return {
-        text: "We build with modern tools including React, Next.js, TypeScript, and Tailwind CSS. Sites are responsive, accessible, and built with performance and security in mind.",
+        text: "Sites are built to be fast, phone-friendly, and secure. You don't need to worry about the tools underneath.",
         showEmailCapture: false,
       };
     } else if (
@@ -232,12 +232,12 @@ export function Chatbot() {
       lowerMessage.includes("reach")
     ) {
       return {
-        text: "You can reach us at josh@theenclosure.co.uk, message us on WhatsApp from the contact page, or book a free intro call there.",
+        text: "You can reach us at josh@theenclosure.co.uk, message us on WhatsApp from the contact page, or book a 20 min chat there.",
         showEmailCapture: true,
       };
     } else {
       return {
-        text: "Thanks for your message. For the most accurate answer, it's often best to speak with us directly. Would you like to book a free intro call?",
+        text: "Thanks for your message. For the most accurate answer, it's often best to speak with us directly. Would you like to book a 20 min chat?",
         showEmailCapture: true,
       };
     }
@@ -324,7 +324,7 @@ export function Chatbot() {
           {showEmailCapture && (
             <div className="border-t border-marketing-border bg-marketing-forest/5 p-4">
               <p className="mb-2 text-marketing-sm text-marketing-muted">
-                Enter your email to schedule a free intro call:
+                Enter your email to schedule a 20 min chat:
               </p>
               <div className="flex gap-2">
                 <Input

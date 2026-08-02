@@ -14,44 +14,44 @@ export default function FAQ() {
 
   const faqs: FaqItem[] = [
     {
-      question: "How much do I need to pay upfront to get started?",
+      question: "How much do I need to pay upfront?",
       answer:
-        "We typically require a deposit to begin your project. The remaining balance can be paid through flexible instalments based on your package. Exact terms are confirmed on your intro call.",
+        "We usually take a deposit to start. The rest can be staged by package. Exact terms are confirmed on your intro call.",
     },
     {
-      question: "How long does it take to complete a website?",
+      question: "How long does a website take?",
       answer:
-        "Timelines vary by package and content readiness. Most standard sites take a few weeks once assets are approved. We'll set clear expectations before work begins.",
+        "It depends on the package and how ready your content is. Most standard sites take a few weeks once assets are approved. We'll set expectations before we start.",
     },
     {
-      question: "Do you offer ongoing maintenance after launch?",
+      question: "Do you look after the site after launch?",
       answer:
-        "Yes. We can handle security updates, performance checks, and content changes so your site stays fast, secure, and up to date.",
+        "Yes. Updates, checks, and small content changes so the site stays fast and secure without you managing it.",
     },
     {
-      question: "Can I make changes to my website after it's launched?",
+      question: "Can I change things after launch?",
       answer:
-        "Yes. You'll have full access to your site, and packages can include monthly content updates. Larger edits or new pages can be added as ongoing care.",
+        "Yes. You'll have access to your site, and packages can include monthly updates. Bigger edits or new pages can be added as ongoing care.",
     },
     {
-      question: "What happens if I need more than the included pages?",
+      question: "What if I need more pages later?",
       answer:
-        "Additional pages can be added after the initial build. Each new page is designed, made mobile-friendly, and integrated into your existing site.",
+        "Extra pages can be added after the first build. Each one is designed, phone-friendly, and fitted into your existing site.",
     },
     {
-      question: "Do you provide domain registration or hosting?",
+      question: "Do you provide domain or hosting?",
       answer:
-        "Domain registration isn't included, but we'll guide you through purchasing the right one. We assist with hosting setup and SSL so your site is secure and live-ready.",
+        "Domain registration isn't included, but we'll guide you through buying the right one. Hosting setup and security certificates are part of getting you live.",
     },
     {
-      question: "Can I cancel my maintenance plan at any time?",
+      question: "Can I cancel the retainer any time?",
       answer:
-        "Ongoing plans are month-to-month with no long-term contracts. You can cancel with 30 days' notice, and your website remains fully yours.",
+        "Yes. Month-to-month, no long-term lock-in. Cancel with 30 days' notice. The website remains yours.",
     },
     {
-      question: "What if I don't have content or branding ready yet?",
+      question: "What if I don't have content ready yet?",
       answer:
-        "We can help you develop brand identity, content strategy, and copywriting before the build begins so your site launches with strong visuals and messaging.",
+        "We can help with branding and copy before the build so you don't launch with half-finished pages.",
     },
   ];
 
@@ -67,10 +67,10 @@ export default function FAQ() {
             Frequently asked questions
           </MarketingHeading>
           <MarketingHeading level="h2" variant="section" className="mt-2">
-            Common questions answered
+            Common questions
           </MarketingHeading>
           <p className="mx-auto mt-6 max-w-2xl text-marketing-lg leading-8 text-marketing-muted">
-            Answers to the questions we hear most about our process and packages.
+            Straight answers about timing, cost, and what happens after launch.
           </p>
         </div>
 
@@ -110,7 +110,7 @@ export default function FAQ() {
               to="/contact#book"
               className="font-semibold text-marketing-forest hover:underline"
             >
-              Book a free intro call
+              Book a 20 min chat
             </Link>{" "}
             and we'll help.
           </p>

@@ -27,7 +27,7 @@ export default function Footer() {
             <p className="text-marketing-sm leading-6 text-marketing-ink">
               {t(
                 "footer.tagline",
-                "If your website looks like it's from 2013, it is costing you leads."
+                "If your website looks like it's from 2013, it's costing you enquiries."
               )}
             </p>
             <div className="space-y-3">
@@ -45,7 +45,7 @@ export default function Footer() {
                 className="flex items-center gap-2 text-marketing-sm text-marketing-muted transition-colors hover:text-marketing-forest"
               >
                 <MessageCircle className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
-                WhatsApp
+                Message us on WhatsApp
               </a>
             </div>
           </div>
@@ -86,7 +86,7 @@ export default function Footer() {
                       to="/services"
                       className="text-marketing-sm leading-6 text-marketing-forest transition-colors hover:text-marketing-forest-dark hover:underline"
                     >
-                      SEO optimisation
+                      Get found locally
                     </Link>
                   </li>
                   <li>
@@ -94,7 +94,7 @@ export default function Footer() {
                       to="/services"
                       className="text-marketing-sm leading-6 text-marketing-forest transition-colors hover:text-marketing-forest-dark hover:underline"
                     >
-                      E-commerce solutions
+                      Sell online without the faff
                     </Link>
                   </li>
                   <li>
@@ -102,7 +102,7 @@ export default function Footer() {
                       to="/services"
                       className="text-marketing-sm leading-6 text-marketing-forest transition-colors hover:text-marketing-forest-dark hover:underline"
                     >
-                      Website maintenance
+                      Site care and updates
                     </Link>
                   </li>
                 </ul>

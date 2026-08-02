@@ -4,44 +4,44 @@ import { MarketingHeading } from "./marketing/marketing-heading";
 
 const includedFeatures = [
   {
-    title: "Responsive design",
+    title: "Works on phones",
     description:
-      "Your website will look and work well on desktops, tablets, and smartphones.",
+      "Customers can browse and contact you cleanly from any device.",
   },
   {
-    title: "Custom branding",
+    title: "Looks like your business",
     description:
-      "We'll incorporate your brand colours, logos, and style guidelines for a consistent visual identity.",
+      "Your colours, logo, and tone carried through so the site feels like you, not a template.",
   },
   {
-    title: "SEO optimisation",
+    title: "Set up to be found",
     description:
-      "Built-in SEO best practices to help improve rankings and drive more organic traffic.",
+      "Page titles, structure, and basics in place so local search has something solid to work with.",
   },
   {
-    title: "Performance tuning",
+    title: "Loads quickly",
     description:
-      "Optimised code and images for fast loading speeds and a better user experience.",
+      "Fast pages so people don't bounce before they read who you are.",
   },
   {
-    title: "Content creation",
+    title: "Copy that earns replies",
     description:
-      "Professional copywriting that highlights your value proposition and converts visitors.",
+      "Clear wording that explains what you do and nudges people to enquire.",
   },
   {
-    title: "Lead generation forms",
+    title: "Easy ways to enquire",
     description:
-      "Strategic placement of contact forms and CTAs to capture leads and grow your business.",
+      "Forms and contact points placed where people are ready to act.",
   },
   {
-    title: "Analytics integration",
+    title: "See where interest comes from",
     description:
-      "Track visitor behaviour and conversion metrics to measure your website's performance.",
+      "Simple tracking so you know which pages and sources lead to contact.",
   },
   {
-    title: "30-day support",
+    title: "Support after go-live",
     description:
-      "Post-launch technical support and adjustments to help everything run smoothly.",
+      "A short window of hands-on help so launch week isn't left to you alone.",
   },
 ];
 
@@ -54,10 +54,10 @@ export default function WhatsIncluded() {
             What's included
           </MarketingHeading>
           <MarketingHeading level="h2" variant="section" className="mt-2">
-            Everything you need for a solid launch
+            The basics that help a site earn its keep
           </MarketingHeading>
           <p className="mx-auto mt-6 max-w-2xl text-marketing-lg leading-8 text-marketing-muted">
-            Our website packages include the essentials needed to create a high-performing online presence.
+            Every package is set up so visitors can find you, trust you, and get in touch without friction.
           </p>
         </div>
 
