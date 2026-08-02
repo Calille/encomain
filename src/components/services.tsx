@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -23,6 +24,8 @@ import { Container } from "./ui/container";
 import { AnimatedBackground } from "./ui/animated-background";
 import { MarketingHeading } from "./marketing/marketing-heading";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+
+const SERVICES_JSON_LD_ID = "services-json-ld";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -133,6 +136,42 @@ export default function Services() {
     "Services",
     "Redesign, local search setup, site care, and custom features for UK businesses that want their website to earn enquiries."
   );
+
+  useEffect(() => {
+    const existing = document.getElementById(SERVICES_JSON_LD_ID);
+    if (existing) existing.remove();
+
+    const script = document.createElement("script");
+    script.id = SERVICES_JSON_LD_ID;
+    script.type = "application/ld+json";
+    script.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      itemListElement: services.map((service, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "Service",
+          name: service.title,
+          description: service.description,
+          provider: {
+            "@type": "Organization",
+            name: "The Enclosure",
+            url: "https://theenclosure.co.uk",
+          },
+          areaServed: {
+            "@type": "Country",
+            name: "GB",
+          },
+        },
+      })),
+    });
+    document.head.appendChild(script);
+
+    return () => {
+      document.getElementById(SERVICES_JSON_LD_ID)?.remove();
+    };
+  }, []);
 
   return (
     <div className="bg-white">

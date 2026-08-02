@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /change-password
+Disallow: /audit/
+Disallow: /unsubscribe/
+Disallow: /account-deleted
+
+Sitemap: https://theenclosure.co.uk/sitemap.xml
