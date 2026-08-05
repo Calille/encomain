@@ -1,5 +1,3 @@
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   Palette,
   Search,
@@ -19,23 +17,12 @@ import Footer from "./footer";
 import CTA from "./cta";
 import { Chatbot } from "./ui/chatbot";
 import StickyCTA from "./sticky-cta";
-import { Container } from "./ui/container";
-import { AnimatedBackground } from "./ui/animated-background";
 import { MarketingHeading } from "./marketing/marketing-heading";
+import { MarketingCard, MarketingCardIcon } from "./marketing/marketing-card";
+import { CtaButton } from "./marketing/cta-button";
+import { PageHero } from "./marketing/page-hero";
+import { Section } from "./marketing/section";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
-
-const fadeInUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 },
-  },
-};
 
 const services = [
   {
@@ -138,121 +125,89 @@ export default function Services() {
     <div className="bg-white">
       <Header />
       <main>
-        {/* Soft mint hero (matches About / Contact / Careers) */}
-        <section className="relative bg-marketing-mint pt-32 overflow-hidden">
-          <div className="absolute inset-0 overflow-hidden">
-            <AnimatedBackground />
-            <div className="absolute left-0 top-0 h-full w-full bg-marketing-mint opacity-90" />
-          </div>
-
-          <Container className="relative pt-16 pb-20 sm:pt-24 sm:pb-24">
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={staggerContainer}
-              className="mx-auto max-w-3xl text-center"
-            >
-              <motion.div variants={fadeInUp}>
-                <MarketingHeading level="h1" variant="display">
-                  The site local customers find when they search for what you sell
-                </MarketingHeading>
-              </motion.div>
-              <motion.p
-                variants={fadeInUp}
-                className="mt-6 text-marketing-lg leading-8 text-marketing-muted max-w-2xl mx-auto"
-              >
-                Clear design built to win enquiries, show up in local search, and look more trustworthy than the competition.
-              </motion.p>
-              <motion.div
-                variants={fadeInUp}
-                className="mt-10 flex flex-col sm:flex-row gap-4 justify-center"
-              >
-                <Link
-                  to="/contact#book"
-                  className="inline-flex items-center justify-center rounded-lg bg-marketing-ink px-6 py-3 text-marketing-base font-semibold text-white transition-colors hover:bg-marketing-forest min-h-[44px]"
-                >
-                  Book a 20 min chat
-                </Link>
-                <Link
-                  to="/pricing"
-                  className="inline-flex items-center justify-center rounded-lg border border-marketing-forest px-6 py-3 text-marketing-base font-semibold text-marketing-forest transition-colors hover:bg-marketing-forest/10 min-h-[44px]"
-                >
-                  See our packages
-                </Link>
-              </motion.div>
-            </motion.div>
-          </Container>
-        </section>
+        <PageHero
+          title="The site local customers find when they search for what you sell"
+          description="Clear design built to win enquiries, show up in local search, and look more trustworthy than the competition."
+          actions={
+            <>
+              <CtaButton to="/contact#book" variant="on-dark" size="lg">
+                Book a 20 min chat
+              </CtaButton>
+              <CtaButton to="/pricing" variant="ghost-dark" size="lg">
+                See our packages
+              </CtaButton>
+            </>
+          }
+        />
 
         {/* Services grid */}
-        <section className="py-16 md:py-24 bg-marketing-mint">
-          <Container>
-            <div className="text-center mb-14">
-              <MarketingHeading level="h2" variant="section" className="mb-4">
-                What you can get from us
-              </MarketingHeading>
-              <p className="text-marketing-lg text-marketing-muted max-w-2xl mx-auto">
-                From a full redesign to quiet ongoing care, the work most UK businesses actually need online.
-              </p>
-            </div>
+        <Section tone="mist">
+          <div className="mx-auto mb-14 max-w-2xl text-center">
+            <MarketingHeading level="h2" variant="section" className="mb-4">
+              What you can get from us
+            </MarketingHeading>
+            <p className="text-marketing-lg text-marketing-muted">
+              From a full redesign to quiet ongoing care, the work most UK businesses actually need online.
+            </p>
+          </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {services.map((service) => {
-                const Icon = service.icon;
-                return (
-                  <article
-                    key={service.title}
-                    className="rounded-2xl border border-marketing-border bg-white p-8"
-                  >
-                    <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-lg bg-marketing-forest">
-                      <Icon className="h-7 w-7 text-white" strokeWidth={1.5} aria-hidden="true" />
-                    </div>
-                    <h3 className="font-marketing-display text-marketing-xl font-medium text-marketing-ink mb-3">
-                      {service.title}
-                    </h3>
-                    <p className="text-marketing-base text-marketing-muted leading-relaxed">
-                      {service.description}
-                    </p>
-                  </article>
-                );
-              })}
-            </div>
-          </Container>
-        </section>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {services.map((service) => {
+              const Icon = service.icon;
+              return (
+                <MarketingCard key={service.title} interactive accentEdge>
+                  <MarketingCardIcon>
+                    <Icon className="h-6 w-6" strokeWidth={1.75} aria-hidden="true" />
+                  </MarketingCardIcon>
+                  <h3 className="mb-3 font-marketing-display text-marketing-xl font-medium text-marketing-ink">
+                    {service.title}
+                  </h3>
+                  <p className="text-marketing-base leading-relaxed text-marketing-muted">
+                    {service.description}
+                  </p>
+                </MarketingCard>
+              );
+            })}
+          </div>
+        </Section>
 
         {/* Process */}
-        <section className="py-16 md:py-24 bg-white">
-          <Container>
-            <div className="text-center mb-14">
-              <MarketingHeading level="h2" variant="section" className="mb-4">
+        <Section tone="navy" hairline className="overflow-hidden">
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-[420px] w-[860px] max-w-[120vw] rounded-full bg-marketing-blue/10 blur-[150px]"
+            aria-hidden="true"
+          />
+          <div className="relative">
+            <div className="mx-auto mb-14 max-w-2xl text-center">
+              <MarketingHeading level="h2" variant="section" tone="dark" className="mb-4">
                 How the work unfolds
               </MarketingHeading>
-              <p className="text-marketing-lg text-marketing-muted max-w-2xl mx-auto">
+              <p className="text-marketing-lg text-marketing-sky/80">
                 A clear path from first chat to a live site that can take enquiries.
               </p>
             </div>
 
             <div className="hidden md:block">
               <div className="relative">
-                <div className="absolute top-12 left-0 right-0 h-px bg-marketing-border" />
-                <div className="grid grid-cols-4 gap-8 relative">
+                <div className="marketing-hairline absolute left-0 right-0 top-12 h-px" />
+                <div className="relative grid grid-cols-4 gap-8">
                   {processSteps.map((step) => {
                     const Icon = step.icon;
                     return (
                       <div key={step.number} className="text-center">
-                        <div className="relative mx-auto mb-6 inline-flex h-24 w-24 items-center justify-center rounded-full bg-marketing-forest text-white font-semibold text-marketing-2xl shadow-sm">
+                        <div className="marketing-glow-lg relative mx-auto mb-6 inline-flex h-24 w-24 items-center justify-center rounded-full bg-marketing-blue text-marketing-2xl font-semibold text-white">
                           <span>{step.number}</span>
-                          <div className="absolute -bottom-2 right-0 flex h-10 w-10 items-center justify-center rounded-full bg-marketing-forest-dark">
-                            <Icon className="h-5 w-5 text-white" strokeWidth={1.5} />
+                          <div className="absolute -bottom-2 right-0 flex h-10 w-10 items-center justify-center rounded-full bg-marketing-navy-800 ring-1 ring-marketing-blue/40">
+                            <Icon className="h-5 w-5 text-marketing-sky" strokeWidth={1.5} />
                           </div>
                         </div>
-                        <h3 className="font-marketing-display text-marketing-xl font-medium text-marketing-ink mb-2">
+                        <h3 className="mb-2 font-marketing-display text-marketing-xl font-medium text-white">
                           {step.title}
                         </h3>
-                        <p className="text-marketing-sm font-semibold text-marketing-forest mb-2">
+                        <p className="mb-2 text-marketing-sm font-semibold uppercase tracking-[0.12em] text-marketing-blue-bright">
                           {step.duration}
                         </p>
-                        <p className="text-marketing-sm text-marketing-muted">
+                        <p className="text-marketing-sm text-marketing-sky/80">
                           {step.description}
                         </p>
                       </div>
@@ -262,25 +217,25 @@ export default function Services() {
               </div>
             </div>
 
-            <div className="md:hidden space-y-8">
+            <div className="space-y-8 md:hidden">
               {processSteps.map((step) => {
                 const Icon = step.icon;
                 return (
                   <div key={step.number} className="flex gap-6">
-                    <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-marketing-forest text-white font-semibold text-marketing-xl">
+                    <div className="marketing-glow-lg relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-marketing-blue text-marketing-xl font-semibold text-white">
                       {step.number}
-                      <div className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-marketing-forest-dark">
-                        <Icon className="h-4 w-4 text-white" strokeWidth={1.5} />
+                      <div className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-marketing-navy-800 ring-1 ring-marketing-blue/40">
+                        <Icon className="h-4 w-4 text-marketing-sky" strokeWidth={1.5} />
                       </div>
                     </div>
                     <div>
-                      <h3 className="font-marketing-display text-marketing-xl font-medium text-marketing-ink mb-1">
+                      <h3 className="mb-1 font-marketing-display text-marketing-xl font-medium text-white">
                         {step.title}
                       </h3>
-                      <p className="text-marketing-sm font-semibold text-marketing-forest mb-2">
+                      <p className="mb-2 text-marketing-sm font-semibold uppercase tracking-[0.12em] text-marketing-blue-bright">
                         {step.duration}
                       </p>
-                      <p className="text-marketing-base text-marketing-muted">
+                      <p className="text-marketing-base text-marketing-sky/80">
                         {step.description}
                       </p>
                     </div>
@@ -288,41 +243,40 @@ export default function Services() {
                 );
               })}
             </div>
-          </Container>
-        </section>
+          </div>
+        </Section>
 
         {/* Outcome labels (replaces tech stack names) */}
-        <section className="py-16 md:py-24 bg-marketing-cream">
-          <Container>
-            <div className="text-center mb-14">
-              <MarketingHeading level="h2" variant="section" className="mb-4">
-                Built to stay fast and secure
-              </MarketingHeading>
-              <p className="text-marketing-lg text-marketing-muted max-w-2xl mx-auto">
-                You get a site that loads quickly, works on phones, and is set up properly for the long run.
-              </p>
-            </div>
+        <Section tone="ice">
+          <div className="mx-auto mb-14 max-w-2xl text-center">
+            <MarketingHeading level="h2" variant="section" className="mb-4">
+              Built to stay fast and secure
+            </MarketingHeading>
+            <p className="text-marketing-lg text-marketing-muted">
+              You get a site that loads quickly, works on phones, and is set up properly for the long run.
+            </p>
+          </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
-              {outcomeLabels.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={item.name}
-                    className="flex flex-col items-center gap-4 rounded-xl border border-marketing-border bg-white p-6"
-                  >
-                    <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-marketing-forest text-white">
-                      <Icon className="h-8 w-8" strokeWidth={1.5} />
-                    </div>
-                    <span className="text-marketing-sm font-semibold text-marketing-ink text-center">
-                      {item.name}
-                    </span>
+          <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-6">
+            {outcomeLabels.map((item) => {
+              const Icon = item.icon;
+              return (
+                <MarketingCard
+                  key={item.name}
+                  interactive
+                  className="flex flex-col items-center gap-4 p-5 text-center sm:p-5"
+                >
+                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-marketing-blue to-marketing-blue-deep text-white">
+                    <Icon className="h-7 w-7" strokeWidth={1.5} />
                   </div>
-                );
-              })}
-            </div>
-          </Container>
-        </section>
+                  <span className="text-marketing-sm font-semibold text-marketing-ink">
+                    {item.name}
+                  </span>
+                </MarketingCard>
+              );
+            })}
+          </div>
+        </Section>
 
         <CTA />
       </main>

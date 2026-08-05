@@ -122,15 +122,6 @@ module.exports = {
           ink: "hsl(var(--marketing-navy-900))",
           muted: "hsl(var(--marketing-muted))",
           border: "hsl(var(--marketing-border))",
-          /*
-            Deprecated green names, remapped onto the blue palette so the site
-            still renders while pages are migrated. Removed once nothing uses them.
-          */
-          forest: "hsl(var(--marketing-blue-deep))",
-          "forest-dark": "hsl(var(--marketing-navy-800))",
-          sage: "hsl(var(--marketing-sky))",
-          mint: "hsl(var(--marketing-mist))",
-          cream: "hsl(var(--marketing-ice))",
         },
       },
       borderRadius: {

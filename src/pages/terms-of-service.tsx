@@ -1,8 +1,7 @@
-import { Container } from "../components/ui/container";
 import Header from "../components/header";
 import Footer from "../components/footer";
-import { AnimatedBackground } from "../components/ui/animated-background";
-import { MarketingHeading } from "../components/marketing/marketing-heading";
+import { PageHero } from "../components/marketing/page-hero";
+import { Section } from "../components/marketing/section";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { Mail, MapPin } from "lucide-react";
 
@@ -13,28 +12,18 @@ export default function TermsOfService() {
     <div className="bg-white">
       <Header />
       <main>
-        <section className="relative overflow-hidden bg-marketing-mint pt-24">
-          <div className="absolute inset-0 overflow-hidden">
-            <AnimatedBackground />
-            <div className="absolute left-0 top-0 h-full w-full bg-marketing-mint opacity-90" />
-          </div>
+        <PageHero
+          size="sm"
+          title={
+            <>
+              Terms of <span className="marketing-gradient-text">service</span>
+            </>
+          }
+          description="Please read these terms and conditions carefully before using our services."
+        />
 
-          <Container className="relative pb-20 pt-16 sm:pb-24 sm:pt-24">
-            <div className="text-center">
-              <MarketingHeading level="h1" variant="display">
-                Terms of <span className="text-marketing-forest">service</span>
-              </MarketingHeading>
-              <p className="mx-auto mt-6 max-w-3xl text-marketing-lg leading-8 text-marketing-muted">
-                Please read these terms and conditions carefully before using
-                our services.
-              </p>
-            </div>
-          </Container>
-        </section>
-
-        <section className="py-24 sm:py-32">
-          <Container>
-            <div className="prose prose-lg mx-auto max-w-3xl prose-headings:font-marketing-display prose-a:text-marketing-forest">
+        <Section tone="white" size="lg">
+            <div className="prose prose-lg mx-auto max-w-3xl prose-headings:font-marketing-display prose-a:text-marketing-blue-deep prose-headings:text-marketing-ink">
               <p className="mb-8 text-marketing-sm text-marketing-muted">
                 <strong>Last Updated:</strong> October 2025
                 <br />
@@ -168,7 +157,7 @@ export default function TermsOfService() {
               <p className="not-prose flex flex-col gap-2 text-marketing-base text-marketing-ink">
                 <a
                   href="mailto:info@theenclosure.co.uk"
-                  className="inline-flex items-center gap-2 text-marketing-forest hover:text-marketing-forest-dark"
+                  className="inline-flex items-center gap-2 text-marketing-blue-deep hover:text-marketing-blue"
                 >
                   <Mail className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                   info@theenclosure.co.uk
@@ -183,8 +172,7 @@ export default function TermsOfService() {
                 Last Updated: October 2025
               </p>
             </div>
-          </Container>
-        </section>
+        </Section>
       </main>
       <Footer />
     </div>

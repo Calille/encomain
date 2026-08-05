@@ -1,8 +1,9 @@
-import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
 import { Check, Code2, Boxes, Zap, Database } from "lucide-react";
-import { Container } from "./ui/container";
 import { MarketingHeading } from "./marketing/marketing-heading";
+import { MarketingCard, MarketingCardIcon } from "./marketing/marketing-card";
+import { CtaButton } from "./marketing/cta-button";
+import { PageHero } from "./marketing/page-hero";
+import { Section } from "./marketing/section";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 const packages = [
@@ -99,23 +100,6 @@ const faqs = [
   },
 ];
 
-function CtaButton({
-  children,
-  className = "",
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <Link
-      to="/contact#book"
-      className={`inline-flex items-center justify-center rounded-lg bg-marketing-ink px-6 py-3 text-marketing-base font-semibold text-white transition-colors hover:bg-marketing-forest min-h-[44px] ${className}`}
-    >
-      {children}
-    </Link>
-  );
-}
-
 export default function PricingSection() {
   useDocumentTitle(
     "Pricing",
@@ -124,183 +108,175 @@ export default function PricingSection() {
 
   return (
     <div className="bg-white">
-      {/* Hero */}
-      <section className="relative bg-marketing-mint pt-32 overflow-hidden">
-        <Container className="relative pt-20 pb-20 sm:pt-28 sm:pb-24">
-          <div className="mx-auto max-w-3xl text-center">
-            <MarketingHeading level="h1" variant="display">
-              Pick a package that matches what you need.
-            </MarketingHeading>
-            <p className="mt-6 text-marketing-lg leading-8 text-marketing-muted max-w-2xl mx-auto">
-              Fixed packages for most business websites, or a bespoke quote when the work is bigger. Every project starts with a short intro call.
-            </p>
-            <div className="mt-10">
-              <CtaButton>Book a 20 min chat</CtaButton>
-            </div>
-          </div>
-        </Container>
-      </section>
+      <PageHero
+        title="Pick a package that matches what you need."
+        description="Fixed packages for most business websites, or a bespoke quote when the work is bigger. Every project starts with a short intro call."
+        actions={
+          <CtaButton to="/contact#book" variant="on-dark" size="lg">
+            Book a 20 min chat
+          </CtaButton>
+        }
+      />
 
       {/* Standard packages */}
-      <section className="py-20 sm:py-28 bg-white">
-        <Container>
-          <div className="mx-auto max-w-2xl text-center mb-14">
-            <MarketingHeading level="h2" variant="section">
-              Standard packages
-            </MarketingHeading>
-            <p className="mt-4 text-marketing-lg text-marketing-muted">
-              Everything you need to go live, then peace of mind after. One-off build fee plus a small monthly retainer so you're not left maintaining it alone.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
-            {packages.map((pkg) => (
-              <div key={pkg.name} className="relative flex flex-col">
-                {pkg.featured && (
-                  <span className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-marketing-forest px-3 py-1 text-marketing-xs font-semibold text-white">
-                    Most popular
-                  </span>
-                )}
-                <article
-                  className={`flex h-full flex-col rounded-2xl border p-8 ${
-                    pkg.featured
-                      ? "border-marketing-forest/30 bg-marketing-mint"
-                      : "border-marketing-border bg-white"
-                  }`}
-                >
-                  <h3 className="font-marketing-display text-marketing-2xl font-medium text-marketing-ink">
-                    {pkg.name}
-                  </h3>
-                  <div className="mt-4">
-                    <p className="font-marketing-display text-marketing-4xl font-semibold text-marketing-forest">
-                      {pkg.oneOff}
-                    </p>
-                    <p className="mt-1 text-marketing-sm text-marketing-ink">
-                      one-off
-                    </p>
-                    <p className="mt-3 text-marketing-sm text-marketing-ink">
-                      {pkg.year1}
-                    </p>
-                    <p className="mt-1 text-marketing-xs text-marketing-muted">
-                      {pkg.year2}
-                    </p>
-                  </div>
-                  <p className="mt-4 text-marketing-base text-marketing-muted">
-                    {pkg.description}
-                  </p>
-                  <ul className="mt-8 flex-1 space-y-3">
-                    {pkg.features.map((feature) => (
-                      <li
-                        key={feature}
-                        className="flex items-start gap-3 text-marketing-sm text-marketing-ink"
-                      >
-                        <Check
-                          className="mt-0.5 h-4 w-4 shrink-0 text-marketing-forest"
-                          strokeWidth={1.5}
-                          aria-hidden="true"
-                        />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-8">
-                    <CtaButton className="w-full">Book a 20 min chat</CtaButton>
-                  </div>
-                </article>
-              </div>
-            ))}
-          </div>
-
-          <p className="mx-auto mt-10 max-w-3xl text-center text-marketing-sm text-marketing-muted leading-relaxed">
-            Prefer to pay annually? Ten months upfront covers the year and saves you two. Paid ads, premium tools, and specialist add-ons are billed at cost when you need them.
+      <Section tone="mist">
+        <div className="mx-auto mb-14 max-w-2xl text-center">
+          <MarketingHeading level="h2" variant="section">
+            Standard packages
+          </MarketingHeading>
+          <p className="mt-4 text-marketing-lg text-marketing-muted">
+            Everything you need to go live, then peace of mind after. One-off build fee plus a small monthly retainer so you're not left maintaining it alone.
           </p>
-        </Container>
-      </section>
+        </div>
+
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3 lg:gap-10">
+          {packages.map((pkg) => (
+            <div key={pkg.name} className="relative flex flex-col">
+              {pkg.featured && (
+                <span className="marketing-glow-sm absolute -top-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-marketing-blue-deep px-3.5 py-1 text-marketing-xs font-semibold text-white">
+                  Most popular
+                </span>
+              )}
+              <MarketingCard
+                interactive
+                accentEdge
+                featured={pkg.featured}
+                className="flex h-full flex-col"
+              >
+                <h3 className="font-marketing-display text-marketing-2xl font-medium text-marketing-ink">
+                  {pkg.name}
+                </h3>
+                <div className="mt-4">
+                  <p className="font-marketing-display text-marketing-4xl font-semibold text-marketing-blue-deep">
+                    {pkg.oneOff}
+                  </p>
+                  <p className="mt-1 text-marketing-sm text-marketing-ink">
+                    one-off
+                  </p>
+                  <p className="mt-3 text-marketing-sm text-marketing-ink">
+                    {pkg.year1}
+                  </p>
+                  <p className="mt-1 text-marketing-xs text-marketing-muted">
+                    {pkg.year2}
+                  </p>
+                </div>
+                <p className="mt-4 text-marketing-base text-marketing-muted">
+                  {pkg.description}
+                </p>
+                <ul className="mt-8 flex-1 space-y-3">
+                  {pkg.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-start gap-3 text-marketing-sm text-marketing-ink"
+                    >
+                      <Check
+                        className="mt-0.5 h-4 w-4 shrink-0 text-marketing-blue-deep"
+                        strokeWidth={2}
+                        aria-hidden="true"
+                      />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-8">
+                  <CtaButton
+                    to="/contact#book"
+                    variant={pkg.featured ? "primary" : "secondary"}
+                    fullWidth
+                  >
+                    Book a 20 min chat
+                  </CtaButton>
+                </div>
+              </MarketingCard>
+            </div>
+          ))}
+        </div>
+
+        <p className="mx-auto mt-10 max-w-3xl text-center text-marketing-sm leading-relaxed text-marketing-muted">
+          Prefer to pay annually? Ten months upfront covers the year and saves you two. Paid ads, premium tools, and specialist add-ons are billed at cost when you need them.
+        </p>
+      </Section>
 
       {/* Bespoke lane */}
-      <section className="py-20 sm:py-28 bg-marketing-cream">
-        <Container>
-          <div className="mx-auto max-w-2xl text-center mb-14">
-            <MarketingHeading level="h2" variant="section">
+      <Section tone="navy" hairline className="overflow-hidden">
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 mx-auto h-[420px] w-[860px] max-w-[120vw] rounded-full bg-marketing-blue/10 blur-[150px]"
+          aria-hidden="true"
+        />
+        <div className="relative">
+          <div className="mx-auto mb-14 max-w-2xl text-center">
+            <MarketingHeading level="h2" variant="section" tone="dark">
               Need something beyond a standard site?
             </MarketingHeading>
-            <p className="mt-4 text-marketing-lg text-marketing-muted">
+            <p className="mt-4 text-marketing-lg text-marketing-sky/85">
               We also build custom tools, customer portals, and the quiet systems that save a team hours each week. Every bespoke project is quoted on scope.
             </p>
           </div>
 
-          <div className="mx-auto grid max-w-4xl grid-cols-1 gap-8 sm:grid-cols-2">
+          <div className="mx-auto grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-2">
             {bespokeOfferings.map((item) => {
               const Icon = item.icon;
               return (
-                <div
-                  key={item.title}
-                  className="rounded-2xl border border-marketing-border bg-white p-8"
-                >
-                  <Icon
-                    className="mb-4 h-7 w-7 text-marketing-forest"
-                    strokeWidth={1.5}
-                    aria-hidden="true"
-                  />
-                  <h3 className="font-marketing-display text-marketing-xl font-medium text-marketing-ink">
+                <MarketingCard key={item.title} tone="dark" interactive accentEdge>
+                  <MarketingCardIcon tone="dark">
+                    <Icon className="h-6 w-6" strokeWidth={1.75} aria-hidden="true" />
+                  </MarketingCardIcon>
+                  <h3 className="font-marketing-display text-marketing-xl font-medium text-white">
                     {item.title}
                   </h3>
-                  <p className="mt-3 text-marketing-base leading-relaxed text-marketing-muted">
+                  <p className="mt-3 text-marketing-base leading-relaxed text-marketing-sky/80">
                     {item.description}
                   </p>
-                </div>
+                </MarketingCard>
               );
             })}
           </div>
 
-          <div className="mt-12 text-center">
-            <CtaButton>Book a 20 min chat about your project</CtaButton>
+          <div className="mt-12 flex justify-center">
+            <CtaButton to="/contact#book" variant="on-dark">
+              Book a 20 min chat about your project
+            </CtaButton>
           </div>
-        </Container>
-      </section>
+        </div>
+      </Section>
 
       {/* Draft-first */}
-      <section className="py-20 sm:py-28 bg-white">
-        <Container>
-          <div className="mx-auto max-w-2xl text-center">
-            <MarketingHeading level="h2" variant="section">
-              Not sure yet? Start with a draft.
-            </MarketingHeading>
-            <p className="mt-4 text-marketing-lg leading-relaxed text-marketing-muted">
-              For a small fee, we'll design a draft of your site before you commit to the full build. If you go ahead, that fee comes off your final invoice.
-            </p>
-            <div className="mt-10">
-              <CtaButton>Book a 20 min chat about a draft</CtaButton>
-            </div>
+      <Section tone="white">
+        <div className="mx-auto max-w-2xl text-center">
+          <MarketingHeading level="h2" variant="section">
+            Not sure yet? Start with a draft.
+          </MarketingHeading>
+          <p className="mt-4 text-marketing-lg leading-relaxed text-marketing-muted">
+            For a small fee, we'll design a draft of your site before you commit to the full build. If you go ahead, that fee comes off your final invoice.
+          </p>
+          <div className="mt-9 flex justify-center">
+            <CtaButton to="/contact#book" variant="primary">
+              Book a 20 min chat about a draft
+            </CtaButton>
           </div>
-        </Container>
-      </section>
+        </div>
+      </Section>
 
       {/* FAQ */}
-      <section className="py-20 sm:py-28 bg-marketing-mint">
-        <Container>
-          <div className="mx-auto mb-12 max-w-2xl text-center">
-            <MarketingHeading level="h2" variant="section">
-              Common questions
-            </MarketingHeading>
-          </div>
-          <div className="mx-auto max-w-3xl space-y-6">
-            {faqs.map((faq) => (
-              <div
-                key={faq.question}
-                className="rounded-xl border border-marketing-border bg-white p-6"
-              >
-                <h3 className="font-marketing-display text-marketing-lg font-medium text-marketing-ink">
-                  {faq.question}
-                </h3>
-                <p className="mt-2 text-marketing-base leading-relaxed text-marketing-muted">
-                  {faq.answer}
-                </p>
-              </div>
-            ))}
-          </div>
-        </Container>
-      </section>
+      <Section tone="ice">
+        <div className="mx-auto mb-12 max-w-2xl text-center">
+          <MarketingHeading level="h2" variant="section">
+            Common questions
+          </MarketingHeading>
+        </div>
+        <div className="mx-auto max-w-3xl space-y-4">
+          {faqs.map((faq) => (
+            <MarketingCard key={faq.question} className="p-6 sm:p-6">
+              <h3 className="font-marketing-display text-marketing-lg font-medium text-marketing-ink">
+                {faq.question}
+              </h3>
+              <p className="mt-2 text-marketing-base leading-relaxed text-marketing-muted">
+                {faq.answer}
+              </p>
+            </MarketingCard>
+          ))}
+        </div>
+      </Section>
     </div>
   );
 }

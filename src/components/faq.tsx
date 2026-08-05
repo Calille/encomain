@@ -1,8 +1,8 @@
-import { Container } from "./ui/container";
 import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { MarketingHeading } from "./marketing/marketing-heading";
+import { Section } from "./marketing/section";
 
 interface FaqItem {
   question: string;
@@ -60,62 +60,70 @@ export default function FAQ() {
   };
 
   return (
-    <section className="bg-marketing-mint py-24">
-      <Container>
-        <div className="mb-16 text-center">
-          <MarketingHeading level="p" variant="eyebrow">
-            Frequently asked questions
-          </MarketingHeading>
-          <MarketingHeading level="h2" variant="section" className="mt-2">
-            Common questions
-          </MarketingHeading>
-          <p className="mx-auto mt-6 max-w-2xl text-marketing-lg leading-8 text-marketing-muted">
-            Straight answers about timing, cost, and what happens after launch.
-          </p>
-        </div>
+    <Section tone="ice">
+      <div className="mx-auto mb-12 max-w-2xl text-center">
+        <MarketingHeading level="p" variant="eyebrow">
+          Frequently asked questions
+        </MarketingHeading>
+        <MarketingHeading level="h2" variant="section" className="mt-2">
+          Common questions
+        </MarketingHeading>
+        <p className="mt-6 text-marketing-lg leading-8 text-marketing-muted">
+          Straight answers about timing, cost, and what happens after launch.
+        </p>
+      </div>
 
-        <div className="mx-auto max-w-3xl">
-          {faqs.map((faq, index) => (
+      <div className="mx-auto max-w-3xl space-y-3">
+        {faqs.map((faq, index) => {
+          const isOpen = openIndex === index;
+
+          return (
             <div
               key={faq.question}
-              className="mb-4 overflow-hidden rounded-lg border border-marketing-border bg-white"
+              className={`overflow-hidden rounded-2xl border bg-white transition-colors ${
+                isOpen
+                  ? "border-marketing-blue/45 shadow-marketing-lift"
+                  : "border-marketing-border shadow-marketing-card hover:border-marketing-blue/30"
+              }`}
             >
               <button
-                className="flex w-full items-center justify-between px-6 py-4 text-left min-h-[44px]"
+                className="marketing-focus flex min-h-[44px] w-full items-center justify-between gap-4 px-6 py-4 text-left"
                 onClick={() => toggleQuestion(index)}
-                aria-expanded={openIndex === index}
+                aria-expanded={isOpen}
               >
-                <span className="pr-4 font-semibold text-marketing-ink text-marketing-base">
+                <span className="text-marketing-base font-semibold text-marketing-ink">
                   {faq.question}
                 </span>
-                {openIndex === index ? (
-                  <ChevronUp className="h-5 w-5 shrink-0 text-marketing-forest" strokeWidth={1.5} />
-                ) : (
-                  <ChevronDown className="h-5 w-5 shrink-0 text-marketing-forest" strokeWidth={1.5} />
-                )}
+                <ChevronDown
+                  className={`h-5 w-5 shrink-0 text-marketing-blue-deep transition-transform duration-200 ${
+                    isOpen ? "rotate-180" : ""
+                  }`}
+                  strokeWidth={2}
+                  aria-hidden="true"
+                />
               </button>
-              {openIndex === index && (
-                <div className="px-6 pb-4 text-marketing-base text-marketing-muted leading-relaxed">
+              {isOpen && (
+                <div className="px-6 pb-5 text-marketing-base leading-relaxed text-marketing-muted">
                   {faq.answer}
                 </div>
               )}
             </div>
-          ))}
-        </div>
+          );
+        })}
+      </div>
 
-        <div className="mt-12 text-center">
-          <p className="text-marketing-muted text-marketing-base">
-            Don't see your question?{" "}
-            <Link
-              to="/contact#book"
-              className="font-semibold text-marketing-forest hover:underline"
-            >
-              Book a 20 min chat
-            </Link>{" "}
-            and we'll help.
-          </p>
-        </div>
-      </Container>
-    </section>
+      <div className="mt-12 text-center">
+        <p className="text-marketing-base text-marketing-muted">
+          Don't see your question?{" "}
+          <Link
+            to="/contact#book"
+            className="marketing-focus rounded font-semibold text-marketing-blue-deep underline underline-offset-4 hover:text-marketing-blue"
+          >
+            Book a 20 min chat
+          </Link>{" "}
+          and we'll help.
+        </p>
+      </div>
+    </Section>
   );
 }
