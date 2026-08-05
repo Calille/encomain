@@ -63,6 +63,29 @@
     --radius-sm: 0.375rem;
     --radius-md: 0.5rem;
     --radius-lg: 0.625rem;
+
+    /*
+      Marketing brand palette: dark navy + light blue, built around the same
+      logo blue as --accent so the marketing and app layers share one hue family.
+      Stored as HSL channels so Tailwind opacity modifiers keep working.
+    */
+    --marketing-navy-950: 224 66% 6%;
+    --marketing-navy-900: 220 60% 10%;
+    --marketing-navy-800: 219 58% 15%;
+    --marketing-navy-700: 218 53% 22%;
+    /*
+      --marketing-blue is the logo blue. At 63% lightness it only reaches ~2.8:1
+      against white, so light backgrounds use --marketing-blue-deep (5.1:1) for
+      text, links and solid buttons, and keep the logo blue for accents and glows.
+    */
+    --marketing-blue: 216 98% 63%;
+    --marketing-blue-deep: 216 85% 45%;
+    --marketing-blue-bright: 216 98% 74%;
+    --marketing-sky: 216 100% 83%;
+    --marketing-ice: 218 100% 95%;
+    --marketing-mist: 218 100% 98%;
+    --marketing-muted: 217 20% 44%;
+    --marketing-border: 217 59% 90%;
   }
 
   .dark {
@@ -188,6 +211,69 @@
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
+
+  /* Marketing focus ring: brand blue, works on both light and navy backgrounds */
+  .marketing-focus {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marketing-blue focus-visible:ring-offset-2 focus-visible:ring-offset-transparent;
+  }
+
+  /* Headline keyword treatment: light blue gradient wash */
+  .marketing-gradient-text {
+    background-image: linear-gradient(
+      100deg,
+      hsl(var(--marketing-sky)) 0%,
+      hsl(var(--marketing-blue-bright)) 45%,
+      hsl(var(--marketing-blue)) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Soft blue bloom behind hero copy and stat figures */
+  .marketing-glow-text {
+    text-shadow: 0 0 32px hsl(var(--marketing-blue) / 0.45);
+  }
+
+  .marketing-glow-sm {
+    box-shadow: 0 0 0 1px hsl(var(--marketing-blue) / 0.18),
+      0 8px 28px -10px hsl(var(--marketing-blue) / 0.35);
+  }
+
+  .marketing-glow-lg {
+    box-shadow: 0 0 0 1px hsl(var(--marketing-blue) / 0.25),
+      0 22px 60px -18px hsl(var(--marketing-blue) / 0.55);
+  }
+
+  /*
+    Radial fade applied to the hero's WebGL canvas so the animation stays at the
+    edges and never runs across the headline or subheading.
+  */
+  .marketing-canvas-mask {
+    -webkit-mask-image: radial-gradient(
+      ellipse 62% 52% at 50% 46%,
+      transparent 0%,
+      transparent 42%,
+      black 78%
+    );
+    mask-image: radial-gradient(
+      ellipse 62% 52% at 50% 46%,
+      transparent 0%,
+      transparent 42%,
+      black 78%
+    );
+  }
+
+  /* Hairline gradient rule used to separate navy sections from light ones */
+  .marketing-hairline {
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--marketing-blue) / 0.45) 50%,
+      transparent 100%
+    );
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -196,6 +282,8 @@
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    /* Without this, staggered entrance animations hold content invisible for their delay */
+    animation-delay: 0ms !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
