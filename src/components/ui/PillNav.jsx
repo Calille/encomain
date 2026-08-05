@@ -10,15 +10,13 @@ const PillNav = ({
   activeHref,
   className = '',
   ease = 'power3.easeOut',
-  baseColor = '#0d3b2e',
-  pillColor = '#e8f5e9',
-  hoveredPillTextColor = '#e8f5e9',
-  pillTextColor,
+  /** Rendered at the end of the bar, e.g. the account or login control. */
+  trailing,
   onMobileMenuClick,
   initialLoadAnimation = true
 }) => {
-  const resolvedPillTextColor = pillTextColor ?? baseColor;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const circleRefs = useRef([]);
   const tlRefs = useRef([]);
   const activeTweenRefs = useRef([]);
@@ -119,6 +117,13 @@ const PillNav = ({
     return () => window.removeEventListener('resize', onResize);
   }, [items, ease, initialLoadAnimation]);
 
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const handleEnter = i => {
     const tl = tlRefs.current[i];
     if (!tl) return;
@@ -141,14 +146,26 @@ const PillNav = ({
     });
   };
 
+  // A gentle lift; the logo is a wide wordmark, so spinning it is not an option
   const handleLogoEnter = () => {
     const img = logoImgRef.current;
     if (!img) return;
     logoTweenRef.current?.kill();
-    gsap.set(img, { rotate: 0 });
     logoTweenRef.current = gsap.to(img, {
-      rotate: 360,
-      duration: 0.2,
+      scale: 1.05,
+      duration: 0.25,
+      ease,
+      overwrite: 'auto'
+    });
+  };
+
+  const handleLogoLeave = () => {
+    const img = logoImgRef.current;
+    if (!img) return;
+    logoTweenRef.current?.kill();
+    logoTweenRef.current = gsap.to(img, {
+      scale: 1,
+      duration: 0.25,
       ease,
       overwrite: 'auto'
     });
@@ -215,23 +232,16 @@ const PillNav = ({
 
   const isRouterLink = href => href && !isExternalLink(href);
 
-  const cssVars = {
-    ['--base']: baseColor,
-    ['--pill-bg']: pillColor,
-    ['--hover-text']: hoveredPillTextColor,
-    ['--pill-text']: resolvedPillTextColor
-  };
-
   return (
-    <div className="pill-nav-container">
-      <nav className={`pill-nav ${className}`} aria-label="Primary" style={cssVars}>
+    <div className={`pill-nav-container${isScrolled ? ' is-scrolled' : ''}`}>
+      <nav className={`pill-nav ${className}`} aria-label="Primary">
         {isRouterLink(items?.[0]?.href) ? (
           <Link
             className="pill-logo"
             to={items[0].href}
             aria-label="Home"
             onMouseEnter={handleLogoEnter}
-            role="menuitem"
+            onMouseLeave={handleLogoLeave}
             ref={el => {
               logoRef.current = el;
             }}
@@ -244,6 +254,7 @@ const PillNav = ({
             href={items?.[0]?.href || '#'}
             aria-label="Home"
             onMouseEnter={handleLogoEnter}
+            onMouseLeave={handleLogoLeave}
             ref={el => {
               logoRef.current = el;
             }}
@@ -308,10 +319,13 @@ const PillNav = ({
           </ul>
         </div>
 
+        {trailing && <div className="pill-nav-trailing">{trailing}</div>}
+
         <button
           className="mobile-menu-button mobile-only"
           onClick={toggleMobileMenu}
           aria-label="Toggle menu"
+          aria-expanded={isMobileMenuOpen}
           ref={hamburgerRef}
         >
           <span className="hamburger-line" />
@@ -319,7 +333,7 @@ const PillNav = ({
         </button>
       </nav>
 
-      <div className="mobile-menu-popover mobile-only" ref={mobileMenuRef} style={cssVars}>
+      <div className="mobile-menu-popover mobile-only" ref={mobileMenuRef}>
         <ul className="mobile-menu-list">
           {items.map((item, i) => (
             <li key={item.href || `mobile-item-${i}`}>
