@@ -1,6 +1,7 @@
-import { Container } from "./ui/container";
 import { Check } from "lucide-react";
 import { MarketingHeading } from "./marketing/marketing-heading";
+import { MarketingCard } from "./marketing/marketing-card";
+import { Section } from "./marketing/section";
 
 const includedFeatures = [
   {
@@ -47,45 +48,44 @@ const includedFeatures = [
 
 export default function WhatsIncluded() {
   return (
-    <section className="bg-marketing-mint py-24">
-      <Container>
-        <div className="mb-16 text-center">
-          <MarketingHeading level="p" variant="eyebrow">
-            What's included
-          </MarketingHeading>
-          <MarketingHeading level="h2" variant="section" className="mt-2">
-            The basics that help a site earn its keep
-          </MarketingHeading>
-          <p className="mx-auto mt-6 max-w-2xl text-marketing-lg leading-8 text-marketing-muted">
-            Every package is set up so visitors can find you, trust you, and get in touch without friction.
-          </p>
-        </div>
+    <Section tone="ice">
+      <div className="mx-auto mb-14 max-w-2xl text-center">
+        <MarketingHeading level="p" variant="eyebrow">
+          What's included
+        </MarketingHeading>
+        <MarketingHeading level="h2" variant="section" className="mt-2">
+          The basics that help a site earn its keep
+        </MarketingHeading>
+        <p className="mt-6 text-marketing-lg leading-8 text-marketing-muted">
+          Every package is set up so visitors can find you, trust you, and get in touch without friction.
+        </p>
+      </div>
 
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-          {includedFeatures.map((feature) => (
-            <div
-              key={feature.title}
-              className="rounded-xl border border-marketing-border bg-white p-6"
-            >
-              <div className="mb-4 flex items-center">
-                <div className="mr-3 rounded-full bg-marketing-forest/10 p-2">
-                  <Check
-                    className="h-5 w-5 text-marketing-forest"
-                    strokeWidth={1.5}
-                    aria-hidden="true"
-                  />
-                </div>
-                <h3 className="text-marketing-lg font-semibold text-marketing-forest">
-                  {feature.title}
-                </h3>
-              </div>
-              <p className="text-marketing-base text-marketing-muted">
-                {feature.description}
-              </p>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {includedFeatures.map((feature) => (
+          <MarketingCard
+            key={feature.title}
+            interactive
+            className="p-6 sm:p-6"
+          >
+            <div className="mb-4 flex items-center gap-3">
+              <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-marketing-blue/12">
+                <Check
+                  className="h-5 w-5 text-marketing-blue-deep"
+                  strokeWidth={2}
+                  aria-hidden="true"
+                />
+              </span>
+              <h3 className="text-marketing-base font-semibold tracking-tight text-marketing-ink">
+                {feature.title}
+              </h3>
             </div>
-          ))}
-        </div>
-      </Container>
-    </section>
+            <p className="text-marketing-base leading-relaxed text-marketing-muted">
+              {feature.description}
+            </p>
+          </MarketingCard>
+        ))}
+      </div>
+    </Section>
   );
 }

@@ -42,8 +42,8 @@ export function AnimatedBackground() {
       }
 
       getRandomColor() {
-        // Matches marketing tokens: forest, sage, ink
-        const colors = ["#1A4D2E", "#7FA99B", "#1A1A1A"];
+        // Matches marketing tokens: blue, blue-bright, sky
+        const colors = ["#468EFD", "#7CB0FE", "#A9CCFF"];
         return colors[Math.floor(Math.random() * colors.length)];
       }
 
@@ -86,7 +86,7 @@ export function AnimatedBackground() {
 
           if (distance < maxDistance) {
             const opacity = 1 - distance / maxDistance;
-            ctx.strokeStyle = `rgba(26, 77, 46, ${opacity * 0.2})`;
+            ctx.strokeStyle = `rgba(70, 142, 253, ${opacity * 0.35})`;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
@@ -121,7 +121,7 @@ export function AnimatedBackground() {
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 h-full w-full opacity-20"
+      className="absolute inset-0 h-full w-full opacity-40"
     />
   );
 }

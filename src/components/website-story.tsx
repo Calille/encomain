@@ -1,7 +1,8 @@
 import { memo, useRef, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Container } from "./ui/container";
 import { MarketingHeading } from "./marketing/marketing-heading";
+import { MarketingCard } from "./marketing/marketing-card";
+import { CtaButton } from "./marketing/cta-button";
+import { Section } from "./marketing/section";
 
 const storySteps = [
   {
@@ -78,7 +79,7 @@ const TimelineStep = memo(
     return (
       <div ref={stepRef} className="relative">
         {!isLast && (
-          <div className="absolute left-1/2 top-20 hidden h-full w-0.5 -translate-x-1/2 bg-marketing-sage/30 md:block" />
+          <div className="absolute left-1/2 top-20 hidden h-full w-px -translate-x-1/2 bg-gradient-to-b from-marketing-blue/60 to-marketing-blue/10 md:block" />
         )}
 
         <div
@@ -94,18 +95,18 @@ const TimelineStep = memo(
             }`}
             style={{ transitionDelay: `${index * 100}ms` }}
           >
-            <div className="rounded-xl border border-marketing-border bg-white p-6 shadow-sm">
-              <h3 className="mb-3 font-marketing-display text-marketing-2xl font-medium text-marketing-forest">
+            <MarketingCard tone="dark" interactive accentEdge className="p-6 sm:p-6">
+              <h3 className="mb-3 font-marketing-display text-marketing-2xl font-medium text-white">
                 {step.title}
               </h3>
-              <p className="leading-relaxed text-marketing-muted text-marketing-base">
+              <p className="leading-relaxed text-marketing-sky/80 text-marketing-base">
                 {step.description}
               </p>
-            </div>
+            </MarketingCard>
           </div>
 
           <div
-            className={`z-10 flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-marketing-forest text-marketing-xl font-semibold text-white shadow-sm transition-all duration-700 ${
+            className={`marketing-glow-lg z-10 flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-marketing-blue text-marketing-xl font-semibold text-white transition-all duration-700 ${
               isVisible ? "scale-100 opacity-100" : "scale-50 opacity-0"
             }`}
             style={{ transitionDelay: `${index * 100 + 200}ms` }}
@@ -125,16 +126,27 @@ TimelineStep.displayName = "TimelineStep";
 
 export default function WebsiteStory() {
   return (
-    <section className="relative overflow-hidden bg-marketing-mint py-24 sm:py-32">
-      <Container>
+    <Section tone="navy" size="lg" hairline className="overflow-hidden">
+      {/* Ambient blue wash so the navy band does not read as a flat block */}
+      <div
+        className="pointer-events-none absolute left-1/2 top-0 h-[520px] w-[900px] max-w-[120vw] -translate-x-1/2 rounded-full bg-marketing-blue/10 blur-[140px]"
+        aria-hidden="true"
+      />
+
+      <div className="relative">
         <div className="mx-auto mb-16 max-w-2xl lg:text-center">
-          <MarketingHeading level="p" variant="eyebrow">
+          <MarketingHeading level="p" variant="eyebrow" tone="dark">
             How you get from stuck to live
           </MarketingHeading>
-          <MarketingHeading level="h2" variant="section" className="mt-2">
+          <MarketingHeading
+            level="h2"
+            variant="section"
+            tone="dark"
+            className="mt-2"
+          >
             A clear path from first chat to a site that can earn enquiries.
           </MarketingHeading>
-          <p className="mt-6 text-marketing-lg leading-8 text-marketing-muted">
+          <p className="mt-6 text-marketing-lg leading-8 text-marketing-sky/80">
             Six steps, plain English, no mystery about what happens next.
           </p>
         </div>
@@ -150,21 +162,20 @@ export default function WebsiteStory() {
           ))}
         </div>
 
-        <div className="mt-24 text-center">
-          <h3 className="mb-6 font-marketing-display text-marketing-3xl font-medium text-marketing-forest">
+        <div className="mt-16 text-center">
+          <h3 className="mb-6 font-marketing-display text-marketing-3xl font-medium text-white">
             Want to see what we'd change?
           </h3>
-          <p className="mx-auto mb-10 max-w-2xl text-marketing-xl text-marketing-muted">
+          <p className="mx-auto mb-10 max-w-2xl text-marketing-xl text-marketing-sky/80">
             Book a short intro call and we'll walk through your current site with fresh eyes.
           </p>
-          <Link
-            to="/contact#book"
-            className="inline-flex items-center justify-center rounded-lg bg-marketing-ink px-8 py-4 text-marketing-lg font-semibold text-white transition-colors hover:bg-marketing-forest min-h-[44px]"
-          >
-            Book a 20 min chat
-          </Link>
+          <div className="flex justify-center">
+            <CtaButton to="/contact#book" variant="on-dark" size="lg">
+              Book a 20 min chat
+            </CtaButton>
+          </div>
         </div>
-      </Container>
-    </section>
+      </div>
+    </Section>
   );
 }

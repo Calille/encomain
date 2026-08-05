@@ -15,16 +15,69 @@ const navigation = {
   ],
 };
 
+const serviceLinks = [
+  "Website redesign",
+  "Get found locally",
+  "Sell online without the faff",
+  "Site care and updates",
+];
+
+const companyLinks = [
+  { name: "About us", href: "/about" },
+  { name: "Careers", href: "/careers" },
+];
+
+const legalLinks = [
+  { name: "Privacy policy", href: "/privacy-policy" },
+  { name: "Terms of service", href: "/terms-of-service" },
+];
+
+const linkClasses =
+  "marketing-focus rounded text-marketing-sm leading-6 text-marketing-sky/80 transition-colors hover:text-white";
+
+const groupHeadingClasses =
+  "text-marketing-sm font-semibold uppercase leading-6 tracking-[0.14em] text-marketing-blue-bright";
+
+function FooterGroup({
+  heading,
+  children,
+  className,
+}: {
+  heading: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <h3 className={groupHeadingClasses}>{heading}</h3>
+      <ul className="mt-6 space-y-4">{children}</ul>
+    </div>
+  );
+}
+
 export default function Footer() {
   return (
-    <footer className="bg-marketing-mint">
-      <Container className="py-12 md:py-16">
+    <footer className="relative overflow-hidden bg-marketing-navy-950">
+      <div
+        className="marketing-hairline pointer-events-none absolute inset-x-0 top-0 h-px"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 -bottom-40 mx-auto h-[420px] w-[900px] max-w-[120vw] rounded-full bg-marketing-blue/10 blur-[150px]"
+        aria-hidden="true"
+      />
+
+      <Container className="relative py-14 md:py-20">
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
-          <div className="space-y-8">
-            <Link to="/" className="flex items-center">
-              <Logo />
+          <div className="space-y-7">
+            {/* The wordmark is black on transparent, so it needs a light chip on navy */}
+            <Link
+              to="/"
+              className="marketing-focus inline-flex w-fit items-center rounded-2xl bg-white/95 px-4 py-2.5"
+            >
+              <Logo className="[&_img]:h-10" />
             </Link>
-            <p className="text-marketing-sm leading-6 text-marketing-ink">
+            <p className="max-w-sm text-marketing-base leading-relaxed text-marketing-sky/85">
               {t(
                 "footer.tagline",
                 "If your website looks like it's from 2013, it's costing you enquiries."
@@ -33,7 +86,7 @@ export default function Footer() {
             <div className="space-y-3">
               <a
                 href="mailto:hello@theenclosure.co.uk"
-                className="flex items-center gap-2 text-marketing-sm text-marketing-muted transition-colors hover:text-marketing-forest"
+                className={`flex items-center gap-2 ${linkClasses}`}
               >
                 <Mail className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
                 hello@theenclosure.co.uk
@@ -42,124 +95,63 @@ export default function Footer() {
                 href={whatsappLink()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-marketing-sm text-marketing-muted transition-colors hover:text-marketing-forest"
+                className={`flex items-center gap-2 ${linkClasses}`}
               >
                 <MessageCircle className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
                 Message us on WhatsApp
               </a>
             </div>
           </div>
-          <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
+
+          <div className="mt-14 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
             <div className="md:grid md:grid-cols-2 md:gap-8">
-              <div>
-                <h3 className="text-marketing-sm font-semibold leading-6 text-marketing-forest">
-                  {t("footer.navigation", "Navigation")}
-                </h3>
-                <ul className="mt-6 space-y-4">
-                  {navigation.main.map((item) => (
-                    <li key={item.name}>
-                      <Link
-                        to={item.href}
-                        className="text-marketing-sm leading-6 text-marketing-forest transition-colors hover:text-marketing-forest-dark hover:underline"
-                      >
-                        {t(`nav.${item.name.toLowerCase()}`, item.name)}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="mt-10 md:mt-0">
-                <h3 className="text-marketing-sm font-semibold leading-6 text-marketing-forest">
-                  Services
-                </h3>
-                <ul className="mt-6 space-y-4">
-                  <li>
-                    <Link
-                      to="/services"
-                      className="text-marketing-sm leading-6 text-marketing-forest transition-colors hover:text-marketing-forest-dark hover:underline"
-                    >
-                      Website redesign
+              <FooterGroup heading={t("footer.navigation", "Navigation")}>
+                {navigation.main.map((item) => (
+                  <li key={item.name}>
+                    <Link to={item.href} className={linkClasses}>
+                      {t(`nav.${item.name.toLowerCase()}`, item.name)}
                     </Link>
                   </li>
-                  <li>
-                    <Link
-                      to="/services"
-                      className="text-marketing-sm leading-6 text-marketing-forest transition-colors hover:text-marketing-forest-dark hover:underline"
-                    >
-                      Get found locally
+                ))}
+              </FooterGroup>
+
+              <FooterGroup heading="Services" className="mt-10 md:mt-0">
+                {serviceLinks.map((name) => (
+                  <li key={name}>
+                    <Link to="/services" className={linkClasses}>
+                      {name}
                     </Link>
                   </li>
-                  <li>
-                    <Link
-                      to="/services"
-                      className="text-marketing-sm leading-6 text-marketing-forest transition-colors hover:text-marketing-forest-dark hover:underline"
-                    >
-                      Sell online without the faff
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/services"
-                      className="text-marketing-sm leading-6 text-marketing-forest transition-colors hover:text-marketing-forest-dark hover:underline"
-                    >
-                      Site care and updates
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+                ))}
+              </FooterGroup>
             </div>
+
             <div className="md:grid md:grid-cols-2 md:gap-8">
-              <div>
-                <h3 className="text-marketing-sm font-semibold leading-6 text-marketing-forest">
-                  Company
-                </h3>
-                <ul className="mt-6 space-y-4">
-                  <li>
-                    <Link
-                      to="/about"
-                      className="text-marketing-sm leading-6 text-marketing-forest transition-colors hover:text-marketing-forest-dark hover:underline"
-                    >
-                      About us
+              <FooterGroup heading="Company">
+                {companyLinks.map((item) => (
+                  <li key={item.name}>
+                    <Link to={item.href} className={linkClasses}>
+                      {item.name}
                     </Link>
                   </li>
-                  <li>
-                    <Link
-                      to="/careers"
-                      className="text-marketing-sm leading-6 text-marketing-forest transition-colors hover:text-marketing-forest-dark hover:underline"
-                    >
-                      Careers
+                ))}
+              </FooterGroup>
+
+              <FooterGroup heading="Legal" className="mt-10 md:mt-0">
+                {legalLinks.map((item) => (
+                  <li key={item.name}>
+                    <Link to={item.href} className={linkClasses}>
+                      {item.name}
                     </Link>
                   </li>
-                </ul>
-              </div>
-              <div className="mt-10 md:mt-0">
-                <h3 className="text-marketing-sm font-semibold leading-6 text-marketing-forest">
-                  Legal
-                </h3>
-                <ul className="mt-6 space-y-4">
-                  <li>
-                    <Link
-                      to="/privacy-policy"
-                      className="text-marketing-sm leading-6 text-marketing-forest transition-colors hover:text-marketing-forest-dark hover:underline"
-                    >
-                      Privacy policy
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/terms-of-service"
-                      className="text-marketing-sm leading-6 text-marketing-forest transition-colors hover:text-marketing-forest-dark hover:underline"
-                    >
-                      Terms of service
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+                ))}
+              </FooterGroup>
             </div>
           </div>
         </div>
-        <div className="mt-16 border-t border-marketing-border pt-8 sm:mt-20 lg:mt-24">
-          <p className="text-marketing-xs leading-5 text-marketing-muted">
+
+        <div className="mt-14 border-t border-marketing-navy-700 pt-8">
+          <p className="text-marketing-xs leading-5 text-marketing-sky/55">
             &copy; {new Date().getFullYear()} The Enclosure. All rights reserved.
           </p>
         </div>

@@ -2,13 +2,13 @@ import { clsx } from "clsx";
 import type { ReactNode } from "react";
 
 type HeadingLevel = "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "p";
-type HeadingVariant = "display" | "section" | "eyebrow";
+type HeadingVariant = "hero" | "display" | "section" | "eyebrow";
 type HeadingTone = "light" | "dark" | "auto";
 
 interface MarketingHeadingProps {
   level: HeadingLevel;
   variant?: HeadingVariant;
-  /** Background context. Auto/light → ink (or forest for eyebrows). Dark → white (or sage for eyebrows). */
+  /** Background context. Auto/light → navy ink (blue for eyebrows). Dark → white (sky for eyebrows). */
   tone?: HeadingTone;
   children: ReactNode;
   className?: string;
@@ -20,6 +20,8 @@ interface MarketingHeadingProps {
  * with text-marketing-* font-size utilities.
  */
 const typographyClasses: Record<HeadingVariant, string> = {
+  hero:
+    "font-marketing-display font-semibold tracking-tight text-marketing-4xl leading-[1.08] sm:text-marketing-6xl lg:text-marketing-7xl",
   display:
     "font-marketing-display font-semibold tracking-tight text-marketing-4xl sm:text-marketing-5xl",
   section:
@@ -32,10 +34,10 @@ function toneClass(variant: HeadingVariant, tone: HeadingTone): string {
   const dark = tone === "dark";
 
   if (variant === "eyebrow") {
-    return dark ? "text-marketing-sage" : "text-marketing-forest";
+    return dark ? "text-marketing-sky" : "text-marketing-blue-deep";
   }
 
-  // display + section
+  // hero + display + section
   return dark ? "text-white" : "text-marketing-ink";
 }
 
