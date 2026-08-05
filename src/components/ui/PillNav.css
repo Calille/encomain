@@ -55,6 +55,29 @@
     margin-right: auto;
     padding: 0 12px;
   }
+
+  /*
+    On mobile the bar is separate pills with gaps between them, so scrolled
+    content shows through. This scrim sits behind them once the page moves.
+  */
+  .pill-nav-container.is-scrolled::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: calc(var(--nav-h, 54px) + 1.75rem);
+    background: linear-gradient(
+      to bottom,
+      hsl(var(--marketing-navy-950) / 0.92) 0%,
+      hsl(var(--marketing-navy-950) / 0.75) 60%,
+      transparent 100%
+    );
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    pointer-events: none;
+    z-index: -1;
+  }
 }
 
 /* The bar holding the nav links */

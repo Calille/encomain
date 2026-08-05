@@ -244,7 +244,8 @@ export function Chatbot() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6">
+    // Lifted on small screens so the launcher clears the sticky CTA bar
+    <div className="fixed bottom-20 right-4 z-50 md:bottom-6 md:right-6">
       <button
         onClick={toggleChat}
         className="flex h-14 w-14 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-marketing-blue-deep text-white shadow-lg transition-all duration-300 hover:bg-marketing-blue hover:scale-105 sm:h-16 sm:w-16"
