@@ -265,6 +265,100 @@
     );
   }
 
+  /*
+    Long-form copy for the legal pages. These used Tailwind `prose` classes, but
+    @tailwindcss/typography is not installed, so they rendered as an unformatted
+    wall of text. This provides the same shape scoped to the marketing palette.
+  */
+  .marketing-prose {
+    color: hsl(var(--marketing-muted));
+    font-size: 16px;
+    line-height: 1.75;
+  }
+
+  .marketing-prose h2 {
+    font-family: Fraunces, Georgia, serif;
+    font-size: 30px;
+    line-height: 1.25;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: hsl(var(--marketing-navy-900));
+    margin-top: 2.5em;
+    margin-bottom: 0.75em;
+  }
+
+  .marketing-prose h3 {
+    font-family: Fraunces, Georgia, serif;
+    font-size: 22px;
+    line-height: 1.3;
+    font-weight: 600;
+    color: hsl(var(--marketing-navy-900));
+    margin-top: 1.75em;
+    margin-bottom: 0.6em;
+  }
+
+  .marketing-prose h2:first-child,
+  .marketing-prose h3:first-child {
+    margin-top: 0;
+  }
+
+  .marketing-prose p,
+  .marketing-prose ul,
+  .marketing-prose ol {
+    margin-top: 1.1em;
+    margin-bottom: 1.1em;
+  }
+
+  .marketing-prose ul,
+  .marketing-prose ol {
+    padding-left: 1.5em;
+  }
+
+  .marketing-prose ul {
+    list-style: disc;
+  }
+
+  .marketing-prose ol {
+    list-style: decimal;
+  }
+
+  .marketing-prose li {
+    margin-top: 0.4em;
+    margin-bottom: 0.4em;
+    padding-left: 0.25em;
+  }
+
+  .marketing-prose li::marker {
+    color: hsl(var(--marketing-blue));
+  }
+
+  .marketing-prose strong {
+    font-weight: 600;
+    color: hsl(var(--marketing-navy-900));
+  }
+
+  .marketing-prose a {
+    color: hsl(var(--marketing-blue-deep));
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .marketing-prose a:hover {
+    color: hsl(var(--marketing-blue));
+  }
+
+  .marketing-prose hr {
+    border-color: hsl(var(--marketing-border));
+    margin-top: 2.5em;
+    margin-bottom: 2.5em;
+  }
+
+  /* Escape hatch matching the `not-prose` convention the pages already use */
+  .marketing-prose .not-prose,
+  .marketing-prose .not-prose * {
+    margin: 0;
+  }
+
   /* Hairline gradient rule used to separate navy sections from light ones */
   .marketing-hairline {
     background-image: linear-gradient(
