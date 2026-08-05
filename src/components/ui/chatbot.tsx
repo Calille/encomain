@@ -247,7 +247,7 @@ export function Chatbot() {
     <div className="fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6">
       <button
         onClick={toggleChat}
-        className="flex h-14 w-14 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-marketing-forest text-white shadow-lg transition-all duration-300 hover:bg-marketing-forest-dark hover:scale-105 sm:h-16 sm:w-16"
+        className="flex h-14 w-14 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-marketing-blue-deep text-white shadow-lg transition-all duration-300 hover:bg-marketing-blue hover:scale-105 sm:h-16 sm:w-16"
         aria-label={isOpen ? "Close chat" : "Open chat"}
       >
         {isOpen ? (
@@ -259,7 +259,7 @@ export function Chatbot() {
 
       {isOpen && (
         <div className="absolute bottom-16 right-0 flex h-[calc(100vh-8rem)] max-h-[500px] w-[calc(100vw-2rem)] max-w-[320px] flex-col overflow-hidden rounded-lg border border-marketing-border bg-white shadow-xl sm:bottom-20 sm:max-w-[384px]">
-          <div className="flex flex-shrink-0 items-center justify-between bg-marketing-forest p-3 text-white sm:p-4">
+          <div className="flex flex-shrink-0 items-center justify-between bg-marketing-blue-deep p-3 text-white sm:p-4">
             <div className="flex min-w-0 items-center">
               <Zap className="mr-2 h-4 w-4 flex-shrink-0 sm:h-5 sm:w-5" size={16} strokeWidth={1.5} />
               <h3 className="truncate text-marketing-sm font-semibold sm:text-marketing-base">
@@ -275,7 +275,7 @@ export function Chatbot() {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto bg-marketing-mint p-4">
+          <div className="flex-1 overflow-y-auto bg-marketing-mist p-4">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -284,7 +284,7 @@ export function Chatbot() {
                 <div
                   className={`max-w-[80%] rounded-lg p-3 ${
                     message.sender === "user"
-                      ? "bg-marketing-forest text-white"
+                      ? "bg-marketing-blue-deep text-white"
                       : "border border-marketing-border bg-white text-marketing-ink"
                   }`}
                 >
@@ -322,7 +322,7 @@ export function Chatbot() {
           </div>
 
           {showEmailCapture && (
-            <div className="border-t border-marketing-border bg-marketing-forest/5 p-4">
+            <div className="border-t border-marketing-border bg-marketing-mist p-4">
               <p className="mb-2 text-marketing-sm text-marketing-muted">
                 Enter your email to schedule a 20 min chat:
               </p>
@@ -336,7 +336,7 @@ export function Chatbot() {
                 />
                 <Button
                   onClick={handleSubmitEmail}
-                  className="min-h-[44px] bg-marketing-forest px-4 text-white hover:bg-marketing-forest-dark"
+                  className="min-h-[44px] bg-marketing-blue-deep px-4 text-white hover:bg-marketing-blue"
                 >
                   Submit
                 </Button>
@@ -344,7 +344,7 @@ export function Chatbot() {
             </div>
           )}
 
-          <div className="overflow-x-auto whitespace-nowrap border-t border-marketing-border bg-marketing-mint p-2">
+          <div className="overflow-x-auto whitespace-nowrap border-t border-marketing-border bg-marketing-mist p-2">
             <div className="flex gap-2">
               {commonQuestions.map((question) => (
                 <button
@@ -370,7 +370,7 @@ export function Chatbot() {
               />
               <Button
                 onClick={handleSendMessage}
-                className="flex min-h-[44px] min-w-[44px] items-center justify-center bg-marketing-forest hover:bg-marketing-forest-dark"
+                className="flex min-h-[44px] min-w-[44px] items-center justify-center bg-marketing-blue-deep hover:bg-marketing-blue"
                 aria-label="Send message"
               >
                 <Send size={18} strokeWidth={1.5} />

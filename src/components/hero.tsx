@@ -75,10 +75,6 @@ export default function Hero() {
       <Container className="relative">
         <div className="mx-auto max-w-3xl pt-10 pb-20 sm:pt-16 sm:pb-24 lg:pt-20 lg:pb-28">
           <div className="text-center">
-            <p className="animate-fade-in mb-6 inline-flex items-center gap-2 rounded-full border border-marketing-blue/30 bg-marketing-blue/10 px-4 py-1.5 text-marketing-xs font-semibold uppercase tracking-[0.18em] text-marketing-sky backdrop-blur">
-              <span className="h-1.5 w-1.5 rounded-full bg-marketing-blue-bright" />
-              Websites for UK businesses
-            </p>
             <MarketingHeading
               level="h1"
               variant="hero"

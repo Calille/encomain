@@ -79,10 +79,10 @@ export function MarketingCardIcon({
   return (
     <div
       className={clsx(
-        "mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl",
+        "mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl ring-1",
         tone === "light"
-          ? "bg-marketing-blue/12 text-marketing-blue-deep"
-          : "bg-marketing-blue/20 text-marketing-sky",
+          ? "bg-marketing-ice text-marketing-blue-deep ring-marketing-blue/25"
+          : "bg-marketing-blue/20 text-marketing-sky ring-marketing-blue/40",
         className
       )}
     >

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { CtaButton } from "./marketing/cta-button";
 
 export default function StickyCTA() {
   const [isVisible, setIsVisible] = useState(false);
@@ -16,13 +16,10 @@ export default function StickyCTA() {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-marketing-border bg-white p-4 shadow-lg md:hidden">
-      <Link
-        to="/contact#book"
-        className="flex w-full items-center justify-center rounded-lg bg-marketing-forest px-4 py-3 text-marketing-sm font-semibold text-white transition-colors hover:bg-marketing-forest-dark min-h-[44px]"
-      >
+    <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-marketing-navy-700 bg-marketing-navy-950/90 p-3 backdrop-blur md:hidden">
+      <CtaButton to="/contact#book" variant="primary" fullWidth>
         Book a 20 min chat
-      </Link>
+      </CtaButton>
     </div>
   );
 }
